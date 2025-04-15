@@ -492,18 +492,34 @@
     }
     
     function openEditModal() {
-      if (!selectedProjectId) return;
+      console.log('사업 수정 모달 열기', selectedProjectId);
+      if (!selectedProjectId) {
+        alert('수정할 사업을 선택해주세요.');
+        return;
+      }
       
       const project = projects.find(p => p.id === selectedProjectId);
-      if (!project) return;
+      if (!project) {
+        alert('선택한 사업 정보를 찾을 수 없습니다.');
+        return;
+      }
       
-      document.getElementById('editName').value = project.name || '';
-      document.getElementById('editBudget').value = project.targetCompanies || '';
-      document.getElementById('editStartDate').value = project.startDate || '';
-      document.getElementById('editEndDate').value = project.endDate || '';
-      document.getElementById('editOrganizer').value = project.organizer || '';
-      document.getElementById('editNoticeUrl').value = project.noticeUrl || '';
+      // 폼 필드에 데이터 설정
+      const editName = document.getElementById('editName');
+      const editBudget = document.getElementById('editBudget');
+      const editStartDate = document.getElementById('editStartDate');
+      const editEndDate = document.getElementById('editEndDate');
+      const editOrganizer = document.getElementById('editOrganizer');
+      const editNoticeUrl = document.getElementById('editNoticeUrl');
       
+      if (editName) editName.value = project.name || '';
+      if (editBudget) editBudget.value = project.targetCompanies || '';
+      if (editStartDate) editStartDate.value = project.startDate || '';
+      if (editEndDate) editEndDate.value = project.endDate || '';
+      if (editOrganizer) editOrganizer.value = project.organizer || '';
+      if (editNoticeUrl) editNoticeUrl.value = project.noticeUrl || '';
+      
+      // 모달 표시
       editModal.classList.remove('hidden');
     }
     
