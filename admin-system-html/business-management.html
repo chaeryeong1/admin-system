@@ -600,26 +600,23 @@
     }
 
     // 사업 삭제 모달 열기
-    function openDeleteModal(projectId = null) {
-      // 선택된 라디오 버튼이 없고 projectId도 없는 경우 확인
-      if (!projectId && !selectedProjectIds.length) {
+    function openDeleteModal() {
+      if (!selectedProjectIds.length) {
         alert('삭제할 사업을 선택해주세요.');
         return;
       }
       
-      // projectId가 제공되지 않은 경우 selectedProjectIds 사용
-      const idToDelete = projectId || selectedProjectIds[0];
+      const projectId = selectedProjectIds[0];
       
       // 해당 ID의 프로젝트가 존재하는지 확인
-      const project = projects.find(p => p.id === idToDelete);
+      const project = projects.find(p => p.id === projectId);
       if (!project) {
         alert('선택한 사업을 찾을 수 없습니다.');
         return;
       }
       
-      document.getElementById('projectNameToDelete').textContent = project.name;
+      document.getElementById('deleteProjectName').textContent = project.name;
       document.getElementById('deleteModal').classList.remove('hidden');
-      document.getElementById('deleteForm').setAttribute('data-id', idToDelete);
     }
 
     // 모달 닫기
