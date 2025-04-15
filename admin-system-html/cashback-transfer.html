@@ -77,19 +77,49 @@
             <thead>
               <tr class="border-b">
                 <th class="px-4 py-2 text-left">선택</th>
-                <th class="px-4 py-2 text-left">기업명</th>
-                <th class="px-4 py-2 text-left">담당자</th>
-                <th class="px-4 py-2 text-left">참여 사업</th>
-                <th class="px-4 py-2 text-left">승인일</th>
-                <th class="px-4 py-2 text-left">금액</th>
-                <th class="px-4 py-2 text-left">계좌번호</th>
-                <th class="px-4 py-2 text-left">상태</th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="companyName">기업명 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="bankInfo">계좌정보 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="amount">금액 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="approvalDate">승인일 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="transferDate">송금일 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="status">상태 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left">작업</th>
               </tr>
             </thead>
             <tbody id="transferTableBody">
               <!-- JavaScript로 채워질 부분 -->
             </tbody>
           </table>
+        </div>
+        
+        <!-- 페이지네이션 -->
+        <div class="px-4 py-3 flex items-center justify-between border-t">
+          <div class="flex-1 flex justify-between items-center">
+            <div>
+              <span class="text-sm text-gray-700">
+                총 <span id="totalItems">0</span>개 항목 중 <span id="startItem">0</span>-<span id="endItem">0</span>
+              </span>
+            </div>
+            <div>
+              <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <button id="prevPageBtn" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                  <span class="sr-only">이전</span>
+                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+                <div id="paginationNumbers" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                  <!-- 페이지 번호가 여기에 동적으로 추가됩니다 -->
+                </div>
+                <button id="nextPageBtn" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                  <span class="sr-only">다음</span>
+                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </nav>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -175,186 +205,393 @@
 
   <script>
     // 상태 관리
-    let transfers = [
-      {
-        id: 1,
-        companyName: "(주)클라우드테크",
-        contactPerson: "홍길동",
-        project: "클라우드 보급사업",
-        approvalDate: "2025-06-21",
-        amount: 500000,
-        accountNumber: "국민은행 123-45-6789-12",
-        status: "송금 대기"
-      },
-      {
-        id: 2,
-        companyName: "데이터시스템즈",
-        contactPerson: "김철수",
-        project: "클라우드 보급사업",
-        approvalDate: "2025-06-19",
-        amount: 800000,
-        accountNumber: "신한은행 987-65-4321-10",
-        status: "송금 대기"
-      },
-      {
-        id: 3,
-        companyName: "모바일솔루션",
-        contactPerson: "이영희",
-        project: "클라우드 보급사업",
-        approvalDate: "2025-06-15",
-        amount: 600000,
-        accountNumber: "우리은행 555-66-7777-88",
-        status: "송금 완료",
-        transferDate: "2025-06-18",
-        note: "캐시백 송금 완료"
-      }
-    ];
-    let selectedId = null;
-
-    // 현재 날짜 가져오기
-    function getCurrentDate() {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-
-    // DOM 요소
-    const transferTableBody = document.getElementById('transferTableBody');
-    const businessFilter = document.getElementById('businessFilter');
-    const statusFilter = document.getElementById('statusFilter');
-    const searchInput = document.getElementById('searchInput');
-    const searchButton = document.getElementById('searchButton');
-    const transferButton = document.getElementById('transferButton');
+    let transfers = [];
+    let selectedTransferId = null;
     
-    const transferModal = document.getElementById('transferModal');
-    const transferCompanyName = document.getElementById('transferCompanyName');
-    const transferAmount = document.getElementById('transferAmount');
-    const transferAccount = document.getElementById('transferAccount');
-    const transferDate = document.getElementById('transferDate');
-    const transferNote = document.getElementById('transferNote');
-    const cancelTransferButton = document.getElementById('cancelTransferButton');
-    const confirmTransferButton = document.getElementById('confirmTransferButton');
+    // 페이지네이션 상태
+    let currentPage = 1;
+    const itemsPerPage = 20;
+    let totalPages = 0;
+    
+    // 정렬 상태
+    let currentSort = {
+      field: null,
+      direction: 'asc' // 'asc' 또는 'desc'
+    };
 
-    // 금액 포맷팅 함수
-    function formatAmount(amount) {
-      return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    async function loadTransfers() {
+      console.log('송금 처리 데이터 로딩 시작');
+      document.getElementById('transferTableBody').innerHTML = 
+        '<tr><td colspan="8" class="px-4 py-2 text-center">데이터를 불러오는 중입니다...</td></tr>';
+      
+      try {
+        // API를 통해 데이터 가져오기
+        const result = await fetchData('송금처리');
+        console.log('API 결과:', result);
+        
+        if (result && result.data && Array.isArray(result.data) && result.data.length > 0) {
+          transfers = result.data;
+          console.log(`${transfers.length}개의 송금 처리 데이터 로드됨`);
+        } else {
+          console.log('유효한 데이터가 없어 샘플 데이터를 사용합니다.');
+          // 샘플 데이터
+          transfers = [
+            {
+              id: "1",
+              companyName: "(주)테크솔루션",
+              bankInfo: "우리은행 123-456-789 (주)테크솔루션",
+              amount: 5000000,
+              approvalDate: "2025-02-15",
+              transferDate: "2025-02-18",
+              status: "송금완료"
+            },
+            {
+              id: "2",
+              companyName: "클라우드시스템(주)",
+              bankInfo: "국민은행 987-654-321 클라우드시스템(주)",
+              amount: 7500000,
+              approvalDate: "2025-02-10",
+              transferDate: "",
+              status: "송금대기"
+            },
+            {
+              id: "3",
+              companyName: "스마트테크놀로지(주)",
+              bankInfo: "신한은행 555-555-555 스마트테크놀로지",
+              amount: 12000000,
+              approvalDate: "2025-02-05",
+              transferDate: "2025-02-08",
+              status: "송금완료"
+            }
+          ];
+        }
+        renderTransfers();
+      } catch (error) {
+        console.error('송금 처리 데이터 로드 중 오류 발생:', error);
+        document.getElementById('transferTableBody').innerHTML = 
+          '<tr><td colspan="8" class="px-4 py-2 text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
+      }
     }
 
-    // 송금 목록 렌더링
     function renderTransfers() {
-      const filteredTransfers = transfers.filter(transfer => 
-        transfer.companyName.includes(searchInput.value) && 
-        (businessFilter.value === "" || transfer.project === businessFilter.value) &&
-        (statusFilter.value === "" || transfer.status === statusFilter.value)
-      );
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const statusFilter = document.getElementById('statusFilter').value;
+      
+      let filteredTransfers = transfers.filter(transfer => {
+        const matchSearch = transfer.companyName.toLowerCase().includes(searchTerm);
+        const matchStatus = !statusFilter || transfer.status === statusFilter;
+        return matchSearch && matchStatus;
+      });
+      
+      // 정렬 적용
+      if (currentSort.field) {
+        filteredTransfers.sort((a, b) => {
+          let aValue = a[currentSort.field];
+          let bValue = b[currentSort.field];
+          
+          // 날짜인 경우 특별 처리
+          if (currentSort.field === 'approvalDate' || currentSort.field === 'transferDate') {
+            // 빈 값은 가장 나중에 정렬
+            if (!aValue && !bValue) return 0;
+            if (!aValue) return currentSort.direction === 'asc' ? 1 : -1;
+            if (!bValue) return currentSort.direction === 'asc' ? -1 : 1;
+            
+            const dateA = new Date(aValue);
+            const dateB = new Date(bValue);
+            return currentSort.direction === 'asc' ? dateA - dateB : dateB - dateA;
+          }
+          
+          // 금액인 경우 숫자로 처리
+          if (currentSort.field === 'amount') {
+            aValue = Number(aValue);
+            bValue = Number(bValue);
+            return currentSort.direction === 'asc' ? aValue - bValue : bValue - aValue;
+          }
+          
+          // 문자열인 경우
+          aValue = String(aValue || '').toLowerCase();
+          bValue = String(bValue || '').toLowerCase();
+          
+          if (aValue < bValue) return currentSort.direction === 'asc' ? -1 : 1;
+          if (aValue > bValue) return currentSort.direction === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+      
+      // 페이지네이션 계산
+      totalPages = Math.ceil(filteredTransfers.length / itemsPerPage);
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, filteredTransfers.length);
+      const paginatedTransfers = filteredTransfers.slice(startIndex, endIndex);
+      
+      // 페이지네이션 정보 업데이트
+      document.getElementById('totalItems').textContent = filteredTransfers.length;
+      document.getElementById('startItem').textContent = filteredTransfers.length === 0 ? 0 : startIndex + 1;
+      document.getElementById('endItem').textContent = endIndex;
+      
+      // 페이지네이션 버튼 업데이트
+      updatePaginationButtons();
 
+      const transferTableBody = document.getElementById('transferTableBody');
       transferTableBody.innerHTML = '';
       
-      filteredTransfers.forEach(transfer => {
+      if (filteredTransfers.length === 0) {
+        transferTableBody.innerHTML = '<tr><td colspan="8" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
+        return;
+      }
+
+      paginatedTransfers.forEach(transfer => {
         const tr = document.createElement('tr');
         tr.className = 'border-b hover:bg-gray-50';
-        
-        // 상태에 따른 스타일 
-        let statusClass = 'bg-yellow-100 text-yellow-800';
-        if (transfer.status === '송금 완료') {
-          statusClass = 'bg-green-100 text-green-800';
-        }
-        
         tr.innerHTML = `
           <td class="px-4 py-2">
             <input 
               type="radio" 
               name="select-transfer" 
               value="${transfer.id}" 
-              ${selectedId === transfer.id ? 'checked' : ''}
-              ${transfer.status === '송금 완료' ? 'disabled' : ''}
+              class="transfer-select"
+              ${selectedTransferId === transfer.id ? 'checked' : ''}
             >
           </td>
           <td class="px-4 py-2">${transfer.companyName}</td>
-          <td class="px-4 py-2">${transfer.contactPerson}</td>
-          <td class="px-4 py-2">${transfer.project}</td>
-          <td class="px-4 py-2">${transfer.approvalDate}</td>
-          <td class="px-4 py-2 text-right">${formatAmount(transfer.amount)}원</td>
-          <td class="px-4 py-2">${transfer.accountNumber}</td>
+          <td class="px-4 py-2">${transfer.bankInfo}</td>
+          <td class="px-4 py-2">${formatNumber(transfer.amount)}원</td>
+          <td class="px-4 py-2">${transfer.approvalDate || '-'}</td>
+          <td class="px-4 py-2">${transfer.transferDate || '-'}</td>
+          <td class="px-4 py-2"><span class="${getStatusClass(transfer.status)}">${transfer.status}</span></td>
           <td class="px-4 py-2">
-            <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">
-              ${transfer.status}
-            </span>
+            ${transfer.status === '송금대기' ? `
+              <button class="bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1 text-sm transfer-button" data-id="${transfer.id}">송금처리</button>
+            ` : ''}
           </td>
         `;
-        
         transferTableBody.appendChild(tr);
       });
 
-      // 라디오 버튼 이벤트 리스너 추가
-      document.querySelectorAll('input[name="select-transfer"]').forEach(radio => {
+      // 이벤트 리스너 추가
+      document.querySelectorAll('.transfer-select').forEach(radio => {
         radio.addEventListener('change', (e) => {
-          selectedId = parseInt(e.target.value);
+          selectedTransferId = e.target.value;
         });
       });
+
+      document.querySelectorAll('.transfer-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+          const transferId = e.target.getAttribute('data-id');
+          openTransferModal(transferId);
+        });
+      });
+      
+      // 정렬 아이콘 업데이트
+      updateSortIcons();
+    }
+    
+    // 숫자 포맷팅
+    function formatNumber(num) {
+      if (num === undefined || num === null) return '';
+      return new Intl.NumberFormat('ko-KR').format(num);
+    }
+    
+    // 상태에 따른 클래스 반환
+    function getStatusClass(status) {
+      if (!status) return '';
+      
+      switch(status) {
+        case '송금완료': return 'text-green-600 font-medium';
+        case '송금대기': return 'text-blue-600 font-medium';
+        default: return '';
+      }
+    }
+    
+    // 페이지네이션 버튼 업데이트
+    function updatePaginationButtons() {
+      const paginationNumbers = document.getElementById('paginationNumbers');
+      paginationNumbers.innerHTML = '';
+      
+      // 표시할 페이지 번호 범위 계산
+      const maxVisiblePages = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      // 페이지 범위 조정
+      if (endPage - startPage + 1 < maxVisiblePages && startPage > 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+      
+      // 이전 버튼 상태 업데이트
+      const prevPageBtn = document.getElementById('prevPageBtn');
+      prevPageBtn.disabled = currentPage <= 1;
+      prevPageBtn.classList.toggle('opacity-50', currentPage <= 1);
+      prevPageBtn.onclick = () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderTransfers();
+        }
+      };
+      
+      // 페이지 번호 버튼 생성
+      for (let i = startPage; i <= endPage; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.className = `relative inline-flex items-center px-4 py-2 border ${
+          i === currentPage ? 'bg-blue-50 border-blue-500 text-blue-600' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+        } text-sm font-medium`;
+        pageButton.textContent = i;
+        pageButton.onclick = () => {
+          currentPage = i;
+          renderTransfers();
+        };
+        paginationNumbers.appendChild(pageButton);
+      }
+      
+      // 다음 버튼 상태 업데이트
+      const nextPageBtn = document.getElementById('nextPageBtn');
+      nextPageBtn.disabled = currentPage >= totalPages;
+      nextPageBtn.classList.toggle('opacity-50', currentPage >= totalPages);
+      nextPageBtn.onclick = () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderTransfers();
+        }
+      };
+    }
+    
+    // 정렬 아이콘 업데이트
+    function updateSortIcons() {
+      document.querySelectorAll('.sort-icon').forEach(icon => {
+        icon.textContent = '';
+      });
+      
+      if (currentSort.field) {
+        const sortHeader = document.querySelector(`th[data-sort="${currentSort.field}"] .sort-icon`);
+        if (sortHeader) {
+          sortHeader.textContent = currentSort.direction === 'asc' ? '↑' : '↓';
+        }
+      }
+    }
+    
+    // 정렬 이벤트 처리
+    function handleSort(field) {
+      if (currentSort.field === field) {
+        // 같은 필드를 다시 클릭한 경우 방향 전환
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        // 새로운 필드로 정렬
+        currentSort.field = field;
+        currentSort.direction = 'asc';
+      }
+      
+      // 페이지를 1페이지로 리셋
+      currentPage = 1;
+      renderTransfers();
     }
 
-    // 초기 렌더링
-    renderTransfers();
+    // 송금 처리 모달 열기
+    function openTransferModal(transferId) {
+      const transfer = transfers.find(t => t.id === transferId);
+      if (!transfer) {
+        alert('송금 정보를 찾을 수 없습니다.');
+        return;
+      }
+      
+      document.getElementById('transferCompanyName').textContent = transfer.companyName;
+      document.getElementById('transferAmount').textContent = formatNumber(transfer.amount) + '원';
+      document.getElementById('transferBankInfo').textContent = transfer.bankInfo;
+      document.getElementById('transferDate').valueAsDate = new Date();
+      document.getElementById('transferModal').classList.remove('hidden');
+      document.getElementById('transferForm').setAttribute('data-id', transferId);
+    }
+
+    // 모달 닫기
+    function closeModal() {
+      document.getElementById('transferModal').classList.add('hidden');
+    }
+
+    // 송금 처리
+    async function handleTransferSubmit(e) {
+      e.preventDefault();
+      
+      const form = document.getElementById('transferForm');
+      const transferId = form.getAttribute('data-id');
+      const transferDate = document.getElementById('transferDate').value;
+      const confirmButton = document.getElementById('transferConfirmButton');
+      
+      if (!transferId || !transferDate) return;
+      
+      try {
+        confirmButton.disabled = true;
+        confirmButton.textContent = '처리 중...';
+        
+        const transfer = transfers.find(t => t.id === transferId);
+        if (!transfer) {
+          throw new Error('송금 정보를 찾을 수 없습니다.');
+        }
+        
+        // API 호출로 송금 처리
+        const updatedData = {
+          ...transfer,
+          status: '송금완료',
+          transferDate: transferDate
+        };
+        
+        const result = await updateData('송금처리', updatedData);
+        
+        if (result.success) {
+          // 로컬 배열 업데이트
+          const index = transfers.findIndex(t => t.id === transferId);
+          if (index !== -1) {
+            transfers[index] = updatedData;
+          }
+          
+          closeModal();
+          renderTransfers();
+          alert('송금 처리가 완료되었습니다.');
+        } else {
+          throw new Error(result.error || '알 수 없는 오류');
+        }
+      } catch (error) {
+        console.error('송금 처리 중 오류:', error);
+        alert('송금 처리 중 오류가 발생했습니다: ' + error.message);
+      } finally {
+        confirmButton.disabled = false;
+        confirmButton.textContent = '송금처리';
+      }
+    }
 
     // 이벤트 리스너
-    searchButton.addEventListener('click', () => {
-      renderTransfers();
-    });
-
-    transferButton.addEventListener('click', () => {
-      if (!selectedId) {
-        alert('송금 처리할 항목을 선택하세요.');
-        return;
-      }
-
-      const transfer = transfers.find(t => t.id === selectedId);
-      if (!transfer) return;
+    window.addEventListener('load', () => {
+      loadTransfers();
       
-      if (transfer.status !== '송금 대기') {
-        alert('송금 대기 상태인 항목만 처리할 수 있습니다.');
-        return;
-      }
-
-      transferCompanyName.textContent = transfer.companyName;
-      transferAmount.value = formatAmount(transfer.amount);
-      transferAccount.value = transfer.accountNumber;
-      transferDate.value = getCurrentDate();
-      transferNote.value = "";
+      // 정렬 이벤트 리스너 추가
+      document.querySelectorAll('th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          const field = th.getAttribute('data-sort');
+          handleSort(field);
+        });
+      });
       
-      transferModal.classList.remove('hidden');
-    });
-
-    cancelTransferButton.addEventListener('click', () => {
-      transferModal.classList.add('hidden');
-    });
-
-    confirmTransferButton.addEventListener('click', () => {
-      const date = transferDate.value;
-      const note = transferNote.value.trim();
+      document.getElementById('searchButton').addEventListener('click', () => {
+        currentPage = 1; // 검색 시 1페이지로 리셋
+        renderTransfers();
+      });
       
-      if (!date) {
-        alert('송금일을 입력하세요.');
-        return;
-      }
+      document.getElementById('statusFilter').addEventListener('change', () => {
+        currentPage = 1; // 필터링 시 1페이지로 리셋
+        renderTransfers();
+      });
       
-      // 상태 업데이트
-      transfers = transfers.map(t => 
-        t.id === selectedId ? {
-          ...t,
-          status: '송금 완료',
-          transferDate: date,
-          note: note || '캐시백 송금 완료'
-        } : t
-      );
+      document.getElementById('searchInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          currentPage = 1;
+          renderTransfers();
+        }
+      });
       
-      selectedId = null;
-      transferModal.classList.add('hidden');
-      renderTransfers();
+      document.getElementById('transferForm').addEventListener('submit', handleTransferSubmit);
       
-      alert('송금 처리가 완료되었습니다.');
+      // 모달 닫기 버튼
+      document.querySelectorAll('.modal-close').forEach(button => {
+        button.addEventListener('click', closeModal);
+      });
     });
   </script>
 </body>
