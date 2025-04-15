@@ -857,35 +857,126 @@
     
     // 이벤트 리스너 등록
     document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM이 로드되었습니다. 이벤트 리스너 초기화 시작.');
+      
+      // 필수 요소 확인
+      if (!companyTableBody) {
+        console.error('companyTableBody 요소를 찾을 수 없습니다.');
+      }
+      
+      if (!addModal) {
+        console.error('addModal 요소를 찾을 수 없습니다.');
+      }
+      
+      if (!editModal) {
+        console.error('editModal 요소를 찾을 수 없습니다.');
+      }
+      
+      if (!deleteModal) {
+        console.error('deleteModal 요소를 찾을 수 없습니다.');
+      }
+      
       // 데이터 로드
       loadCompanies();
       
       // 검색 및 필터링
-      searchButton.addEventListener('click', renderCompanies);
-      searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          renderCompanies();
-        }
-      });
+      if (searchButton) {
+        searchButton.addEventListener('click', renderCompanies);
+        console.log('검색 버튼에 이벤트 리스너 추가됨');
+      } else {
+        console.error('searchButton 요소를 찾을 수 없습니다.');
+      }
+      
+      if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            renderCompanies();
+          }
+        });
+        console.log('검색 입력창에 이벤트 리스너 추가됨');
+      } else {
+        console.error('searchInput 요소를 찾을 수 없습니다.');
+      }
+      
       const businessFilterElement = document.getElementById('businessFilter');
       if (businessFilterElement) {
         businessFilterElement.addEventListener('change', renderCompanies);
+        console.log('사업 필터에 이벤트 리스너 추가됨');
+      } else {
+        console.log('businessFilter 요소가 없습니다.');
       }
       
       // 버튼 이벤트
-      addButton.addEventListener('click', openAddModal);
-      editButton.addEventListener('click', openEditModal);
-      deleteButton.addEventListener('click', openDeleteModal);
+      if (addButton) {
+        addButton.addEventListener('click', openAddModal);
+        console.log('추가 버튼에 이벤트 리스너 추가됨');
+      } else {
+        console.error('addButton 요소를 찾을 수 없습니다.');
+      }
+      
+      if (editButton) {
+        editButton.addEventListener('click', openEditModal);
+        console.log('수정 버튼에 이벤트 리스너 추가됨');
+      } else {
+        console.error('editButton 요소를 찾을 수 없습니다.');
+      }
+      
+      if (deleteButton) {
+        deleteButton.addEventListener('click', openDeleteModal);
+        console.log('삭제 버튼에 이벤트 리스너 추가됨');
+      } else {
+        console.error('deleteButton 요소를 찾을 수 없습니다.');
+      }
       
       // 모달 확인 버튼
-      document.getElementById('confirmAddButton').addEventListener('click', addCompanies);
-      document.getElementById('confirmEditButton').addEventListener('click', editCompanies);
-      document.getElementById('confirmDeleteButton').addEventListener('click', deleteCompanies);
+      const confirmAddButton = document.getElementById('confirmAddButton');
+      if (confirmAddButton) {
+        confirmAddButton.addEventListener('click', addCompanies);
+        console.log('추가 확인 버튼에 이벤트 리스너 추가됨');
+      } else {
+        console.error('confirmAddButton 요소를 찾을 수 없습니다.');
+      }
+      
+      const confirmEditButton = document.getElementById('confirmEditButton');
+      if (confirmEditButton) {
+        confirmEditButton.addEventListener('click', editCompanies);
+        console.log('수정 확인 버튼에 이벤트 리스너 추가됨');
+      } else {
+        console.error('confirmEditButton 요소를 찾을 수 없습니다.');
+      }
+      
+      const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+      if (confirmDeleteButton) {
+        confirmDeleteButton.addEventListener('click', deleteCompanies);
+        console.log('삭제 확인 버튼에 이벤트 리스너 추가됨');
+      } else {
+        console.error('confirmDeleteButton 요소를 찾을 수 없습니다.');
+      }
       
       // 모달 닫기 버튼
-      document.getElementById('addCancelButton').addEventListener('click', closeAddModal);
-      document.getElementById('editCancelButton').addEventListener('click', closeEditModal);
-      document.getElementById('cancelDeleteButton').addEventListener('click', closeDeleteModal);
+      const addCancelButton = document.getElementById('addCancelButton');
+      if (addCancelButton) {
+        addCancelButton.addEventListener('click', closeAddModal);
+        console.log('추가 취소 버튼에 이벤트 리스너 추가됨');
+      } else {
+        console.error('addCancelButton 요소를 찾을 수 없습니다.');
+      }
+      
+      const editCancelButton = document.getElementById('editCancelButton');
+      if (editCancelButton) {
+        editCancelButton.addEventListener('click', closeEditModal);
+        console.log('수정 취소 버튼에 이벤트 리스너 추가됨');
+      } else {
+        console.error('editCancelButton 요소를 찾을 수 없습니다.');
+      }
+      
+      const cancelDeleteButton = document.getElementById('cancelDeleteButton');
+      if (cancelDeleteButton) {
+        cancelDeleteButton.addEventListener('click', closeDeleteModal);
+        console.log('삭제 취소 버튼에 이벤트 리스너 추가됨');
+      } else {
+        console.error('cancelDeleteButton 요소를 찾을 수 없습니다.');
+      }
       
       // 체크박스 관련 이벤트 처리
       document.addEventListener('click', function(event) {
@@ -908,25 +999,39 @@
       const selectAllCheckbox = document.getElementById('selectAllCheckbox');
       if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', handleSelectAll);
+        console.log('전체 선택 체크박스에 이벤트 리스너 추가됨');
+      } else {
+        console.log('selectAllCheckbox 요소가 없습니다.');
       }
       
       // 엑셀 다운로드 버튼
       const excelButton = document.getElementById('excelButton');
       if (excelButton) {
         excelButton.addEventListener('click', downloadExcel);
+        console.log('엑셀 다운로드 버튼에 이벤트 리스너 추가됨');
+      } else {
+        console.error('excelButton 요소를 찾을 수 없습니다.');
       }
       
       // 샘플 다운로드 버튼
       const downloadSampleButton = document.getElementById('downloadSampleButton');
       if (downloadSampleButton) {
         downloadSampleButton.addEventListener('click', downloadSample);
+        console.log('샘플 다운로드 버튼에 이벤트 리스너 추가됨');
+      } else {
+        console.log('downloadSampleButton 요소가 없습니다.');
       }
       
       // 현재 데이터 다운로드 버튼
       const downloadCurrentDataButton = document.getElementById('downloadCurrentDataButton');
       if (downloadCurrentDataButton) {
         downloadCurrentDataButton.addEventListener('click', downloadCurrentData);
+        console.log('현재 데이터 다운로드 버튼에 이벤트 리스너 추가됨');
+      } else {
+        console.log('downloadCurrentDataButton 요소가 없습니다.');
       }
+      
+      console.log('이벤트 리스너 초기화 완료.');
     });
   </script>
 </body>
