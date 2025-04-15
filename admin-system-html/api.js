@@ -565,10 +565,14 @@ async function uploadFile(formData, sheet) {
     console.error('파일 업로드 중 오류 발생:', error);
     
     // CORS 오류 감지
-    if (error.message.includes('NetworkError') || error.message.includes('CORS')) {
+    if (error.message.includes('NetworkError') || error.message.includes('CORS') || 
+        error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      console.error('CORS 정책 오류 감지: API 직접 호출 불가');
+      
+      // 로컬 처리 대신 명확한 CORS 오류 메시지 반환
       return { 
         success: false, 
-        error: `CORS 정책 오류: API 서버가 크로스 도메인 요청을 허용하지 않습니다. 서버 관리자에게 CORS 설정을 확인해주세요.`
+        error: `CORS 정책 오류: 현재 도메인(${window.location.origin})에서 API 서버(${API_URL})로의 접근이 차단되었습니다. 서버 관리자에게 CORS 설정을 요청하거나, 같은 도메인에서 실행하세요.`
       };
     }
     
