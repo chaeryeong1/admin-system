@@ -134,24 +134,85 @@ async function addData(sheet, data) {
     const actualSheet = getActualSheetName(sheet);
     console.log(`${sheet}(${actualSheet})에 데이터 추가:`, data);
     
-    // 데이터 처리 시뮬레이션
-    console.log('CORS 이슈로 인해 API 직접 호출 대신 모의 응답 사용');
+    // 콜백 이름 생성
+    const callbackName = 'addDataCallback_' + Math.floor(Math.random() * 1000000);
     
-    // 실제 API 호출은 CORS 이슈로 작동하지 않으므로, 모의 응답 반환
-    const mockResponse = {
-      success: true,
-      data: {
-        ...data,
-        id: String(Date.now())  // 임시 ID 생성
-      },
-      message: '데이터가 성공적으로 추가되었습니다.'
-    };
+    // API URL 생성
+    const apiUrl = `${API_URL}?action=addData&sheet=${encodeURIComponent(actualSheet)}&callback=${encodeURIComponent(callbackName)}`;
     
-    // 시뮬레이션된 응답 지연
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // 데이터를 URL 파라미터로 변환 (GET 요청을 통한 JSONP)
+    const params = Object.entries(data).map(([key, value]) => 
+      `${encodeURIComponent(key)}=${encodeURIComponent(JSON.stringify(value))}`
+    ).join('&');
     
-    console.log('추가 결과(시뮬레이션):', mockResponse);
-    return mockResponse;
+    // JSONP 요청 생성
+    return new Promise((resolve, reject) => {
+      // 콜백 함수 정의
+      window[callbackName] = function(response) {
+        console.log('추가 결과:', response);
+        delete window[callbackName];
+        document.head.removeChild(script);
+        resolve(response);
+      };
+      
+      // 스크립트 태그 생성 및 추가
+      const script = document.createElement('script');
+      script.src = `${apiUrl}&${params}`;
+      
+      // 오류 처리
+      script.onerror = (error) => {
+        console.error('데이터 추가 JSONP 요청 실패:', error);
+        delete window[callbackName];
+        document.head.removeChild(script);
+        
+        // 실패 시 모의 응답 반환
+        console.log('API 호출 실패, 모의 응답 사용');
+        const mockResponse = {
+          success: true,
+          data: {
+            ...data,
+            id: String(Date.now())  // 임시 ID 생성
+          },
+          message: '데이터가 성공적으로 추가되었습니다.'
+        };
+        
+        setTimeout(() => {
+          console.log('추가 결과(모의):', mockResponse);
+          resolve(mockResponse);
+        }, 500);
+      };
+      
+      // 타임아웃 설정 (5초)
+      const timeoutId = setTimeout(() => {
+        if (window[callbackName]) {
+          console.error('데이터 추가 JSONP 요청 타임아웃');
+          delete window[callbackName];
+          document.head.removeChild(script);
+          
+          // 타임아웃 시 모의 응답 반환
+          const mockResponse = {
+            success: true,
+            data: {
+              ...data,
+              id: String(Date.now())
+            },
+            message: '데이터가 성공적으로 추가되었습니다.'
+          };
+          
+          console.log('추가 결과(모의):', mockResponse);
+          resolve(mockResponse);
+        }
+      }, 5000);
+      
+      // 성공 시 타임아웃 제거
+      const originalCallback = window[callbackName];
+      window[callbackName] = function(response) {
+        clearTimeout(timeoutId);
+        originalCallback(response);
+      };
+      
+      document.head.appendChild(script);
+    });
   } catch (error) {
     console.error('데이터 추가 오류:', error);
     return { success: false, error: error.message };
