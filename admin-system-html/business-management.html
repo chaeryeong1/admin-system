@@ -652,8 +652,9 @@
         return;
       }
       
-      // 단일 선택인 경우
+      // 단일 선택된 사업 ID
       const projectId = selectedProjectIds[0];
+      
       const project = projects.find(p => p.id === projectId);
       
       if (!project) {
@@ -839,7 +840,19 @@
     async function editProject(event) {
       event.preventDefault();
       
-      if (!selectedProjectId) return;
+      if (selectedProjectIds.length === 0) {
+        alert('수정할 사업을 선택해주세요.');
+        return;
+      }
+      
+      // 다중 선택된 경우 처리
+      if (selectedProjectIds.length > 1) {
+        alert('수정은 한 번에 하나의 사업만 가능합니다. 하나의 사업만 선택해주세요.');
+        return;
+      }
+      
+      // 단일 선택된 사업 ID
+      const projectId = selectedProjectIds[0];
       
       const name = document.getElementById('editName').value.trim();
       const targetCompanies = parseInt(document.getElementById('editBudget').value) || 0;
@@ -889,7 +902,7 @@
       }
       
       const updatedProject = {
-        id: selectedProjectId,
+        id: projectId,
         name,
         targetCompanies,
         startDate,
