@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>관리자 시스템 - 기업 관리</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
   <style>
     body {
       font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
@@ -734,6 +735,14 @@
     document.addEventListener('DOMContentLoaded', function() {
       console.log('기업 관리 페이지 초기화');
       
+      // 먼저 DOM 요소 초기화
+      const companyTableBody = document.getElementById('companyTableBody');
+      
+      if (!companyTableBody) {
+        console.error('companyTableBody 요소를 찾을 수 없습니다. 페이지 로드를 건너뜁니다.');
+        return;
+      }
+      
       // 데이터 로드
       loadCompanies();
       
@@ -741,22 +750,30 @@
       // 버튼 이벤트
       if (addButton) {
         addButton.addEventListener('click', openAddModal);
+      } else {
+        console.warn('addButton 요소를 찾을 수 없습니다.');
       }
       
       if (deleteButton) {
         deleteButton.addEventListener('click', () => openDeleteModal(null));
+      } else {
+        console.warn('deleteButton 요소를 찾을 수 없습니다.');
       }
       
       // 전체 선택 체크박스
       const selectAllCheckbox = document.getElementById('selectAllCheckbox');
       if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', toggleSelectAll);
+      } else {
+        console.warn('selectAllCheckbox 요소를 찾을 수 없습니다.');
       }
       
       // 엑셀 다운로드 버튼
       const excelButton = document.getElementById('excelButton');
       if (excelButton) {
         excelButton.addEventListener('click', () => downloadExcelFile('기업정보'));
+      } else {
+        console.warn('excelButton 요소를 찾을 수 없습니다.');
       }
       
       // 파일 선택 시 파일명 표시
@@ -770,6 +787,8 @@
             fileNameDisplay.textContent = '선택된 파일 없음';
           }
         });
+      } else {
+        console.warn('fileInput 또는 fileNameDisplay 요소를 찾을 수 없습니다.');
       }
       
       // 모달 확인 버튼 설정
@@ -799,6 +818,8 @@
       if (editCancelButton) {
         editCancelButton.addEventListener('click', closeEditModal);
       }
+      
+      console.log('이벤트 리스너 설정 완료');
     });
   </script>
 </body>
