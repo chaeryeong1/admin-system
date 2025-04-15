@@ -140,9 +140,8 @@ async function addData(sheet, data) {
       throw new Error('추가할 데이터가 없거나 형식이 올바르지 않습니다.');
     }
     
-    // 디버깅 모드 - 서버 연동 없이 테스트 (주석 해제하여 사용)
-    // const isDebugMode = true;
-    const isDebugMode = window.location.href.includes('netlify') || window.location.href.includes('localhost'); // 배포 환경에서는
+    // 항상 실제 API 호출하도록 수정
+    const isDebugMode = false;
     
     // 디버깅 모드일 때는 실제 API 호출 없이 로컬 저장만 수행
     if (isDebugMode) {
