@@ -81,8 +81,8 @@
                 </th>
                 <th class="px-4 py-2 text-left">기업명</th>
                 <th class="px-4 py-2 text-left">사업자등록번호</th>
-                <th class="px-4 py-2 text-left">담당자</th>
-                <th class="px-4 py-2 text-left">연락처</th>
+                <th class="px-4 py-2 text-left">대표자</th>
+                <th class="px-4 py-2 text-left">전화번호</th>
                 <th class="px-4 py-2 text-left">이메일</th>
                 <th class="px-4 py-2 text-left">등록일</th>
                 <th class="px-4 py-2 text-left">관리</th>
@@ -227,14 +227,17 @@
       const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
       
       return data.map(company => {
+        // 원본 데이터 로깅
+        console.log('원본 기업 데이터:', company);
+        
         // API나 다른 소스에서 가져온 데이터 필드명 통일
         return {
           id: company.id || `id_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
           name: company.name || company.companyName || company.company_name || '',
           businessNumber: company.businessNumber || company.business_number || company.businessNo || '',
-          contactPerson: company.contactPerson || company.representative || company.contact_person || '',
-          contact: company.contact || company.contact_phone || company.phone || company.phoneNumber || '',
-          email: company.email || company.contact_email || company.email_address || '',
+          representative: company.representative || company.대표자 || '',
+          phone: company.phone || company.phoneNumber || company.contact || company.전화번호 || '',
+          email: company.email || company.이메일 || company.emailAddress || company.email_address || '',
           registrationDate: company.registrationDate || company.created_at || company.regDate || today // 등록일 자동 설정
         };
       });
@@ -596,8 +599,8 @@
           </td>
           <td class="px-4 py-2 text-left">${company.name || '-'}</td>
           <td class="px-4 py-2 text-left">${company.businessNumber || '-'}</td>
-          <td class="px-4 py-2 text-left">${company.contactPerson || '-'}</td>
-          <td class="px-4 py-2 text-left">${company.contact || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.representative || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.phone || '-'}</td>
           <td class="px-4 py-2 text-left">${company.email || '-'}</td>
           <td class="px-4 py-2 text-left">${company.registrationDate || '-'}</td>
           <td class="px-4 py-2 text-left">
@@ -662,7 +665,7 @@
             const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
             
             // CSV 데이터 생성
-            let csvContent = "기업명,사업자등록번호,대표자,담당자,연락처,이메일,주소\n";
+            let csvContent = "기업명,사업자등록번호,대표자,전화번호,이메일,주소\n";
             
             companies.forEach(company => {
               // 데이터 정제 - 쉼표나 줄바꿈 있으면 따옴표로 감싸기
@@ -678,18 +681,17 @@
               // 테이블에 표시된 것과 같은 필드 사용
               const name = escapeCsv(company.name); 
               const businessNumber = escapeCsv(company.businessNumber);
-              const representative = escapeCsv(company.representative || company.contactPerson);
-              const manager = escapeCsv(company.manager || company.contactPerson);
-              const phone = escapeCsv(company.phone || company.contact);
+              const representative = escapeCsv(company.representative);
+              const phone = escapeCsv(company.phone);
               const email = escapeCsv(company.email);
-              const address = escapeCsv(company.address);
+              const address = escapeCsv(company.address || '');
               
               // 데이터 확인을 위한 로깅
               console.log('CSV 데이터 행:', {
-                name, businessNumber, representative, manager, phone, email, address
+                name, businessNumber, representative, phone, email
               });
               
-              csvContent += `${name},${businessNumber},${representative},${manager},${phone},${email},${address}\n`;
+              csvContent += `${name},${businessNumber},${representative},${phone},${email},${address}\n`;
             });
             
             // Blob에 BOM 먼저 추가
