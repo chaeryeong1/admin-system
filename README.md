@@ -1,60 +1,93 @@
-# 관리자 시스템 프로젝트
+# 사업관리 시스템
 
-Google Sheets를 백엔드로 사용하는 관리자 시스템입니다.
+이 프로젝트는 사업 정보, 기업 정보, 송금 정보 등을 관리하는 웹 기반 시스템입니다.
 
-## 주요 기능
+## 특징
 
-- 사업 관리: 사업 추가, 수정, 삭제
-- 기업 관리: 기업 정보 관리, 엑셀 다운로드
-- 캐시백 송금: 송금 요청, 승인, 처리
+- 사업 정보 관리: 사업명, 목표업체수, 사업기간, 주최기관, 공고 관리
+- 기업 정보 관리: 기업명, 연락처, 담당자 정보 등 관리
+- 송금 정보 관리: 계약금 수령 및 송금 정보 관리
+- 빠른 응답 시간: Netlify Functions + JSON을 통한 최적화된 데이터 처리
+
+## 설치 및 실행 방법
+
+### 로컬 개발 환경
+
+1. 프로젝트 클론:
+```bash
+git clone <repository-url>
+cd <project-directory>
+```
+
+2. Netlify CLI 설치:
+```bash
+npm install -g netlify-cli
+```
+
+3. 로컬 개발 서버 실행:
+```bash
+netlify dev
+```
+
+4. 브라우저에서 http://localhost:8888 접속
+
+### 배포
+
+1. Netlify 계정 연결:
+```bash
+netlify login
+```
+
+2. 프로젝트 초기화:
+```bash
+netlify init
+```
+
+3. 배포:
+```bash
+netlify deploy --prod
+```
+
+## 프로젝트 구조
+
+```
+프로젝트루트/
+  ├── admin-system-html/     # 프론트엔드 파일
+  │   ├── api.js             # API 연결 코드
+  │   ├── business-management.html  # 사업 관리 페이지
+  │   ├── company-management.html   # 기업 관리 페이지
+  │   └── ... 기타 HTML/CSS/JS 파일
+  ├── netlify/
+  │   ├── functions/         # 서버리스 함수
+  │   │   ├── get-projects.js     # 데이터 조회 함수
+  │   │   ├── add-project.js      # 데이터 추가 함수
+  │   │   ├── update-project.js   # 데이터 수정 함수
+  │   │   └── delete-project.js   # 데이터 삭제 함수
+  │   └── data/              # 데이터 저장소
+  │       └── projects.json  # 프로젝트 데이터
+  └── netlify.toml           # Netlify 설정 파일
+```
+
+## 사용 방법
+
+1. 사업 관리: 
+   - `/business-management.html` 페이지에서 사업 정보 관리
+   - 사업 추가, 수정, 삭제 가능
+
+2. 기업 관리:
+   - `/company-management.html` 페이지에서 기업 정보 관리
+   - 엑셀 파일 업로드/다운로드 기능
+
+3. 송금 관리:
+   - `/cashback-request.html` 페이지에서 송금 요청 관리
+   - `/cashback-approval.html` 페이지에서 송금 승인 관리
 
 ## 기술 스택
 
-- 프론트엔드: HTML, CSS (Tailwind CSS), JavaScript
-- 백엔드: Netlify Functions
-- 데이터 저장소: Google Sheets
+- 프론트엔드: HTML, CSS (Tailwind), JavaScript
+- 백엔드: Netlify Functions (서버리스)
+- 데이터 저장: JSON 파일 (Netlify 서버에 저장)
 
-## 설정 방법
+## 개발자 정보
 
-### 1. Google Cloud 설정
-
-1. [Google Cloud Console](https://console.cloud.google.com/) 접속
-2. 새 프로젝트 생성
-3. "Google Sheets API" 활성화
-4. 서비스 계정 생성 (역할: Editor)
-5. 서비스 계정 키(.json 파일) 생성
-
-### 2. Google Sheet 설정
-
-1. 새 Google 시트 생성
-2. 첫 번째 시트(Sheet1)에 기업 데이터 컬럼 설정:
-   - A1: Company Name
-   - B1: Address
-   - C1: Contact
-   - D1: Email
-3. 두 번째 시트(Projects)에 사업 데이터 컬럼 설정:
-   - A1: Project Name
-   - B1: Target Companies
-   - C1: Start Date
-   - D1: End Date
-   - E1: Organization
-4. 서비스 계정 이메일을 시트에 공유 (편집 권한)
-
-### 3. 환경 변수 설정
-
-1. `.env` 파일에 다음 정보 입력:
-   ```
-   GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-   GOOGLE_CLIENT_EMAIL="your-service-account@your-project.iam.gserviceaccount.com"
-   GOOGLE_SHEET_ID="your-sheet-id"
-   ```
-
-2. Netlify 대시보드에서 환경 변수 설정:
-   - Site settings > Environment variables에 위 값들 추가
-
-## 배포 방법
-
-```bash
-npm install
-netlify deploy --prod
-``` 
+이 프로젝트는 성능 개선을 위해 구글 앱스크립트에서 Netlify Functions로 마이그레이션 되었습니다. 

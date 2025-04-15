@@ -1,7 +1,10 @@
 [build]
+  functions = "netlify/functions"
   publish = "admin-system-html"
-  command = ""
-  functions = "functions"
+
+[dev]
+  functions = "netlify/functions"
+  publish = "admin-system-html"
 
 [[redirects]]
   from = "/*"

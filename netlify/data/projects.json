@@ -1,0 +1,31 @@
+{
+  "projects": [
+    {
+      "id": "1",
+      "name": "클라우드 보급 사업",
+      "targetCount": 50,
+      "startDate": "2025-01-01",
+      "endDate": "2025-12-31",
+      "organizer": "정보통신산업진흥원",
+      "noticeUrl": "https://example.com/notice1"
+    },
+    {
+      "id": "2",
+      "name": "디지털 전환 지원사업",
+      "targetCount": 100,
+      "startDate": "2025-02-15",
+      "endDate": "2025-11-30",
+      "organizer": "중소기업기술정보진흥원",
+      "noticeUrl": "https://example.com/notice2"
+    },
+    {
+      "id": "3",
+      "name": "ICT 융합 프로젝트",
+      "targetCount": 30,
+      "startDate": "2025-03-01",
+      "endDate": "2025-10-31",
+      "organizer": "한국정보화진흥원",
+      "noticeUrl": "https://example.com/notice3"
+    }
+  ]
+} 
