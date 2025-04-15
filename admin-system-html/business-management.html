@@ -556,14 +556,28 @@
     
     // 사업 추가 처리
     async function addProject(event) {
-      event.preventDefault();
+      if (event) event.preventDefault();
       
-      const name = document.getElementById('addName').value.trim();
-      const targetCompanies = parseInt(document.getElementById('addBudget').value) || 0;
-      const startDate = document.getElementById('addStartDate').value;
-      const endDate = document.getElementById('addEndDate').value;
-      const organizer = document.getElementById('addOrganizer').value.trim();
-      const noticeUrl = document.getElementById('addNoticeUrl').value.trim();
+      console.log('사업 추가 시작');
+      
+      const nameInput = document.getElementById('addName');
+      const budgetInput = document.getElementById('addBudget');
+      const startDateInput = document.getElementById('addStartDate');
+      const endDateInput = document.getElementById('addEndDate');
+      const organizerInput = document.getElementById('addOrganizer');
+      const noticeUrlInput = document.getElementById('addNoticeUrl');
+      
+      if (!nameInput || !budgetInput || !startDateInput || !endDateInput) {
+        alert('필수 입력 필드를 찾을 수 없습니다.');
+        return;
+      }
+      
+      const name = nameInput.value.trim();
+      const targetCompanies = parseInt(budgetInput.value) || 0;
+      const startDate = startDateInput.value;
+      const endDate = endDateInput.value;
+      const organizer = organizerInput ? organizerInput.value.trim() : '';
+      const noticeUrl = noticeUrlInput ? noticeUrlInput.value.trim() : '';
       
       // 유효성 검사
       if (!name) {
@@ -591,6 +605,13 @@
         return;
       }
       
+      // 저장 중 표시
+      const saveButton = document.getElementById('confirmAddButton');
+      if (saveButton) {
+        saveButton.textContent = '저장 중...';
+        saveButton.disabled = true;
+      }
+      
       // 새 프로젝트 정보
       const newProject = {
         name,
@@ -601,21 +622,31 @@
         noticeUrl
       };
       
+      console.log('추가할 사업 정보:', newProject);
+      
       try {
         // API 호출
         const result = await addData('사업정보', newProject);
         
-        if (result.success) {
+        console.log('추가 결과:', result);
+        
+        if (result && result.success) {
           // 성공 시 데이터 갱신
           await loadProjects();
           closeAddModal();
           alert('사업 정보가 추가되었습니다.');
         } else {
-          throw new Error(result.error || '추가 실패');
+          throw new Error(result.error || '추가 실패: 서버에서 오류가 발생했습니다.');
         }
       } catch (error) {
         console.error('API 오류:', error);
-        alert('사업 정보 추가 중 오류가 발생했습니다.');
+        alert('사업 정보 추가 중 오류가 발생했습니다: ' + error.message);
+        
+        // 버튼 복원
+        if (saveButton) {
+          saveButton.textContent = '저장';
+          saveButton.disabled = false;
+        }
         
         // API 실패 시 로컬 데이터만 갱신 (테스트용)
         newProject.id = String(Date.now());
