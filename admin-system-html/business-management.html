@@ -305,55 +305,58 @@
     // 사업 데이터 로드
     async function loadProjects() {
       try {
+        console.log('사업 데이터 로드 시작');
+        
         // 로딩 표시
-        projectTableBody.innerHTML = '<tr><td colspan="8" class="px-4 py-2 text-center">데이터를 불러오는 중...</td></tr>';
+        projectTableBody.innerHTML = '<tr><td colspan="6" class="px-4 py-2 text-center">데이터를 불러오는 중...</td></tr>';
         
         // API에서 데이터 가져오기
         const result = await fetchData('사업정보');
         
-        if (result.success && result.data) {
+        console.log('사업 데이터 로드 결과:', result);
+        
+        if (result && result.success && result.data && Array.isArray(result.data)) {
           projects = result.data;
+          console.log('로드된 사업 수:', projects.length);
         } else {
+          console.warn('API 호출 실패 또는 데이터 형식 오류, 샘플 데이터 사용');
+          
           // API 호출 실패 시 샘플 데이터 사용
-          console.log('API 호출 실패, 샘플 데이터 사용');
           projects = [
             {
               id: '1',
               name: '클라우드 보급사업',
-              budget: 500000000,
+              targetCompanies: 50,
               startDate: '2025-01-01',
               endDate: '2025-12-31',
-              manager: '홍길동',
-              department: '디지털혁신부',
-              status: '진행중'
+              organizer: '디지털혁신부',
+              noticeUrl: 'https://example.com/cloud'
             },
             {
               id: '2',
               name: '스마트공장 구축지원사업',
-              budget: 800000000,
+              targetCompanies: 80,
               startDate: '2025-03-01',
               endDate: '2025-12-31',
-              manager: '김철수',
-              department: '제조혁신부',
-              status: '진행중'
+              organizer: '제조혁신부',
+              noticeUrl: 'https://example.com/smart'
             },
             {
               id: '3',
               name: '중소기업 디지털전환 지원사업',
-              budget: 300000000,
+              targetCompanies: 30,
               startDate: '2025-02-01',
               endDate: '2025-11-30',
-              manager: '이영희',
-              department: '산업진흥부',
-              status: '준비중'
+              organizer: '산업진흥부',
+              noticeUrl: 'https://example.com/digital'
             }
           ];
         }
         
         renderProjects();
       } catch (error) {
-        console.error('오류 발생:', error);
-        projectTableBody.innerHTML = '<tr><td colspan="8" class="px-4 py-2 text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
+        console.error('데이터 로드 오류:', error);
+        projectTableBody.innerHTML = '<tr><td colspan="6" class="px-4 py-2 text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
       }
     }
     
