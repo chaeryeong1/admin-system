@@ -227,20 +227,22 @@ async function addData(sheet, data) {
 }
 
 // 데이터 업데이트
-async function updateData(sheet, id, data) {
-  console.log(`${sheet} 데이터 업데이트 시작:`, id, data);
+async function updateData(sheet, data) {
+  console.log(`${sheet} 데이터 업데이트 시작:`, data);
   
   try {
     const actualSheet = getActualSheetName(sheet);
     
     // 데이터 및 ID 검증
-    if (!id) {
-      throw new Error('업데이트할 항목의 ID가 없습니다.');
-    }
-    
     if (!data || typeof data !== 'object') {
       throw new Error('업데이트할 데이터가 없거나 형식이 올바르지 않습니다.');
     }
+    
+    if (!data.id) {
+      throw new Error('업데이트할 항목의 ID가 없습니다.');
+    }
+    
+    const id = data.id;
     
     // CORS 우회를 위한 JSONP 방식 사용
     const callbackName = 'googleScriptCallback_' + Math.floor(Math.random() * 1000000);
@@ -278,10 +280,7 @@ async function updateData(sheet, id, data) {
         console.log('JSONP 방식 실패, 모의 응답 사용');
         resolve({
           success: true,
-          data: {
-            id: id,
-            ...data
-          },
+          data: data,
           message: "항목이 업데이트되었습니다. (로컬 저장)"
         });
       };
@@ -296,10 +295,7 @@ async function updateData(sheet, id, data) {
           // 타임아웃시 모의 응답 반환
           resolve({
             success: true,
-            data: {
-              id: id,
-              ...data
-            },
+            data: data,
             message: "항목이 업데이트되었습니다. (로컬 저장, 타임아웃)"
           });
         }
