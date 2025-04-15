@@ -81,10 +81,10 @@
                 <th class="px-4 py-2 text-left">선택</th>
                 <th class="px-4 py-2 text-left">기업명</th>
                 <th class="px-4 py-2 text-left">사업자등록번호</th>
-                <th class="px-4 py-2 text-left">주소</th>
                 <th class="px-4 py-2 text-left">대표자</th>
-                <th class="px-4 py-2 text-left">연락처</th>
                 <th class="px-4 py-2 text-left">이메일</th>
+                <th class="px-4 py-2 text-left">연락처</th>
+                <th class="px-4 py-2 text-left">등록일</th>
               </tr>
             </thead>
             <tbody id="companyTableBody">
@@ -322,18 +322,18 @@
         <tr class="border-b hover:bg-gray-50" data-id="${company.id}">
           <td class="px-4 py-2">
             <input 
-              type="radio" 
-              name="company-select" 
-              class="company-radio"
-              ${selectedCompanyId === company.id ? 'checked' : ''}
+              type="checkbox" 
+              class="company-checkbox"
+              data-id="${company.id}"
+              data-name="${company.name}"
             >
           </td>
           <td class="px-4 py-2">${company.name || '-'}</td>
           <td class="px-4 py-2">${company.businessNumber || '-'}</td>
-          <td class="px-4 py-2">${company.address || '-'}</td>
           <td class="px-4 py-2">${company.representative || '-'}</td>
-          <td class="px-4 py-2">${company.contact || '-'}</td>
           <td class="px-4 py-2">${company.email || '-'}</td>
+          <td class="px-4 py-2">${company.contact || '-'}</td>
+          <td class="px-4 py-2">${formatDate(company.registrationDate) || '-'}</td>
         </tr>
       `).join('');
       
