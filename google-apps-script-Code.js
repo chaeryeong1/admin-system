@@ -2,66 +2,50 @@
 // 이 코드를 Google 앱스 스크립트에 복사하여 사용하세요.
 
 function doGet(e) {
-  // CORS 헤더 설정
-  var output = ContentService.createTextOutput();
-  output.setMimeType(ContentService.MimeType.JSON);
-  
-  // 콜백 파라미터 확인 (null 체크 추가)
-  var callback = e && e.parameter && e.parameter.callback;
-  
-  // 요청 처리
-  var result = handleRequest(e || {});
-  
-  // JSON 결과 생성
-  if (callback) {
-    // JSONP 형식으로 응답
-    output.setContent(callback + "(" + JSON.stringify(result) + ")");
-  } else {
-    // 일반 JSON 형식으로 응답
-    output.setContent(JSON.stringify(result));
+  try {
+    // 요청 처리
+    e = e || {};
+    var params = e.parameter || {};
+    var callback = params.callback;
+    
+    // 요청 처리
+    var result = handleRequest(e);
+    
+    // JSONP 형식으로 반환하거나 일반 JSON으로 반환
+    if (callback) {
+      return ContentService.createTextOutput(callback + "(" + JSON.stringify(result) + ")")
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    } else {
+      return ContentService.createTextOutput(JSON.stringify(result))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (error) {
+    Logger.log("오류 발생: " + error.toString());
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
   }
-  
-  // CORS 헤더 설정
-  output.addHeader('Access-Control-Allow-Origin', 'https://arkrium-admin.netlify.app');
-  output.addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  output.addHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  return output;
 }
 
 function doPost(e) {
-  // CORS 헤더 설정
-  var output = ContentService.createTextOutput();
-  output.setMimeType(ContentService.MimeType.JSON);
-  
-  // 요청 처리
-  var result = handleRequest(e || {});
-  
-  // JSON 결과 생성
-  output.setContent(JSON.stringify(result));
-  
-  // CORS 헤더 설정
-  output.addHeader('Access-Control-Allow-Origin', 'https://arkrium-admin.netlify.app');
-  output.addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  output.addHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  return output;
+  try {
+    var result = handleRequest(e || {});
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    Logger.log("오류 발생: " + error.toString());
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 // 앱스 스크립트 웹앱 배포 시 호출되는 함수
 function doOptions(e) {
-  var output = ContentService.createTextOutput();
-  output.setMimeType(ContentService.MimeType.JSON);
-  
-  // JSON 결과 생성
-  output.setContent(JSON.stringify({ status: "success" }));
-  
-  // CORS 헤더 설정
-  output.addHeader('Access-Control-Allow-Origin', 'https://arkrium-admin.netlify.app');
-  output.addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  output.addHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  return output;
+  return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function handleRequest(e) {
