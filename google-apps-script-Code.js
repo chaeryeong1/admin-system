@@ -89,7 +89,8 @@ function doOptions(e) {
 
 function handleRequest(e) {
   try {
-    // 요청 파라미터 처리
+    // 요청 파라미터 처리 (null 체크 추가)
+    e = e || {};
     var params = e.parameter || {};
     var action = params.action || 'getData';
     var sheet = params.sheet || 'all';
