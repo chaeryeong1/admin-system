@@ -480,37 +480,37 @@ async function deleteData(sheet, id) {
   }
 }
 
-// 엑셀 파일 다운로드
+/**
+ * 엑셀 파일을 다운로드하는 함수
+ * @param {string} sheet - 다운로드할 데이터가 있는 시트 이름
+ * @returns {Promise<Object>} - 다운로드 결과
+ */
 async function downloadExcelFile(sheet) {
   try {
-    console.log(`${sheet} 엑셀 다운로드 시도`);
+    console.log(`${sheet} 엑셀 파일 다운로드 시작`);
     
-    // CORS 이슈로 인한 모의 응답
-    console.log('CORS 이슈로 인해 API 직접 호출 대신 모의 응답 사용');
+    // 실제 API 엔드포인트 - CORS 우회를 위해 URL만 생성하고 새 창에서 열기
+    const url = `${API_URL}?action=downloadExcel&sheet=${encodeURIComponent(getActualSheetName(sheet))}`;
+    console.log(`다운로드 URL: ${url}`);
     
-    // 테스트용 가상 데이터 생성
-    // 실제 환경에서는 샘플 데이터 다운로드 링크를 제공하거나 별도 안내 필요
+    // 새 창에서 URL 열기 (CORS 우회)
+    const newWindow = window.open(url, '_blank');
     
-    // 샘플 파일 다운로드 시뮬레이션
-    const sampleFiles = {
-      '사업정보': 'sample_projects.xlsx',
-      '기업정보': 'sample_companies.xlsx',
-      '계약정보': 'sample_contracts.xlsx',
-      '송금정보': 'sample_payments.xlsx'
-    };
+    // 새 창이 차단되었는지 확인
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+      throw new Error('팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.');
+    }
     
-    const filename = sampleFiles[sheet] || 'sample_data.xlsx';
-    
-    // 샘플 파일 다운로드를 시도하는 대신 알림으로 대체
-    alert(`CORS 이슈로 인해 직접 다운로드할 수 없습니다.\n샘플 파일명: ${filename}\n\n지금은 테스트 기간이므로 구글 스프레드시트에서 직접 다운로드해주세요.`);
-    
-    return { 
-      success: true, 
-      message: '테스트 환경에서는 직접 다운로드할 수 없습니다. 구글 스프레드시트에서 직접 다운로드해주세요.'
+    return {
+      success: true,
+      message: '파일 다운로드가 시작되었습니다. 새 창을 확인하세요.'
     };
   } catch (error) {
     console.error('엑셀 다운로드 오류:', error);
-    return { success: false, error: error.message };
+    return { 
+      success: false, 
+      error: `다운로드 오류: ${error.message}. API 서버가 실행 중인지 확인하고, CORS 설정이 올바른지 확인하세요.` 
+    };
   }
 }
 
