@@ -66,24 +66,48 @@
           <table class="min-w-full">
             <thead>
               <tr class="border-b">
-                <th class="px-4 py-2 text-left">
-                  <input 
-                    type="checkbox" 
-                    id="selectAllCheckbox" 
-                    class="cursor-pointer"
-                  >
-                </th>
-                <th class="px-4 py-2 text-left">사업명</th>
-                <th class="px-4 py-2 text-left">목표 업체 수</th>
-                <th class="px-4 py-2 text-left">사업 기간</th>
-                <th class="px-4 py-2 text-left">주최기관</th>
-                <th class="px-4 py-2 text-left">공고</th>
+                <th class="px-4 py-2 text-left">선택</th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="name">사업명 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="targetCompanies">참여기업 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="startDate">시작일 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="endDate">종료일 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="organizer">주관기관 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left">작업</th>
               </tr>
             </thead>
             <tbody id="projectTableBody">
-              <!-- JavaScript로 채워질 부분 -->
+              <!-- 사업 목록이 여기에 표시됩니다 -->
             </tbody>
           </table>
+        </div>
+        <!-- 페이지네이션 -->
+        <div class="px-4 py-3 flex items-center justify-between border-t">
+          <div class="flex-1 flex justify-between items-center">
+            <div>
+              <span class="text-sm text-gray-700">
+                총 <span id="totalItems">0</span>개 항목 중 <span id="startItem">0</span>-<span id="endItem">0</span>
+              </span>
+            </div>
+            <div>
+              <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <button id="prevPageBtn" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                  <span class="sr-only">이전</span>
+                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+                <div id="paginationNumbers" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                  <!-- 페이지 번호가 여기에 동적으로 추가됩니다 -->
+                </div>
+                <button id="nextPageBtn" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                  <span class="sr-only">다음</span>
+                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </nav>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -306,873 +330,389 @@
     let projects = [];
     let selectedProjectIds = [];
     
-    // 사업 데이터 로드
+    // 페이지네이션 상태
+    let currentPage = 1;
+    const itemsPerPage = 20;
+    let totalPages = 0;
+    
+    // 정렬 상태
+    let currentSort = {
+      field: null,
+      direction: 'asc' // 'asc' 또는 'desc'
+    };
+    
     async function loadProjects() {
+      console.log('사업 데이터 로딩 시작');
+      document.getElementById('projectTableBody').innerHTML = 
+        '<tr><td colspan="6" class="px-4 py-2 text-center">데이터를 불러오는 중입니다...</td></tr>';
+      
       try {
-        console.log('사업 데이터 로드 시작');
-        
-        // 로딩 표시
-        projectTableBody.innerHTML = '<tr><td colspan="6" class="px-4 py-2 text-center">데이터를 불러오는 중...</td></tr>';
-        
-        // API에서 데이터 가져오기
+        // API를 통해 데이터 가져오기
         const result = await fetchData('사업정보');
-        console.log('API 응답:', result);
+        console.log('API 결과:', result);
         
-        // API 호출 성공 시
-        if (result && result.success && result.data && Array.isArray(result.data)) {
+        if (result && result.data && Array.isArray(result.data) && result.data.length > 0) {
           projects = result.data;
-          console.log('서버에서 로드된 사업 수:', projects.length);
-          
-          // 로컬 스토리지에도 최신 데이터 저장 (오프라인 모드를 위한 백업)
-          localStorage.setItem('projectsData', JSON.stringify(projects));
-        } 
-        // API 호출 실패 시, 로컬 스토리지 데이터 사용 시도
-        else {
-          console.warn('API 호출 실패, 로컬 데이터 확인 중...');
-          
-          const savedData = localStorage.getItem('projectsData');
-          
-          if (savedData) {
-            try {
-              const parsedData = JSON.parse(savedData);
-              if (parsedData && Array.isArray(parsedData) && parsedData.length > 0) {
-                console.log('로컬 스토리지에서 데이터 로드:', parsedData.length + '개 항목');
-                projects = parsedData;
-              } else {
-                throw new Error('저장된 데이터 없음');
-              }
-            } catch (e) {
-              console.error('로컬 스토리지 데이터 파싱 오류:', e);
-              localStorage.removeItem('projectsData');
-              useDefaultData();
+          console.log(`${projects.length}개의 사업 로드됨`);
+        } else {
+          console.log('유효한 데이터가 없어 샘플 데이터를 사용합니다.');
+          // 샘플 데이터
+          projects = [
+            {
+              id: "1",
+              name: "클라우드 보급 사업",
+              targetCompanies: "중소기업, 스타트업",
+              startDate: "2025-01-01",
+              endDate: "2025-12-31",
+              organizer: "정보통신산업진흥원",
+              noticeUrl: "https://example.com/notice1"
+            },
+            {
+              id: "2",
+              name: "디지털 전환 지원사업",
+              targetCompanies: "제조업체, 소상공인",
+              startDate: "2025-02-15",
+              endDate: "2025-11-30",
+              organizer: "중소기업기술정보진흥원",
+              noticeUrl: "https://example.com/notice2"
+            },
+            {
+              id: "3",
+              name: "ICT 융합 프로젝트",
+              targetCompanies: "IT 서비스 기업",
+              startDate: "2025-03-01",
+              endDate: "2025-10-31",
+              organizer: "한국정보화진흥원",
+              noticeUrl: "https://example.com/notice3"
             }
-          } else {
-            console.log('로컬 스토리지에 데이터 없음, 기본 데이터 사용');
-            useDefaultData();
-          }
+          ];
         }
-        
-        // 데이터를 화면에 표시
         renderProjects();
       } catch (error) {
-        console.error('데이터 로드 오류:', error);
-        
-        // 오류 발생 시 로컬 데이터 사용 시도
-        const savedData = localStorage.getItem('projectsData');
-        if (savedData) {
-          try {
-            projects = JSON.parse(savedData);
-            renderProjects();
-            console.log('오류 발생으로 로컬 데이터 사용');
-          } catch (e) {
-            projectTableBody.innerHTML = '<tr><td colspan="6" class="px-4 py-2 text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
-          }
-        } else {
-          projectTableBody.innerHTML = '<tr><td colspan="6" class="px-4 py-2 text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
-        }
+        console.error('사업 데이터 로드 중 오류 발생:', error);
+        document.getElementById('projectTableBody').innerHTML = 
+          '<tr><td colspan="6" class="px-4 py-2 text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
       }
     }
-    
-    // 기본 데이터 사용 (샘플 데이터)
-    function useDefaultData() {
-      projects = [
-        {
-          id: '1',
-          name: '클라우드 보급사업',
-          targetCompanies: 50,
-          startDate: '2025-01-01',
-          endDate: '2025-12-31',
-          organizer: '디지털혁신부',
-          noticeUrl: 'https://example.com/cloud'
-        },
-        {
-          id: '2',
-          name: '스마트공장 구축지원사업',
-          targetCompanies: 80,
-          startDate: '2025-03-01',
-          endDate: '2025-12-31',
-          organizer: '제조혁신부',
-          noticeUrl: 'https://example.com/smart'
-        },
-        {
-          id: '3',
-          name: '중소기업 디지털전환 지원사업',
-          targetCompanies: 30,
-          startDate: '2025-02-01',
-          endDate: '2025-11-30',
-          organizer: '산업진흥부',
-          noticeUrl: 'https://example.com/digital'
-        }
-      ];
-      
-      // 기본 데이터도 로컬 스토리지에 저장
-      localStorage.setItem('projectsData', JSON.stringify(projects));
-    }
-    
-    // 사업 목록 렌더링
+
     function renderProjects() {
-      const searchTerm = searchInput.value.toLowerCase();
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
       
-      const filteredProjects = projects.filter(project => 
+      let filteredProjects = projects.filter(project => 
         project.name.toLowerCase().includes(searchTerm) || 
-        (project.organizer && project.organizer.toLowerCase().includes(searchTerm))
+        project.organizer.toLowerCase().includes(searchTerm)
       );
       
-      if (filteredProjects.length === 0) {
-        projectTableBody.innerHTML = '<tr><td colspan="6" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
-        return;
+      // 정렬 적용
+      if (currentSort.field) {
+        filteredProjects.sort((a, b) => {
+          let aValue = a[currentSort.field];
+          let bValue = b[currentSort.field];
+          
+          // 날짜인 경우 특별 처리
+          if (currentSort.field === 'startDate' || currentSort.field === 'endDate') {
+            const dateA = new Date(aValue);
+            const dateB = new Date(bValue);
+            return currentSort.direction === 'asc' ? dateA - dateB : dateB - dateA;
+          }
+          
+          // 문자열인 경우
+          aValue = String(aValue || '').toLowerCase();
+          bValue = String(bValue || '').toLowerCase();
+          
+          if (aValue < bValue) return currentSort.direction === 'asc' ? -1 : 1;
+          if (aValue > bValue) return currentSort.direction === 'asc' ? 1 : -1;
+          return 0;
+        });
       }
       
-      // 테이블 생성
-      projectTableBody.innerHTML = filteredProjects.map(project => `
-        <tr class="border-b hover:bg-gray-50" data-id="${project.id}">
+      // 페이지네이션 계산
+      totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, filteredProjects.length);
+      const paginatedProjects = filteredProjects.slice(startIndex, endIndex);
+      
+      // 페이지네이션 정보 업데이트
+      document.getElementById('totalItems').textContent = filteredProjects.length;
+      document.getElementById('startItem').textContent = filteredProjects.length === 0 ? 0 : startIndex + 1;
+      document.getElementById('endItem').textContent = endIndex;
+      
+      // 페이지네이션 버튼 업데이트
+      updatePaginationButtons();
+
+      const projectTableBody = document.getElementById('projectTableBody');
+      projectTableBody.innerHTML = '';
+      
+      if (filteredProjects.length === 0) {
+        projectTableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
+        return;
+      }
+
+      paginatedProjects.forEach(project => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b hover:bg-gray-50';
+        tr.innerHTML = `
           <td class="px-4 py-2">
             <input 
-              type="checkbox" 
-              class="project-checkbox" 
-              data-id="${project.id}"
+              type="radio" 
+              name="select-project" 
+              value="${project.id}" 
+              class="project-select"
               ${selectedProjectIds.includes(project.id) ? 'checked' : ''}
             >
           </td>
-          <td class="px-4 py-2">${project.name || '-'}</td>
-          <td class="px-4 py-2">${project.targetCompanies || '-'}</td>
-          <td class="px-4 py-2">${formatDate(project.startDate) || '-'} ~ ${formatDate(project.endDate) || '-'}</td>
-          <td class="px-4 py-2">${project.organizer || '-'}</td>
+          <td class="px-4 py-2">${project.name}</td>
+          <td class="px-4 py-2">${project.targetCompanies}</td>
+          <td class="px-4 py-2">${project.startDate}</td>
+          <td class="px-4 py-2">${project.endDate}</td>
+          <td class="px-4 py-2">${project.organizer}</td>
           <td class="px-4 py-2">
-            ${project.noticeUrl ? `<a href="${project.noticeUrl}" target="_blank" class="text-blue-600 hover:underline">공고 보기</a>` : '-'}
+            <button class="bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1 text-sm edit-button" data-id="${project.id}">수정</button>
+            <button class="bg-red-500 hover:bg-red-600 text-white rounded px-3 py-1 text-sm delete-button" data-id="${project.id}">삭제</button>
           </td>
-        </tr>
-      `).join('');
-      
-      // 체크박스 이벤트 리스너 추가
-      document.querySelectorAll('.project-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', handleProjectSelection);
+        `;
+        projectTableBody.appendChild(tr);
       });
-      
-      // 테이블 행 클릭 이벤트 추가
-      document.querySelectorAll('#projectTableBody tr').forEach(row => {
-        row.addEventListener('click', function(e) {
-          // 링크 클릭은 무시
-          if (e.target.tagName === 'A') return;
-          
-          // 체크박스 클릭은 체크박스 자체가 처리
-          if (e.target.type === 'checkbox') return;
-          
-          // 행 클릭 시 해당 체크박스 토글
-          const checkbox = this.querySelector('.project-checkbox');
-          if (checkbox) {
-            checkbox.checked = !checkbox.checked;
-            
-            // 체크박스 변경 이벤트 발생시키기
-            const event = new Event('change', { bubbles: true });
-            checkbox.dispatchEvent(event);
-          }
+
+      // 이벤트 리스너 추가
+      document.querySelectorAll('.project-select').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          selectedProjectIds = e.target.value.split(',');
+        });
+      });
+
+      document.querySelectorAll('.edit-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+          const projectId = e.target.getAttribute('data-id');
+          openEditModal(projectId);
+        });
+      });
+
+      document.querySelectorAll('.delete-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+          const projectId = e.target.getAttribute('data-id');
+          openDeleteModal(projectId);
         });
       });
       
-      // 버튼 상태 업데이트
-      updateButtonStates();
-      
-      // 전체 선택 체크박스 상태 업데이트
-      updateSelectAllCheckbox();
+      // 정렬 아이콘 업데이트
+      updateSortIcons();
     }
     
-    // 상태에 따른 클래스 반환
-    function getStatusClass(status) {
-      if (!status) return '';
+    // 페이지네이션 버튼 업데이트
+    function updatePaginationButtons() {
+      const paginationNumbers = document.getElementById('paginationNumbers');
+      paginationNumbers.innerHTML = '';
       
-      switch(status) {
-        case '완료': return 'text-green-600 font-medium';
-        case '진행중': return 'text-blue-600 font-medium';
-        case '준비중': return 'text-yellow-600 font-medium';
-        case '중단': return 'text-red-600 font-medium';
-        default: return '';
-      }
-    }
-    
-    // 프로젝트 선택 처리 (이제 다중 선택 가능)
-    function handleProjectSelection(event) {
-      const checkbox = event.target;
-      const projectId = checkbox.dataset.id;
+      // 표시할 페이지 번호 범위 계산
+      const maxVisiblePages = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
       
-      if (checkbox.checked) {
-        // 체크된 경우 배열에 ID 추가
-        if (!selectedProjectIds.includes(projectId)) {
-          selectedProjectIds.push(projectId);
-        }
-      } else {
-        // 체크 해제된 경우 배열에서 ID 제거
-        selectedProjectIds = selectedProjectIds.filter(id => id !== projectId);
+      // 페이지 범위 조정
+      if (endPage - startPage + 1 < maxVisiblePages && startPage > 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
       }
       
-      // 단일 선택 기능 유지를 위한 마지막 선택 ID 저장
-      selectedProjectId = selectedProjectIds.length > 0 ? selectedProjectIds[selectedProjectIds.length - 1] : null;
-      
-      console.log('선택된 사업 ID 목록:', selectedProjectIds);
-      console.log('현재 선택된 사업 ID (마지막):', selectedProjectId);
-      
-      updateButtonStates();
-      updateSelectAllCheckbox();
-    }
-    
-    // 전체 선택 체크박스 상태 업데이트
-    function updateSelectAllCheckbox() {
-      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-      const checkboxes = document.querySelectorAll('.project-checkbox');
-      
-      if (!selectAllCheckbox || checkboxes.length === 0) return;
-      
-      // 모든 체크박스가 선택되었는지 확인
-      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-      // 일부 체크박스만 선택되었는지 확인
-      const someChecked = Array.from(checkboxes).some(cb => cb.checked);
-      
-      selectAllCheckbox.checked = allChecked;
-      // 여기서 필요하면 indeterminate 상태 추가 가능
-      selectAllCheckbox.indeterminate = someChecked && !allChecked;
-    }
-    
-    // 전체 선택/해제 처리
-    function handleSelectAll() {
-      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-      const checkboxes = document.querySelectorAll('.project-checkbox');
-      
-      if (!selectAllCheckbox || checkboxes.length === 0) return;
-      
-      const isChecked = selectAllCheckbox.checked;
-      
-      checkboxes.forEach(checkbox => {
-        checkbox.checked = isChecked;
-        
-        const projectId = checkbox.dataset.id;
-        
-        if (isChecked) {
-          // 전체 선택 시 모든 ID 추가
-          if (!selectedProjectIds.includes(projectId)) {
-            selectedProjectIds.push(projectId);
-          }
-        } else {
-          // 전체 해제 시 배열 비우기
-          selectedProjectIds = [];
-        }
-      });
-      
-      // 마지막 선택 ID 업데이트
-      selectedProjectId = selectedProjectIds.length > 0 ? selectedProjectIds[selectedProjectIds.length - 1] : null;
-      
-      updateButtonStates();
-    }
-    
-    // 버튼 상태 업데이트
-    function updateButtonStates() {
-      const hasSelection = selectedProjectIds.length > 0;
-      
-      editButton.disabled = !hasSelection;
-      deleteButton.disabled = !hasSelection;
-      
-      if (hasSelection) {
-        editButton.classList.remove('opacity-50', 'cursor-not-allowed');
-        deleteButton.classList.remove('opacity-50', 'cursor-not-allowed');
-      } else {
-        editButton.classList.add('opacity-50', 'cursor-not-allowed');
-        deleteButton.classList.add('opacity-50', 'cursor-not-allowed');
-      }
-    }
-    
-    // 숫자 포맷팅
-    function formatNumber(num) {
-      if (num === undefined || num === null) return '';
-      return new Intl.NumberFormat('ko-KR').format(num);
-    }
-    
-    // 날짜 포맷팅
-    function formatDate(dateString) {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    }
-    
-    // 날짜 유효성 검사
-    function isValidDate(dateString) {
-      if (!dateString) return false;
-      const date = new Date(dateString);
-      return !isNaN(date.getTime());
-    }
-    
-    // URL 형식 유효성 검사
-    function isValidUrl(url) {
-      if (!url) return true; // 빈 값은 허용
-      
-      try {
-        // URL 객체를 생성해서 유효성 검사
-        const urlObj = new URL(url);
-        // http 또는 https 프로토콜만 허용
-        return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
-      } catch (e) {
-        return false;
-      }
-    }
-    
-    // 모달 열기/닫기 함수들
-    function openAddModal() {
-      console.log('사업 추가 모달 열기');
-      // 폼 초기화 (addForm이 존재할 경우에만)
-      if (window.addForm) {
-        addForm.reset();
-      }
-      // 필드 초기화
-      document.getElementById('addName').value = '';
-      document.getElementById('addBudget').value = '';
-      document.getElementById('addStartDate').value = '';
-      document.getElementById('addEndDate').value = '';
-      document.getElementById('addOrganizer').value = '';
-      document.getElementById('addNoticeUrl').value = '';
-      
-      // 모달 표시
-      addModal.classList.remove('hidden');
-      
-      // 저장 버튼 초기화
-      const saveButton = document.getElementById('confirmAddButton');
-      if (saveButton) {
-        saveButton.textContent = '저장';
-        saveButton.disabled = false;
-        
-        // 기존 이벤트 리스너를 모두 제거
-        saveButton.replaceWith(saveButton.cloneNode(true));
-        
-        // 다시 참조 가져오기
-        const newSaveButton = document.getElementById('confirmAddButton');
-        // 이벤트 리스너 다시 등록
-        newSaveButton.addEventListener('click', addProject);
-      }
-    }
-    
-    function closeAddModal() {
-      addModal.classList.add('hidden');
-      
-      // 저장 버튼의 이벤트 리스너 제거
-      const saveButton = document.getElementById('confirmAddButton');
-      if (saveButton) {
-        saveButton.replaceWith(saveButton.cloneNode(true));
-      }
-    }
-    
-    function openEditModal() {
-      console.log('사업 수정 모달 열기', selectedProjectIds);
-      
-      if (selectedProjectIds.length === 0) {
-        alert('수정할 사업을 선택해주세요.');
-        return;
-      }
-      
-      // 다중 선택된 경우 처리
-      if (selectedProjectIds.length > 1) {
-        alert('수정은 한 번에 하나의 사업만 가능합니다. 하나의 사업만 선택해주세요.');
-        return;
-      }
-      
-      // 단일 선택된 사업 ID
-      const projectId = selectedProjectIds[0];
-      console.log('수정할 사업 ID:', projectId);
-      console.log('현재 사업 목록:', projects);
-      
-      // 문자열 변환하여 비교 (ID 형식 차이 해결)
-      let project = projects.find(p => String(p.id) === String(projectId));
-      
-      // 찾지 못한 경우 수동 검색 시도
-      if (!project) {
-        console.log('기본 검색으로 사업을 찾지 못함. 수동 검색 시도...');
-        for (let i = 0; i < projects.length; i++) {
-          console.log(`비교: 사업 #${i}`, projects[i].id, projectId, String(projects[i].id) === String(projectId));
-          if (String(projects[i].id) === String(projectId)) {
-            project = projects[i];
-            console.log('수동 검색으로 사업 찾음:', project);
-            break;
-          }
-        }
-      }
-      
-      if (!project) {
-        console.error('선택된 ID에 해당하는 사업을 찾을 수 없음:', projectId);
-        console.log('현재 사업 목록:', projects);
-        alert('선택한 사업 정보를 찾을 수 없습니다.');
-        return;
-      }
-      
-      console.log('수정할 사업 정보:', project);
-      
-      // 폼 필드에 데이터 설정
-      document.getElementById('editProjectId').value = project.id;
-      document.getElementById('editProjectName').value = project.name || '';
-      document.getElementById('editTargetCompanies').value = project.targetCompanies || '';
-      document.getElementById('editProjectStartDate').value = project.startDate || '';
-      document.getElementById('editProjectEndDate').value = project.endDate || '';
-      document.getElementById('editProjectOrganizer').value = project.organizer || '';
-      document.getElementById('editProjectNoticeUrl').value = project.noticeUrl || '';
-      
-      // 모달 표시
-      editModal.classList.remove('hidden');
-    }
-    
-    function closeEditModal() {
-      editModal.classList.add('hidden');
-    }
-    
-    function openDeleteModal() {
-      console.log('사업 삭제 모달 열기', selectedProjectIds);
-      
-      if (selectedProjectIds.length === 0) {
-        alert('삭제할 사업을 선택해주세요.');
-        return;
-      }
-      
-      // 선택된 항목이 하나인 경우
-      if (selectedProjectIds.length === 1) {
-        const projectId = selectedProjectIds[0];
-        // ID 형식 일치 여부 확인을 위해 문자열로 변환하여 비교
-        const project = projects.find(p => String(p.id) === String(projectId));
-        
-        if (!project) {
-          console.error('선택된 ID에 해당하는 사업을 찾을 수 없음:', projectId);
-          console.log('현재 사업 목록:', projects);
-          alert('선택한 사업 정보를 찾을 수 없습니다.');
-          return;
-        }
-        
-        // 삭제할 사업 이름 표시
-        const deleteNameElement = document.getElementById('deleteProjectName');
-        if (deleteNameElement) {
-          deleteNameElement.textContent = project.name;
-        }
-        
-        // 모달 표시
-        deleteModal.classList.remove('hidden');
-      } 
-      // 다중 선택인 경우
-      else {
-        if (confirm(`선택한 ${selectedProjectIds.length}개의 사업을 모두 삭제하시겠습니까?`)) {
-          deleteProject(); // 직접 삭제 처리
-        }
-      }
-    }
-    
-    function closeDeleteModal() {
-      deleteModal.classList.add('hidden');
-    }
-    
-    // 사업 추가 처리
-    async function addProject(event) {
-      if (event) {
-        event.preventDefault();
-        
-        // 이중 클릭 방지
-        if (event.target && event.target.getAttribute('data-processing') === 'true') {
-          console.log('이미 처리 중인 요청입니다');
-          return;
-        }
-        
-        // 처리 중 상태로 설정
-        if (event.target) {
-          event.target.setAttribute('data-processing', 'true');
-        }
-      }
-      
-      console.log('사업 추가 시작');
-      
-      const nameInput = document.getElementById('addName');
-      const budgetInput = document.getElementById('addBudget');
-      const startDateInput = document.getElementById('addStartDate');
-      const endDateInput = document.getElementById('addEndDate');
-      const organizerInput = document.getElementById('addOrganizer');
-      const noticeUrlInput = document.getElementById('addNoticeUrl');
-      
-      if (!nameInput || !budgetInput || !startDateInput || !endDateInput) {
-        alert('필수 입력 필드를 찾을 수 없습니다.');
-        if (event && event.target) {
-          event.target.removeAttribute('data-processing');
-        }
-        return;
-      }
-      
-      const name = nameInput.value.trim();
-      const targetCompanies = parseInt(budgetInput.value) || 0;
-      const startDate = startDateInput.value;
-      const endDate = endDateInput.value;
-      const organizer = organizerInput ? organizerInput.value.trim() : '';
-      const noticeUrl = noticeUrlInput ? noticeUrlInput.value.trim() : '';
-      
-      // 유효성 검사
-      if (!name) {
-        alert('사업명을 입력해주세요.');
-        if (event && event.target) {
-          event.target.removeAttribute('data-processing');
-        }
-        return;
-      }
-      
-      if (targetCompanies <= 0) {
-        alert('목표 업체 수는 1 이상이어야 합니다.');
-        if (event && event.target) {
-          event.target.removeAttribute('data-processing');
-        }
-        return;
-      }
-      
-      if (!isValidDate(startDate)) {
-        alert('유효한 시작일을 입력해주세요.');
-        if (event && event.target) {
-          event.target.removeAttribute('data-processing');
-        }
-        return;
-      }
-      
-      if (!isValidDate(endDate)) {
-        alert('유효한 종료일을 입력해주세요.');
-        if (event && event.target) {
-          event.target.removeAttribute('data-processing');
-        }
-        return;
-      }
-      
-      if (new Date(startDate) > new Date(endDate)) {
-        alert('종료일은 시작일 이후여야 합니다.');
-        if (event && event.target) {
-          event.target.removeAttribute('data-processing');
-        }
-        return;
-      }
-      
-      // URL 형식 검사
-      if (noticeUrl && !isValidUrl(noticeUrl)) {
-        alert('유효한 URL 형식이 아닙니다. http:// 또는 https://로 시작하는 URL을 입력해주세요.');
-        noticeUrlInput.focus();
-        if (event && event.target) {
-          event.target.removeAttribute('data-processing');
-        }
-        return;
-      }
-      
-      // 저장 중 표시
-      const saveButton = document.getElementById('confirmAddButton');
-      if (saveButton) {
-        saveButton.textContent = '저장 중...';
-        saveButton.disabled = true;
-      }
-      
-      // 새 프로젝트 정보
-      const newProject = {
-        name,
-        targetCompanies,
-        startDate,
-        endDate,
-        organizer,
-        noticeUrl
-      };
-      
-      console.log('추가할 사업 정보:', newProject);
-      
-      try {
-        // API 호출
-        const result = await addData('사업정보', newProject);
-        
-        console.log('추가 결과:', result);
-        
-        if (result && result.success) {
-          // 성공 시 로컬 캐시 삭제하고 새로 데이터 로드
-          localStorage.removeItem('projectsData');
-          closeAddModal();
-          
-          // 서버에서 새로운 데이터 로드
-          await loadProjects();
-          alert('사업 정보가 추가되었습니다.');
-        } else {
-          throw new Error(result.error || '추가 실패: 서버에서 오류가 발생했습니다.');
-        }
-      } catch (error) {
-        console.error('API 오류:', error);
-        alert('사업 정보 추가 중 오류가 발생했습니다: ' + error.message);
-        
-        // 버튼 복원
-        if (saveButton) {
-          saveButton.textContent = '저장';
-          saveButton.disabled = false;
-        }
-      } finally {
-        // 처리 완료 상태로 설정
-        if (event && event.target) {
-          event.target.removeAttribute('data-processing');
-        }
-      }
-    }
-    
-    // 사업 수정 처리
-    async function editProject(event) {
-      event.preventDefault();
-      
-      if (selectedProjectIds.length === 0) {
-        alert('수정할 사업을 선택해주세요.');
-        return;
-      }
-      
-      // 다중 선택된 경우 처리
-      if (selectedProjectIds.length > 1) {
-        alert('수정은 한 번에 하나의 사업만 가능합니다. 하나의 사업만 선택해주세요.');
-        return;
-      }
-      
-      // 단일 선택된 사업 ID
-      const projectId = selectedProjectIds[0];
-      
-      const name = document.getElementById('editName').value.trim();
-      const targetCompanies = parseInt(document.getElementById('editBudget').value) || 0;
-      const startDate = document.getElementById('editStartDate').value;
-      const endDate = document.getElementById('editEndDate').value;
-      const organizer = document.getElementById('editOrganizer').value.trim();
-      const noticeUrl = document.getElementById('editNoticeUrl').value.trim();
-      
-      // 유효성 검사
-      if (!name) {
-        alert('사업명을 입력해주세요.');
-        return;
-      }
-      
-      if (targetCompanies <= 0) {
-        alert('목표 업체 수는 1 이상이어야 합니다.');
-        return;
-      }
-      
-      if (!isValidDate(startDate)) {
-        alert('유효한 시작일을 입력해주세요.');
-        return;
-      }
-      
-      if (!isValidDate(endDate)) {
-        alert('유효한 종료일을 입력해주세요.');
-        return;
-      }
-      
-      if (new Date(startDate) > new Date(endDate)) {
-        alert('종료일은 시작일 이후여야 합니다.');
-        return;
-      }
-      
-      // URL 형식 검사
-      if (noticeUrl && !isValidUrl(noticeUrl)) {
-        alert('유효한 URL 형식이 아닙니다. http:// 또는 https://로 시작하는 URL을 입력해주세요.');
-        document.getElementById('editNoticeUrl').focus();
-        return;
-      }
-      
-      // 저장 중 표시
-      const saveButton = document.getElementById('confirmEditButton');
-      if (saveButton) {
-        saveButton.textContent = '저장 중...';
-        saveButton.disabled = true;
-      }
-      
-      const updatedProject = {
-        id: projectId,
-        name,
-        targetCompanies,
-        startDate,
-        endDate,
-        organizer,
-        noticeUrl
-      };
-      
-      console.log('수정할 사업 정보:', updatedProject);
-      
-      try {
-        const result = await updateData('사업정보', updatedProject);
-        
-        console.log('수정 결과:', result);
-        
-        if (result && result.success) {
-          // 성공 시 로컬 캐시 삭제하고 새로 데이터 로드
-          localStorage.removeItem('projectsData');
-          closeEditModal();
-          
-          // 서버에서 새로운 데이터 로드
-          await loadProjects();
-          alert('사업 정보가 수정되었습니다.');
-        } else {
-          throw new Error(result.error || '수정 실패: 서버에서 오류가 발생했습니다.');
-        }
-      } catch (error) {
-        console.error('API 오류:', error);
-        alert('사업 정보 수정 중 오류가 발생했습니다: ' + error.message);
-        
-        // 버튼 복원
-        if (saveButton) {
-          saveButton.textContent = '저장';
-          saveButton.disabled = false;
-        }
-      }
-    }
-    
-    // 사업 삭제 처리 - 다중 삭제 지원
-    async function deleteProject() {
-      console.log('deleteProject 함수 호출됨, 선택된 ID들:', selectedProjectIds);
-      
-      if (selectedProjectIds.length === 0) {
-        alert('삭제할 사업을 선택해주세요.');
-        return;
-      }
-      
-      // 단일 항목 삭제인 경우
-      if (selectedProjectIds.length === 1) {
-        const projectId = selectedProjectIds[0];
-        deleteProjectById(projectId);
-        return;
-      }
-      
-      // 다중 항목 삭제인 경우
-      if (!confirm(`선택한 ${selectedProjectIds.length}개의 사업을 모두 삭제하시겠습니까?`)) {
-        return;
-      }
-      
-      // 삭제 중 표시
-      const deleteButton = document.getElementById('confirmDeleteButton');
-      if (deleteButton) {
-        deleteButton.textContent = '삭제 중...';
-        deleteButton.disabled = true;
-      }
-      
-      try {
-        // 순차적으로 삭제 처리
-        for (const projectId of selectedProjectIds) {
-          await deleteData('사업정보', projectId);
-        }
-        
-        // 성공 시 로컬 캐시 삭제하고 새로 데이터 로드
-        localStorage.removeItem('projectsData');
-        selectedProjectIds = [];
-        selectedProjectId = null;
-        closeDeleteModal();
-        
-        // 서버에서 새로운 데이터 로드
-        await loadProjects();
-        alert('선택한 사업 정보가 삭제되었습니다.');
-      } catch (error) {
-        console.error('API 오류:', error);
-        alert('사업 정보 삭제 중 오류가 발생했습니다: ' + error.message);
-        
-        // 버튼 복원
-        if (deleteButton) {
-          deleteButton.textContent = '삭제';
-          deleteButton.disabled = false;
-        }
-      }
-    }
-    
-    // ID로 단일 사업 삭제
-    async function deleteProjectById(projectId) {
-      if (!projectId) return;
-      
-      console.log('사업 ID 삭제:', projectId);
-      
-      const project = projects.find(p => p.id === projectId);
-      if (!project) {
-        console.error('선택된 ID에 해당하는 사업을 찾을 수 없음:', projectId);
-        alert('선택한 사업 정보를 찾을 수 없습니다.');
-        return;
-      }
-      
-      if (!confirm(`"${project.name}" 사업을 삭제하시겠습니까?`)) {
-        return;
-      }
-      
-      // 삭제 중 표시
-      const deleteButton = document.getElementById('confirmDeleteButton');
-      if (deleteButton) {
-        deleteButton.textContent = '삭제 중...';
-        deleteButton.disabled = true;
-      }
-      
-      try {
-        const result = await deleteData('사업정보', projectId);
-        
-        console.log('삭제 결과:', result);
-        
-        if (result && result.success) {
-          // 성공 시 로컬 캐시 삭제하고 새로 데이터 로드
-          localStorage.removeItem('projectsData');
-          selectedProjectIds = selectedProjectIds.filter(id => id !== projectId);
-          selectedProjectId = selectedProjectIds.length > 0 ? selectedProjectIds[selectedProjectIds.length - 1] : null;
-          
-          // 서버에서 새로운 데이터 로드
-          await loadProjects();
-          alert('사업 정보가 삭제되었습니다.');
-        } else {
-          throw new Error(result.error || '삭제 실패: 서버에서 오류가 발생했습니다.');
-        }
-      } catch (error) {
-        console.error('API 오류:', error);
-        alert('사업 정보 삭제 중 오류가 발생했습니다: ' + error.message);
-      }
-    }
-    
-    // 엑셀 다운로드
-    async function downloadExcel() {
-      try {
-        const result = await downloadExcelFile('사업정보');
-        
-        if (!result.success) {
-          throw new Error(result.error || '다운로드 실패');
-        }
-        
-        // 성공 메시지
-        alert('엑셀 파일 다운로드가 완료되었습니다.');
-      } catch (error) {
-        console.error('API 오류:', error);
-        alert('엑셀 파일 다운로드 중 오류가 발생했습니다.');
-      }
-    }
-    
-    // 이벤트 리스너 등록
-    document.addEventListener('DOMContentLoaded', () => {
-      // 데이터 로드
-      loadProjects();
-      
-      // 검색 및 필터링
-      searchButton.addEventListener('click', renderProjects);
-      searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
+      // 이전 버튼 상태 업데이트
+      const prevPageBtn = document.getElementById('prevPageBtn');
+      prevPageBtn.disabled = currentPage <= 1;
+      prevPageBtn.classList.toggle('opacity-50', currentPage <= 1);
+      prevPageBtn.onclick = () => {
+        if (currentPage > 1) {
+          currentPage--;
           renderProjects();
         }
+      };
+      
+      // 페이지 번호 버튼 생성
+      for (let i = startPage; i <= endPage; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.className = `relative inline-flex items-center px-4 py-2 border ${
+          i === currentPage ? 'bg-blue-50 border-blue-500 text-blue-600' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+        } text-sm font-medium`;
+        pageButton.textContent = i;
+        pageButton.onclick = () => {
+          currentPage = i;
+          renderProjects();
+        };
+        paginationNumbers.appendChild(pageButton);
+      }
+      
+      // 다음 버튼 상태 업데이트
+      const nextPageBtn = document.getElementById('nextPageBtn');
+      nextPageBtn.disabled = currentPage >= totalPages;
+      nextPageBtn.classList.toggle('opacity-50', currentPage >= totalPages);
+      nextPageBtn.onclick = () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderProjects();
+        }
+      };
+    }
+    
+    // 정렬 아이콘 업데이트
+    function updateSortIcons() {
+      document.querySelectorAll('.sort-icon').forEach(icon => {
+        icon.textContent = '';
       });
       
-      // 버튼 이벤트
-      addButton.addEventListener('click', openAddModal);
-      editButton.addEventListener('click', openEditModal);
-      deleteButton.addEventListener('click', openDeleteModal);
+      if (currentSort.field) {
+        const sortHeader = document.querySelector(`th[data-sort="${currentSort.field}"] .sort-icon`);
+        if (sortHeader) {
+          sortHeader.textContent = currentSort.direction === 'asc' ? '↑' : '↓';
+        }
+      }
+    }
+    
+    // 정렬 이벤트 처리
+    function handleSort(field) {
+      if (currentSort.field === field) {
+        // 같은 필드를 다시 클릭한 경우 방향 전환
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        // 새로운 필드로 정렬
+        currentSort.field = field;
+        currentSort.direction = 'asc';
+      }
       
-      // 모달 확인 버튼 - 초기화면 로드 시에는 리스너를 붙이지 않음
-      // 대신 모달 열 때마다 리스너 추가
+      // 페이지를 1페이지로 리셋
+      currentPage = 1;
+      renderProjects();
+    }
+    
+    // 사업 추가 모달 열기
+    function openAddModal() {
+      clearForm();
+      document.getElementById('addEditModalTitle').textContent = '사업 추가';
+      document.getElementById('addEditModal').classList.remove('hidden');
+      document.getElementById('addEditForm').setAttribute('data-mode', 'add');
+    }
+
+    // 사업 수정 모달 열기
+    function openEditModal(projectId) {
+      const project = projects.find(p => p.id === projectId);
+      if (!project) {
+        alert('사업 정보를 찾을 수 없습니다.');
+        return;
+      }
       
-      document.getElementById('confirmEditButton').addEventListener('click', editProject);
+      document.getElementById('projectName').value = project.name;
+      document.getElementById('targetCompanies').value = project.targetCompanies;
+      document.getElementById('startDate').value = project.startDate;
+      document.getElementById('endDate').value = project.endDate;
+      document.getElementById('organizer').value = project.organizer;
+      document.getElementById('noticeUrl').value = project.noticeUrl || '';
       
-      // 모달 닫기 버튼
-      document.getElementById('cancelAddButton').addEventListener('click', closeAddModal);
-      document.getElementById('cancelEditButton').addEventListener('click', closeEditModal);
-      document.getElementById('cancelDeleteButton').addEventListener('click', closeDeleteModal);
+      document.getElementById('addEditModalTitle').textContent = '사업 수정';
+      document.getElementById('addEditModal').classList.remove('hidden');
+      document.getElementById('addEditForm').setAttribute('data-mode', 'edit');
+      document.getElementById('addEditForm').setAttribute('data-id', projectId);
+    }
+
+    // 사업 삭제 모달 열기
+    function openDeleteModal(projectId = null) {
+      // 선택된 라디오 버튼이 없고 projectId도 없는 경우 확인
+      if (!projectId && !selectedProjectIds.length) {
+        alert('삭제할 사업을 선택해주세요.');
+        return;
+      }
       
-      // 삭제 확인 버튼
-      document.getElementById('confirmDeleteButton').addEventListener('click', deleteProject);
+      // projectId가 제공되지 않은 경우 selectedProjectIds 사용
+      const idToDelete = projectId || selectedProjectIds[0];
       
-      // 숫자만 입력 가능하도록 설정
-      const numberInputs = [document.getElementById('addBudget'), document.getElementById('editBudget')];
-      numberInputs.forEach(input => {
-        input.addEventListener('input', function() {
-          this.value = this.value.replace(/[^0-9]/g, '');
+      // 해당 ID의 프로젝트가 존재하는지 확인
+      const project = projects.find(p => p.id === idToDelete);
+      if (!project) {
+        alert('선택한 사업을 찾을 수 없습니다.');
+        return;
+      }
+      
+      document.getElementById('projectNameToDelete').textContent = project.name;
+      document.getElementById('deleteModal').classList.remove('hidden');
+      document.getElementById('deleteForm').setAttribute('data-id', idToDelete);
+    }
+
+    // 모달 닫기
+    function closeModals() {
+      document.getElementById('addEditModal').classList.add('hidden');
+      document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    // 폼 초기화
+    function clearForm() {
+      document.getElementById('projectName').value = '';
+      document.getElementById('targetCompanies').value = '';
+      document.getElementById('startDate').value = '';
+      document.getElementById('endDate').value = '';
+      document.getElementById('organizer').value = '';
+      document.getElementById('noticeUrl').value = '';
+    }
+
+    // 이벤트 리스너
+    window.addEventListener('load', () => {
+      loadProjects();
+      
+      // 정렬 이벤트 리스너 추가
+      document.querySelectorAll('th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          const field = th.getAttribute('data-sort');
+          handleSort(field);
         });
       });
       
-      // 전체 선택 체크박스 이벤트 추가
-      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-      if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', handleSelectAll);
-      }
+      document.getElementById('searchButton').addEventListener('click', () => {
+        currentPage = 1; // 검색 시 1페이지로 리셋
+        renderProjects();
+      });
+      
+      document.getElementById('addButton').addEventListener('click', openAddModal);
+      
+      document.getElementById('deleteButton').addEventListener('click', () => {
+        openDeleteModal();
+      });
+      
+      document.getElementById('addEditForm').addEventListener('submit', handleFormSubmit);
+      
+      document.getElementById('deleteForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const projectId = e.target.getAttribute('data-id');
+        try {
+          document.getElementById('deleteConfirmButton').disabled = true;
+          document.getElementById('deleteConfirmButton').textContent = '삭제 중...';
+          
+          // API 호출로 사업 삭제
+          const result = await deleteData('사업정보', projectId);
+          
+          if (result.success) {
+            // 로컬 배열에서도 삭제
+            projects = projects.filter(p => p.id !== projectId);
+            
+            // 선택된 프로젝트 초기화
+            if (selectedProjectIds.includes(projectId)) {
+              selectedProjectIds = selectedProjectIds.filter(id => id !== projectId);
+            }
+            
+            closeModals();
+            renderProjects();
+            alert('사업이 성공적으로 삭제되었습니다.');
+          } else {
+            alert('사업 삭제 중 오류가 발생했습니다: ' + (result.error || '알 수 없는 오류'));
+          }
+        } catch (error) {
+          console.error('사업 삭제 중 오류:', error);
+          alert('사업 삭제 중 오류가 발생했습니다.');
+        } finally {
+          document.getElementById('deleteConfirmButton').disabled = false;
+          document.getElementById('deleteConfirmButton').textContent = '삭제';
+        }
+      });
+      
+      // 모달 닫기 버튼들
+      document.querySelectorAll('.modal-close').forEach(button => {
+        button.addEventListener('click', closeModals);
+      });
     });
   </script>
 </body>
