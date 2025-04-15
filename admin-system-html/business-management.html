@@ -679,9 +679,12 @@
         console.log('추가 결과:', result);
         
         if (result && result.success) {
-          // 성공 시 데이터 갱신
-          await loadProjects();
+          // 성공 시 로컬 캐시 삭제하고 새로 데이터 로드
+          localStorage.removeItem('projectsData');
           closeAddModal();
+          
+          // 서버에서 새로운 데이터 로드
+          await loadProjects();
           alert('사업 정보가 추가되었습니다.');
         } else {
           throw new Error(result.error || '추가 실패: 서버에서 오류가 발생했습니다.');
