@@ -140,6 +140,36 @@ async function addData(sheet, data) {
       throw new Error('추가할 데이터가 없거나 형식이 올바르지 않습니다.');
     }
     
+    // 디버깅 모드 - 서버 연동 없이 테스트 (주석 해제하여 사용)
+    // const isDebugMode = true;
+    const isDebugMode = window.location.href.includes('netlify') || window.location.href.includes('localhost'); // 배포 환경에서는
+    
+    // 디버깅 모드일 때는 실제 API 호출 없이 로컬 저장만 수행
+    if (isDebugMode) {
+      console.log('디버깅 모드: 로컬 저장으로 처리합니다.');
+      
+      // 임시 ID 생성
+      const tempId = Date.now().toString();
+      data.id = data.id || tempId;
+      
+      // 로컬 스토리지에 데이터 저장 (기존 데이터가 있다면 추가)
+      saveDataToLocalStorage(sheet, data);
+      
+      // 1초 후 응답 (비동기 작업 시뮬레이션)
+      return new Promise(resolve => {
+        setTimeout(() => {
+          resolve({
+            success: true,
+            data: data,
+            message: "항목이 추가되었습니다. (로컬 저장 - 테스트 모드)"
+          });
+        }, 1000);
+      });
+    }
+    
+    // 실제 API 호출을 위한 코드 (디버깅 모드가 아닐 때)
+    console.log('실제 API 호출 모드');
+    
     // CORS 우회를 위한 JSONP 방식 사용
     const callbackName = 'googleScriptCallback_' + Math.floor(Math.random() * 1000000);
     
@@ -159,6 +189,12 @@ async function addData(sheet, data) {
         // 메모리 정리
         delete window[callbackName];
         document.head.removeChild(script);
+        
+        // 성공 시 로컬 스토리지에도 저장
+        if (response.success) {
+          saveDataToLocalStorage(sheet, response.data);
+        }
+        
         resolve(response);
       };
       
@@ -175,14 +211,14 @@ async function addData(sheet, data) {
         // CORS 이슈로 인한 모의 응답 반환
         console.log('JSONP 방식 실패, 모의 응답 사용');
         
-        // 임시 ID 생성
+        // 로컬 스토리지에 저장
         const tempId = Date.now().toString();
+        data.id = data.id || tempId;
+        saveDataToLocalStorage(sheet, data);
+        
         resolve({
           success: true,
-          data: {
-            id: tempId,
-            ...data
-          },
+          data: data,
           message: "항목이 추가되었습니다. (로컬 저장)"
         });
       };
@@ -196,12 +232,12 @@ async function addData(sheet, data) {
           
           // 타임아웃시 모의 응답 반환
           const tempId = Date.now().toString();
+          data.id = data.id || tempId;
+          saveDataToLocalStorage(sheet, data);
+          
           resolve({
             success: true,
-            data: {
-              id: tempId,
-              ...data
-            },
+            data: data,
             message: "항목이 추가되었습니다. (로컬 저장, 타임아웃)"
           });
         }
@@ -224,6 +260,42 @@ async function addData(sheet, data) {
       data: null
     };
   }
+}
+
+// 로컬 스토리지에 데이터 저장 (도우미 함수)
+function saveDataToLocalStorage(sheet, data) {
+  const key = `${sheet}Data`;
+  let existingData = [];
+  
+  // 기존 데이터 로드
+  try {
+    const storedData = localStorage.getItem(key);
+    if (storedData) {
+      existingData = JSON.parse(storedData);
+    }
+  } catch (e) {
+    console.error('로컬 스토리지 데이터 파싱 오류:', e);
+  }
+  
+  // 데이터가 배열이 아니면 배열로 변환
+  if (!Array.isArray(existingData)) {
+    existingData = [];
+  }
+  
+  // 이미 있는 ID인지 확인
+  const index = existingData.findIndex(item => item.id === data.id);
+  
+  if (index >= 0) {
+    // ID가 존재하면 업데이트
+    existingData[index] = data;
+  } else {
+    // 새 항목 추가
+    existingData.push(data);
+  }
+  
+  // 저장
+  localStorage.setItem(key, JSON.stringify(existingData));
+  console.log(`로컬 스토리지 ${key} 업데이트 완료:`, existingData);
 }
 
 // 데이터 업데이트
