@@ -533,10 +533,12 @@ async function uploadFile(formData, sheet) {
   }
   
   // 폼데이터에 시트 이름과 액션 추가
-  formData.append('sheet', sheet);
+  formData.append('sheet', getActualSheetName(sheet));
   formData.append('action', 'upload');
   
   try {
+    console.log(`API URL: ${API_URL}에 파일 업로드 요청 중...`);
+    
     // 진짜 API 호출
     const response = await fetch(API_URL, {
       method: 'POST',
@@ -544,12 +546,14 @@ async function uploadFile(formData, sheet) {
       // 폼 데이터 업로드는 'Content-Type' 헤더를 설정하지 않음
     });
     
+    console.log('API 응답 상태:', response.status, response.statusText);
+    
     if (!response.ok) {
       throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
     }
     
     const result = await response.json();
-    console.log('API 응답:', result);
+    console.log('API 응답 데이터:', result);
     
     return {
       success: true,
@@ -561,7 +565,7 @@ async function uploadFile(formData, sheet) {
     console.error('파일 업로드 중 오류 발생:', error);
     return { 
       success: false, 
-      error: `파일 업로드 실패: ${error.message}. 서버 CORS 설정이나 네트워크 연결을 확인하세요.` 
+      error: `파일 업로드 실패: ${error.message}` 
     };
   }
 }
