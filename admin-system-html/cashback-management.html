@@ -549,6 +549,9 @@
         }
       });
       
+      // 엑셀로 관리 버튼
+      document.getElementById('excelManageButton').addEventListener('click', handleExcelManage);
+      
       // 기업 추가 버튼
       addContractButton.addEventListener('click', openAddContractModal);
       
@@ -556,6 +559,26 @@
       cancelRequestButton.addEventListener('click', closeRequestModal);
       confirmRequestButton.addEventListener('click', requestTransfer);
     });
+    
+    // 엑셀 관리 처리 함수
+    async function handleExcelManage() {
+      try {
+        // 구글 시트에서 최신 데이터 가져오기
+        const result = await fetchData('계약금수령');
+        
+        if (result && result.success) {
+          // 성공적으로 데이터를 가져왔을 경우, 로컬 데이터 갱신
+          contracts = result.data;
+          renderContracts();
+          alert('구글 시트의 최신 데이터를 가져왔습니다.');
+        } else {
+          throw new Error('데이터를 가져오는 데 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('엑셀 관리 오류:', error);
+        alert('구글 시트 데이터를 가져오는 중 오류가 발생했습니다.\n구글 시트에 직접 접근하여 데이터를 확인해주세요.');
+      }
+    }
   </script>
 </body>
 </html> 
