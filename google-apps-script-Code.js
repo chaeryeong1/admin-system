@@ -249,202 +249,183 @@ function addData(sheetName, data) {
         var lastId = lastIdRange.getValue();
         Logger.log("마지막 ID 값: " + lastId + " (타입: " + typeof lastId + ")");
         
-        if (!isNaN(lastId) && lastId > 0) {
-          newId = Number(lastId) + 1;
+        // 숫자로 변환하여 1 증가
+        if (typeof lastId === 'number') {
+          newId = lastId + 1;
+        } else if (typeof lastId === 'string' && !isNaN(parseInt(lastId))) {
+          newId = parseInt(lastId) + 1;
+        } else {
+          // 타임스탬프 기반 ID 생성
+          newId = new Date().getTime();
         }
       }
     }
     
-    Logger.log("새 ID: " + newId);
+    // 데이터에 ID 추가
+    data.id = data.id || newId.toString();
+    Logger.log("새 ID 할당: " + data.id);
     
-    // 데이터 형식 변환 (숫자 문자열을 숫자로 변환)
-    if (data.targetCompanies && typeof data.targetCompanies === 'string') {
-      data.targetCompanies = Number(data.targetCompanies);
-    }
-    
-    // 새 행 데이터 생성
+    // 새 데이터 행 생성
     var newRow = [];
     for (var i = 0; i < headers.length; i++) {
       var header = headers[i];
-      var value = '';
-      
-      if (header === 'id') {
-        value = newId;
-      } else if (data[header] !== undefined) {
-        value = data[header];
-        
-        // 데이터 형식 처리
-        if (value === null) {
-          value = '';
-        } else if (typeof value === 'object') {
-          value = JSON.stringify(value);
-        }
-      }
-      
-      newRow.push(value);
+      newRow.push(data[header] !== undefined ? data[header] : '');
     }
     
-    Logger.log("추가할 행 데이터: " + JSON.stringify(newRow));
-    
-    // 행 추가
+    // 데이터 추가
     sheet.appendRow(newRow);
-    Logger.log("행 추가 완료");
+    Logger.log("새 행 추가 완료: " + JSON.stringify(newRow));
     
-    // 스프레드시트 저장 확인
-    SpreadsheetApp.flush();
-    Logger.log("스프레드시트 갱신 완료");
-    
-    var response = { 
-      success: true,
-      data: {
-        ...data,
-        id: String(newId)
-      },
-      message: "데이터가 성공적으로 추가되었습니다."
-    };
-    
-    Logger.log("응답 데이터: " + JSON.stringify(response));
-    return response;
-  } catch (error) {
-    Logger.log("심각한 오류 발생: " + error.toString());
-    Logger.log("오류 스택: " + (error.stack || "스택 정보 없음"));
     return { 
-      success: false, 
-      error: error.toString() 
+      success: true, 
+      data: data,
+      message: "데이터가 성공적으로 추가되었습니다." 
     };
+  } catch (error) {
+    Logger.log("데이터 추가 중 오류 발생: " + error.toString());
+    return { success: false, error: error.toString() };
   }
 }
 
-// 데이터 업데이트하기
+// 데이터 업데이트
 function updateData(sheetName, data) {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = spreadsheet.getSheetByName(sheetName);
   
+  Logger.log("====== 데이터 업데이트 시작: " + sheetName + " ======");
+  Logger.log("업데이트 데이터: " + JSON.stringify(data));
+  
   if (!sheet) {
-    Logger.log(sheetName + " 시트를 찾을 수 없습니다");
+    Logger.log("오류: 시트를 찾을 수 없음 - " + sheetName);
     return { success: false, error: "시트를 찾을 수 없습니다" };
   }
   
   try {
-    // 헤더 확인
-    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    var id = data.id;
-    
-    if (!id) {
-      Logger.log("업데이트 실패: ID가 없습니다");
-      return { success: false, error: "ID가 없습니다" };
+    // 데이터 형식 검증
+    if (typeof data !== 'object' || data === null) {
+      Logger.log("오류: 데이터가 객체가 아님 - " + typeof data);
+      return { success: false, error: "유효하지 않은 데이터 형식입니다" };
     }
     
-    // ID 열 찾기
-    var idColumnIndex = headers.indexOf('id') + 1;
-    if (idColumnIndex <= 0) {
-      Logger.log("업데이트 실패: ID 열을 찾을 수 없습니다");
+    if (!data.id) {
+      Logger.log("오류: ID가 없음");
+      return { success: false, error: "업데이트할 항목의 ID가 없습니다" };
+    }
+    
+    // 헤더 가져오기
+    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    Logger.log("헤더: " + JSON.stringify(headers));
+    
+    // ID 열 인덱스 찾기
+    var idColIndex = headers.indexOf('id');
+    if (idColIndex === -1) {
+      Logger.log("오류: ID 열을 찾을 수 없음");
       return { success: false, error: "ID 열을 찾을 수 없습니다" };
     }
     
-    // ID로 행 찾기
-    var idValues = sheet.getRange(2, idColumnIndex, sheet.getLastRow() - 1, 1).getValues();
-    var rowIndex = -1;
+    // 모든 ID 값 가져오기
+    var idRange = sheet.getRange(2, idColIndex + 1, sheet.getLastRow() - 1, 1);
+    var idValues = idRange.getValues();
     
+    // ID로 행 찾기
+    var rowIndex = -1;
     for (var i = 0; i < idValues.length; i++) {
-      if (String(idValues[i][0]) === String(id)) {
-        rowIndex = i + 2; // +2 because we start at row 2 and i is 0-indexed
+      if (idValues[i][0].toString() === data.id.toString()) {
+        rowIndex = i + 2; // 헤더(1) + 인덱스(0부터 시작)
         break;
       }
     }
     
     if (rowIndex === -1) {
-      Logger.log("업데이트 실패: ID " + id + "를 찾을 수 없습니다");
-      return { success: false, error: "해당 ID의 데이터를 찾을 수 없습니다: " + id };
+      Logger.log("오류: ID에 해당하는 행을 찾을 수 없음 - " + data.id);
+      return { success: false, error: "ID에 해당하는 항목을 찾을 수 없습니다" };
     }
     
-    // 로그 출력
-    Logger.log("업데이트할 데이터: " + JSON.stringify(data));
-    Logger.log("헤더: " + JSON.stringify(headers));
-    Logger.log("행 인덱스: " + rowIndex);
+    // 행 데이터 업데이트
+    var rowData = [];
+    for (var i = 0; i < headers.length; i++) {
+      var header = headers[i];
+      rowData.push(data[header] !== undefined ? data[header] : sheet.getRange(rowIndex, i + 1).getValue());
+    }
     
     // 데이터 업데이트
-    for (var i = 0; i < headers.length; i++) {
-      if (headers[i] !== 'id' && data[headers[i]] !== undefined) {
-        var columnIndex = i + 1;
-        sheet.getRange(rowIndex, columnIndex).setValue(data[headers[i]]);
-      }
-    }
+    sheet.getRange(rowIndex, 1, 1, headers.length).setValues([rowData]);
+    Logger.log("행 업데이트 완료 - 행 " + rowIndex + ": " + JSON.stringify(rowData));
     
-    Logger.log("데이터 업데이트 완료: ID " + id);
     return { 
       success: true, 
       data: data,
-      message: "데이터가 성공적으로 업데이트되었습니다."
+      message: "데이터가 성공적으로 업데이트되었습니다." 
     };
   } catch (error) {
-    Logger.log("데이터 업데이트 오류: " + error.toString());
-    return { 
-      success: false, 
-      error: error.toString() 
-    };
+    Logger.log("데이터 업데이트 중 오류 발생: " + error.toString());
+    return { success: false, error: error.toString() };
   }
 }
 
-// 데이터 삭제하기
+// 데이터 삭제
 function deleteData(sheetName, id) {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = spreadsheet.getSheetByName(sheetName);
   
+  Logger.log("====== 데이터 삭제 시작: " + sheetName + " ======");
+  Logger.log("삭제할 ID: " + id);
+  
   if (!sheet) {
-    Logger.log(sheetName + " 시트를 찾을 수 없습니다");
+    Logger.log("오류: 시트를 찾을 수 없음 - " + sheetName);
     return { success: false, error: "시트를 찾을 수 없습니다" };
   }
   
   try {
     if (!id) {
-      Logger.log("삭제 실패: ID가 없습니다");
-      return { success: false, error: "ID가 없습니다" };
+      Logger.log("오류: ID가 없음");
+      return { success: false, error: "삭제할 항목의 ID가 없습니다" };
     }
     
-    // 헤더 확인
+    // 헤더 가져오기
     var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    Logger.log("헤더: " + JSON.stringify(headers));
     
-    // ID 열 찾기
-    var idColumnIndex = headers.indexOf('id') + 1;
-    if (idColumnIndex <= 0) {
-      Logger.log("삭제 실패: ID 열을 찾을 수 없습니다");
+    // ID 열 인덱스 찾기
+    var idColIndex = headers.indexOf('id');
+    if (idColIndex === -1) {
+      Logger.log("오류: ID 열을 찾을 수 없음");
       return { success: false, error: "ID 열을 찾을 수 없습니다" };
     }
     
-    // ID로 행 찾기
-    var idValues = sheet.getRange(2, idColumnIndex, sheet.getLastRow() - 1, 1).getValues();
-    var rowIndex = -1;
+    // 모든 ID 값 가져오기
+    var idRange = sheet.getRange(2, idColIndex + 1, sheet.getLastRow() - 1, 1);
+    var idValues = idRange.getValues();
     
+    // ID로 행 찾기
+    var rowIndex = -1;
     for (var i = 0; i < idValues.length; i++) {
-      if (String(idValues[i][0]) === String(id)) {
-        rowIndex = i + 2; // +2 because we start at row 2 and i is 0-indexed
+      if (idValues[i][0].toString() === id.toString()) {
+        rowIndex = i + 2; // 헤더(1) + 인덱스(0부터 시작)
         break;
       }
     }
     
     if (rowIndex === -1) {
-      Logger.log("삭제 실패: ID " + id + "를 찾을 수 없습니다");
-      return { success: false, error: "해당 ID의 데이터를 찾을 수 없습니다: " + id };
+      Logger.log("오류: ID에 해당하는 행을 찾을 수 없음 - " + id);
+      return { success: false, error: "ID에 해당하는 항목을 찾을 수 없습니다" };
     }
-    
-    // 로그 출력
-    Logger.log("삭제할 행 인덱스: " + rowIndex);
     
     // 행 삭제
     sheet.deleteRow(rowIndex);
+    Logger.log("행 삭제 완료 - 행 " + rowIndex);
     
-    Logger.log("데이터 삭제 완료: ID " + id);
     return { 
-      success: true,
-      message: "데이터가 성공적으로 삭제되었습니다."
+      success: true, 
+      data: {
+        id: id,
+        deleted: true
+      },
+      message: "데이터가 성공적으로 삭제되었습니다." 
     };
   } catch (error) {
-    Logger.log("데이터 삭제 오류: " + error.toString());
-    return { 
-      success: false, 
-      error: error.toString() 
-    };
+    Logger.log("데이터 삭제 중 오류 발생: " + error.toString());
+    return { success: false, error: error.toString() };
   }
 }
 
