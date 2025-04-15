@@ -620,6 +620,61 @@
       updateDeleteButtonState();
     }
     
+    // 샘플 파일 다운로드
+    function downloadSample() {
+      console.log('샘플 파일 다운로드');
+      
+      // 샘플 파일 직접 생성 및 다운로드 (CORS 관련 알림 없이)
+      try {
+        // 샘플 데이터 정의
+        const sampleData = [
+          {
+            name: '(주)샘플테크',
+            businessNumber: '123-45-67890',
+            contactPerson: '홍길동',
+            contact: '02-1234-5678',
+            email: 'hong@sample.com'
+          },
+          {
+            name: '한국 제조 주식회사',
+            businessNumber: '234-56-78901',
+            contactPerson: '김철수',
+            contact: '051-987-6543',
+            email: 'kim@manufacturing.kr'
+          }
+        ];
+        
+        // CSV 헤더와 내용 생성
+        const headers = ['기업명', '사업자등록번호', '담당자', '연락처', '이메일'];
+        let csvContent = headers.join(',') + '\n';
+        
+        sampleData.forEach(item => {
+          csvContent += [
+            `"${item.name || ''}"`,
+            `"${item.businessNumber || ''}"`,
+            `"${item.contactPerson || ''}"`,
+            `"${item.contact || ''}"`,
+            `"${item.email || ''}"`,
+          ].join(',') + '\n';
+        });
+        
+        // Blob 생성 및 다운로드
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = '기업정보_샘플.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log('샘플 CSV 다운로드 완료');
+      } catch (error) {
+        console.error('샘플 파일 생성 오류:', error);
+        alert('샘플 파일 다운로드 중 오류가 발생했습니다.');
+      }
+    }
+    
     // 엑셀 파일 업로드 처리 (추가)
     async function addCompanies() {
       console.log('기업 정보 추가 시작');
@@ -682,10 +737,17 @@
           console.error('기업 정보 추가 중 오류 발생:', error);
           alert(`기업 정보 추가 중 오류가 발생했습니다: ${error.message}`);
         } finally {
-          // 버튼 상태 복원
-          confirmAddButton.textContent = originalText;
-          confirmAddButton.disabled = false;
-          confirmAddButton.removeAttribute('data-processing');
+          // 버튼 상태 복원 (중요: 모달이 닫힌 후에도 상태 초기화)
+          try {
+            const button = document.getElementById('confirmAddButton');
+            if (button) {
+              button.textContent = originalText;
+              button.disabled = false;
+              button.removeAttribute('data-processing');
+            }
+          } catch (e) {
+            console.error('버튼 상태 복원 오류:', e);
+          }
         }
       }
     }
@@ -768,23 +830,6 @@
       }
     }
     
-    // 샘플 파일 다운로드
-    function downloadSample() {
-      console.log('샘플 파일 다운로드');
-      
-      // API를 통해 샘플 파일 다운로드
-      downloadExcelFile('기업정보_샘플').then(result => {
-        if (result && result.success) {
-          alert('샘플 파일이 다운로드되었습니다.');
-        } else {
-          alert('샘플 파일 다운로드에 실패했습니다. 관리자에게 문의하세요.');
-        }
-      }).catch(error => {
-        console.error('샘플 파일 다운로드 오류:', error);
-        alert('샘플 파일 다운로드 중 오류가 발생했습니다: ' + error.message);
-      });
-    }
-    
     // 페이지 초기화
     document.addEventListener('DOMContentLoaded', function() {
       console.log('기업 관리 페이지 초기화');
@@ -819,7 +864,51 @@
       // 엑셀 다운로드 버튼
       const excelButton = document.getElementById('excelButton');
       if (excelButton) {
-        excelButton.addEventListener('click', () => downloadExcelFile('기업정보'));
+        excelButton.addEventListener('click', function() {
+          // 데이터가 없어도 빈 엑셀 다운로드 시도
+          console.log('기업 정보 Excel 다운로드');
+          
+          try {
+            // 현재 데이터로 CSV 생성
+            const headers = ['기업명', '사업자등록번호', '담당자', '연락처', '이메일', '등록일'];
+            let csvContent = headers.join(',') + '\n';
+            
+            if (companies && companies.length > 0) {
+              companies.forEach(company => {
+                csvContent += [
+                  `"${company.name || ''}"`,
+                  `"${company.businessNumber || ''}"`,
+                  `"${company.contactPerson || ''}"`,
+                  `"${company.contact || ''}"`,
+                  `"${company.email || ''}"`,
+                  `"${company.registrationDate || ''}"`,
+                ].join(',') + '\n';
+              });
+            }
+            
+            // Blob 생성 및 다운로드
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            const today = new Date().toISOString().split('T')[0];
+            link.download = `기업정보_${today}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            console.log('엑셀 파일 다운로드 완료');
+            
+          } catch (error) {
+            console.error('엑셀 파일 다운로드 오류:', error);
+            alert('엑셀 파일 다운로드 중 오류가 발생했습니다.');
+            
+            // API 방식으로도 시도
+            downloadExcelFile('기업정보').catch(e => {
+              console.error('API 엑셀 다운로드 실패:', e);
+            });
+          }
+        });
       } else {
         console.warn('excelButton 요소를 찾을 수 없습니다.');
       }
