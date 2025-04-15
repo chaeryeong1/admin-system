@@ -521,46 +521,47 @@ async function downloadExcelFile(sheet) {
  * @returns {Promise<Object>} - 업로드 결과
  */
 async function uploadFile(formData, sheet) {
+  console.log(`파일 업로드 시작, 시트: ${sheet}`);
+  
+  // 파일 정보 확인
+  const file = formData.get('file');
+  if (file) {
+    console.log(`업로드 파일 정보: ${file.name}, 크기: ${file.size} 바이트`);
+  } else {
+    console.error('formData에 파일이 없습니다');
+    return { success: false, error: '업로드할 파일이 없습니다' };
+  }
+  
+  // 폼데이터에 시트 이름과 액션 추가
+  formData.append('sheet', sheet);
+  formData.append('action', 'upload');
+  
   try {
-    console.log(`${sheet} 파일 업로드 시작`);
-    
-    // 파일 정보 로깅
-    const file = formData.get('file');
-    if (!file) {
-      throw new Error('업로드할 파일이 없습니다');
-    }
-    
-    console.log(`파일 업로드: ${file.name}, 크기: ${file.size} 바이트`);
-    
-    // formData에 시트 이름 추가
-    formData.append('sheet', getActualSheetName(sheet));
-    formData.append('action', 'uploadFile');
-    
-    // API 요청 실행
+    // 진짜 API 호출
     const response = await fetch(API_URL, {
       method: 'POST',
-      body: formData
+      body: formData,
+      // 폼 데이터 업로드는 'Content-Type' 헤더를 설정하지 않음
     });
     
     if (!response.ok) {
-      throw new Error(`서버 응답 오류: ${response.status} ${response.statusText}`);
+      throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
     }
     
     const result = await response.json();
-    console.log('파일 업로드 결과:', result);
+    console.log('API 응답:', result);
     
     return {
       success: true,
-      fileName: file.name,
-      fileSize: file.size,
-      recordsProcessed: result.recordsProcessed || 0,
-      message: `${file.name} 파일이 성공적으로 업로드되었습니다. ${result.recordsProcessed || 0}개 레코드가 처리되었습니다.`
+      message: `파일 업로드 성공: ${file.name}, ${result.processedRecords || 0}개 레코드 처리됨`,
+      processedRecords: result.processedRecords || 0,
+      fileName: file.name
     };
   } catch (error) {
-    console.error('파일 업로드 오류:', error);
-    return {
-      success: false,
-      error: `파일 업로드 실패: ${error.message}. API 서버가 실행 중인지 확인하고, CORS 설정이 올바른지 확인하세요.`
+    console.error('파일 업로드 중 오류 발생:', error);
+    return { 
+      success: false, 
+      error: `파일 업로드 실패: ${error.message}. 서버 CORS 설정이나 네트워크 연결을 확인하세요.` 
     };
   }
 }
