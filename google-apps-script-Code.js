@@ -13,12 +13,19 @@ function doGet(e) {
     'Access-Control-Max-Age': '86400'
   };
   
-  var result = handleRequest(e);
-  output.setContent(JSON.stringify(result));
+  // 콜백 파라미터 확인 (null 체크 추가)
+  var callback = e && e.parameter && e.parameter.callback;
   
-  var callback = e.parameter.callback;
+  // 요청 처리
+  var result = handleRequest(e || {});
+  
+  // JSON 결과 생성
   if (callback) {
+    // JSONP 형식으로 응답
     output.setContent(callback + "(" + JSON.stringify(result) + ")");
+  } else {
+    // 일반 JSON 형식으로 응답
+    output.setContent(JSON.stringify(result));
   }
   
   return HtmlService.createHtmlOutput()
