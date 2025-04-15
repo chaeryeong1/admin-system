@@ -59,12 +59,13 @@
       background-color: white;
       border-radius: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      overflow: hidden;
+      overflow-x: auto; /* 테이블이 화면보다 클 때 가로 스크롤 허용 */
     }
     table {
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
+      min-width: 650px; /* 최소 테이블 너비 지정 */
     }
     th {
       background-color: #f8fafc;
@@ -123,25 +124,111 @@
       border-color: #3b82f6;
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
     }
+    
+    /* 반응형 디자인 개선 */
+    @media (max-width: 1024px) {
+      .sidebar {
+        width: 200px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .main-layout {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 1rem;
+      }
+      .main-header {
+        padding: 0.5rem 1rem;
+      }
+      .main-header .logo {
+        height: 30px;
+      }
+      .main-header a {
+        font-size: 0.875rem;
+        padding: 0.375rem 0.75rem;
+      }
+      .search-container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .search-container > div {
+        margin-bottom: 0.5rem;
+      }
+      .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+    }
+    
+    /* 모바일 메뉴 개선 */
+    .mobile-menu-button {
+      display: none;
+    }
+    
+    @media (max-width: 640px) {
+      .desktop-menu {
+        display: none;
+      }
+      .mobile-menu-button {
+        display: block;
+      }
+      .mobile-menu {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        background-color: #2563eb;
+        padding: 0.5rem;
+        z-index: 50;
+      }
+      .mobile-menu a {
+        display: block;
+        padding: 0.75rem 1rem;
+        color: white;
+        border-radius: 4px;
+      }
+      .mobile-menu a.active {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+    }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50">
   <!-- 상단 대메뉴 -->
-  <header class="main-header flex items-center">
-    <div class="flex items-center mr-8">
-      <img src="https://via.placeholder.com/120x40/2563eb/ffffff?text=ADMIN" alt="로고" class="logo">
+  <header class="main-header flex items-center justify-between">
+    <div class="flex items-center">
+      <img src="https://placehold.co/120x40/2563eb/ffffff?text=ADMIN" alt="로고" class="logo">
+      <nav class="desktop-menu flex space-x-4">
+        <a href="business-management.html" class="active">사업 관리</a>
+        <a href="company-management.html">기업 관리</a>
+        <a href="business-notification.html">사업 안내</a>
+        <a href="cashback-management.html">캐시백 송금</a>
+      </nav>
     </div>
-    <nav class="flex space-x-4">
-      <a href="business-management.html" class="active">사업 관리</a>
-      <a href="company-management.html">기업 관리</a>
-      <a href="business-notification.html">사업 안내</a>
-      <a href="cashback-management.html">캐시백 송금</a>
-    </nav>
+    
+    <!-- 모바일 메뉴 버튼 -->
+    <button class="mobile-menu-button text-white">
+      <i class="fas fa-bars text-xl"></i>
+    </button>
   </header>
+  
+  <!-- 모바일 메뉴 (기본적으로 숨겨져 있음) -->
+  <div class="mobile-menu hidden">
+    <a href="business-management.html" class="active">사업 관리</a>
+    <a href="company-management.html">기업 관리</a>
+    <a href="business-notification.html">사업 안내</a>
+    <a href="cashback-management.html">캐시백 송금</a>
+  </div>
 
-  <div class="flex">
+  <div class="flex main-layout">
     <!-- 좌측 소메뉴 -->
-    <aside class="sidebar p-4 h-screen">
+    <aside class="sidebar p-4">
       <h2 class="text-lg font-semibold mb-4">사업 관리</h2>
       <ul class="space-y-1">
         <li class="sidebar-item active">
@@ -157,8 +244,8 @@
       </div>
 
       <!-- 검색/조회 -->
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
+      <div class="flex items-center justify-between search-container flex-wrap">
+        <div class="flex items-center space-x-4 w-full md:w-auto">
           <input 
             id="searchInput"
             type="text" 
@@ -172,7 +259,7 @@
             <i class="fas fa-search mr-2"></i>조회
           </button>
         </div>
-        <div>
+        <div class="w-full md:w-auto mt-2 md:mt-0">
           <button 
             id="addButton"
             class="btn btn-primary"
@@ -230,28 +317,24 @@
           </table>
         </div>
         <!-- 페이지네이션 -->
-        <div class="px-4 py-3 flex items-center justify-between border-t">
-          <div class="flex-1 flex justify-between items-center">
-            <div>
-              <span class="text-sm text-gray-700">
-                총 <span id="totalItems">0</span>개 항목 중 <span id="startItem">0</span>-<span id="endItem">0</span>
-              </span>
-            </div>
-            <div>
-              <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                <button id="prevPageBtn" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                  <span class="sr-only">이전</span>
-                  <i class="fas fa-chevron-left"></i>
-                </button>
-                <div id="paginationNumbers" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                  <!-- 페이지 번호가 여기에 동적으로 추가됩니다 -->
-                </div>
-                <button id="nextPageBtn" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                  <span class="sr-only">다음</span>
-                  <i class="fas fa-chevron-right"></i>
-                </button>
-              </nav>
-            </div>
+        <div class="px-4 py-3 flex items-center justify-between border-t flex-wrap">
+          <div class="text-sm text-gray-700 w-full md:w-auto mb-2 md:mb-0">
+            총 <span id="totalItems">0</span>개 항목 중 <span id="startItem">0</span>-<span id="endItem">0</span>
+          </div>
+          <div>
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+              <button id="prevPageBtn" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <span class="sr-only">이전</span>
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <div id="paginationNumbers" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                <!-- 페이지 번호가 여기에 동적으로 추가됩니다 -->
+              </div>
+              <button id="nextPageBtn" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <span class="sr-only">다음</span>
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </nav>
           </div>
         </div>
       </div>
@@ -269,8 +352,8 @@
   </div>
 
   <!-- 추가 모달 -->
-  <div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+  <div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
       <h2 class="text-lg font-semibold mb-4">사업 추가</h2>
       <div class="space-y-4">
         <div>
@@ -295,14 +378,14 @@
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">사업 기간 <span class="text-red-500">*</span></label>
-          <div class="flex space-x-2">
+          <div class="flex space-x-2 flex-wrap">
             <input
               id="addStartDate"
               type="date"
-              class="form-input"
+              class="form-input mb-2 md:mb-0"
               required
             >
-            <span class="flex items-center">~</span>
+            <span class="flex items-center mx-2 md:mx-0">~</span>
             <input
               id="addEndDate"
               type="date"
@@ -348,8 +431,8 @@
   </div>
 
   <!-- 수정 모달 -->
-  <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+  <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
       <h2 class="text-lg font-semibold mb-4">사업 정보 수정</h2>
       <div class="space-y-4">
         <div>
@@ -372,14 +455,14 @@
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">사업 기간 <span class="text-red-500">*</span></label>
-          <div class="flex space-x-2">
+          <div class="flex space-x-2 flex-wrap">
             <input
               id="editStartDate"
               type="date"
-              class="form-input"
+              class="form-input mb-2 md:mb-0"
               required
             >
-            <span class="flex items-center">~</span>
+            <span class="flex items-center mx-2 md:mx-0">~</span>
             <input
               id="editEndDate"
               type="date"
@@ -423,8 +506,8 @@
   </div>
 
   <!-- 삭제 확인 모달 -->
-  <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+  <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
       <h2 class="text-lg font-semibold mb-4">사업 삭제</h2>
       <p>정말 이 사업을 삭제하시겠습니까?</p>
       <p id="deleteProjectName" class="font-semibold mt-2"></p>
@@ -448,6 +531,30 @@
   <!-- API 연동을 위한 스크립트 포함 -->
   <script src="api.js"></script>
   <script>
+    // 모바일 메뉴 토글 기능 추가
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileMenuButton = document.querySelector('.mobile-menu-button');
+      const mobileMenu = document.querySelector('.mobile-menu');
+      
+      mobileMenuButton.addEventListener('click', function() {
+        mobileMenu.classList.toggle('hidden');
+      });
+      
+      // 모바일 메뉴 아이템 클릭 시 메뉴 닫기
+      mobileMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', function() {
+          mobileMenu.classList.add('hidden');
+        });
+      });
+      
+      // 화면 크기 변경 시 모바일 메뉴 상태 조정
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 640) {
+          mobileMenu.classList.add('hidden');
+        }
+      });
+    });
+
     // 프로젝트 데이터 저장 변수
     let projects = [];
     let selectedProjectIds = [];
@@ -698,23 +805,12 @@
           // 수정 버튼
           const editBtn = document.createElement('button');
           editBtn.type = 'button';
-          editBtn.className = 'btn btn-sm btn-primary mr-2';
+          editBtn.className = 'btn btn-sm btn-primary w-full';
           editBtn.innerHTML = '<i class="fas fa-edit mr-1"></i> 수정';
           editBtn.addEventListener('click', function() {
             openEditModal(project);
           });
           tdActions.appendChild(editBtn);
-          
-          // 삭제 버튼
-          const deleteBtn = document.createElement('button');
-          deleteBtn.type = 'button';
-          deleteBtn.className = 'btn btn-sm btn-danger';
-          deleteBtn.innerHTML = '<i class="fas fa-trash-alt mr-1"></i> 삭제';
-          deleteBtn.addEventListener('click', function() {
-            selectedProjectIds = [project.id];
-            openDeleteModal();
-          });
-          tdActions.appendChild(deleteBtn);
           
           tr.appendChild(tdActions);
           
