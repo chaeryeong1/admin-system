@@ -616,6 +616,19 @@
           console.log('파일 업로드 결과:', result);
           
           if (result && result.success) {
+            // 데이터 정규화
+            if (result.data && Array.isArray(result.data.records)) {
+              const newData = normalizeCompanyData(result.data.records);
+              
+              // 기존 데이터와 병합
+              companies = [...companies, ...newData];
+              
+              // 로컬 스토리지에 저장
+              localStorage.setItem('companiesData', JSON.stringify(companies));
+              
+              console.log(`${newData.length}개 기업 정보가 추가되었습니다.`);
+            }
+            
             // 성공 메시지
             alert(`기업 정보가 성공적으로 추가되었습니다. (${result.data?.processed || '여러'} 항목 처리됨)`);
             
