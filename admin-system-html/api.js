@@ -1,5 +1,5 @@
 // 구글 스크립트 API URL
-const API_URL = 'https://script.google.com/macros/s/AKfycbwE8lrESavbFCRpnWF1C2h7h-q0essFRVHqONkVzitF7z6IZJudIIvS4kH2V2HcRDo/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyVdRXxOVKWQ5wdJQZYKHIx7w9YIpk8cQ7dVAaynTGhyvwFBzM9Y6VO9jWWrZZDXOo_/exec';
 
 // 데이터 가져오기
 async function fetchData(sheet = 'all') {
