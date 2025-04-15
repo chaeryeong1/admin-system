@@ -464,6 +464,14 @@
         return;
       }
       
+      // 수정할 기업 찾기
+      const companyIndex = companies.findIndex(c => c.id == companyId);
+      
+      if (companyIndex === -1) {
+        alert('수정할 기업 정보를 찾을 수 없습니다.');
+        return;
+      }
+      
       // 버튼 상태 변경
       const updateButton = document.querySelector('#confirmEditButton');
       if (updateButton) {
@@ -472,7 +480,7 @@
       }
       
       try {
-        // 업데이트할 데이터 준비
+        // 업데이트된 기업 정보 준비
         const updatedCompany = {
           id: companyId,
           name: companyName,
@@ -484,37 +492,30 @@
           description
         };
         
-        console.log('업데이트할 기업 정보:', updatedCompany);
+        console.log('수정된 기업 정보:', updatedCompany);
         
-        // 로컬 데이터 업데이트
-        const companyIndex = companies.findIndex(c => c.id == companyId);
+        // API를 통한 데이터 업데이트 시도
+        const result = await updateData('기업정보', updatedCompany);
+        console.log('API 업데이트 결과:', result);
         
-        if (companyIndex === -1) {
-          throw new Error('수정할 기업 정보를 찾을 수 없습니다.');
+        if (result && result.success) {
+          console.log('API를 통해 기업 정보 업데이트 성공');
+        } else {
+          // API 실패 시 경고 로그
+          console.warn('API 업데이트 실패, 로컬에만 업데이트됨:', result?.error);
         }
         
+        // 로컬 데이터 업데이트
         companies[companyIndex] = updatedCompany;
         
         // 로컬 스토리지 업데이트
         localStorage.setItem('companiesData', JSON.stringify(companies));
         
-        // API를 통한 데이터 업데이트 시도
-        try {
-          const result = await updateData('기업정보', updatedCompany);
-          console.log('API 업데이트 결과:', result);
-          
-          if (result && result.success) {
-            console.log('API를 통해 기업 정보 업데이트 성공');
-          } else {
-            console.warn('API 업데이트 실패, 로컬에만 업데이트됨:', result?.error);
-          }
-        } catch (apiError) {
-          console.error('API 업데이트 중 오류:', apiError);
-        }
-        
         // 테이블 갱신
         renderCompaniesTable();
-        alert('기업 정보가 성공적으로 수정되었습니다.');
+        
+        // 성공 메시지
+        alert('기업 정보가 수정되었습니다.');
         
         // 모달 닫기
         closeEditModal();
@@ -534,29 +535,29 @@
     async function deleteCompany() {
       console.log('기업 정보 삭제 시작');
       
-      // 전체 선택 체크박스 확인
+      // 삭제 대상 설정
+      let companyIds = [];
+      let deletedCount = 0;
+      
+      // 전체 선택 확인
       const selectAllCheckbox = document.getElementById('selectAllCompanies');
       const isSelectAll = selectAllCheckbox && selectAllCheckbox.checked;
       
-      // 삭제할 ID 목록 구성
-      let idsToDelete = [];
-      
       if (isSelectAll) {
-        // 모든 기업 ID
-        idsToDelete = companies.map(company => company.id);
+        // 전체 선택인 경우
+        companyIds = companies.map(c => c.id);
       } else if (selectedCompanyId) {
-        // 단일 기업 ID
-        idsToDelete = [selectedCompanyId];
+        // 단일 선택인 경우
+        companyIds = [selectedCompanyId];
       } else {
-        // 체크된 기업들
-        const checkedBoxes = document.querySelectorAll('.company-checkbox:checked');
-        idsToDelete = Array.from(checkedBoxes).map(checkbox => checkbox.getAttribute('data-id'));
+        // 다중 선택인 경우
+        document.querySelectorAll('.company-checkbox:checked').forEach(checkbox => {
+          companyIds.push(checkbox.value);
+        });
       }
       
-      // 삭제할 항목이 없으면 종료
-      if (idsToDelete.length === 0) {
+      if (companyIds.length === 0) {
         alert('삭제할 기업을 선택해주세요.');
-        closeDeleteModal();
         return;
       }
       
@@ -568,30 +569,27 @@
       }
       
       try {
-        console.log(`${idsToDelete.length}개 기업 정보 삭제 시작`);
-        
-        // API를 통한 데이터 삭제 시도
-        const deleteResults = [];
-        
-        for (const id of idsToDelete) {
-          try {
-            const result = await deleteData('기업정보', id);
-            console.log(`ID ${id} 삭제 결과:`, result);
-            
-            if (result && result.success) {
-              deleteResults.push({ id, success: true });
-            } else {
-              console.warn(`ID ${id} API 삭제 실패:`, result?.error);
-              deleteResults.push({ id, success: false, error: result?.error });
-            }
-          } catch (apiError) {
-            console.error(`ID ${id} 삭제 중 API 오류:`, apiError);
-            deleteResults.push({ id, success: false, error: apiError.message });
+        // 각 기업 삭제 처리
+        for (const id of companyIds) {
+          console.log(`기업 ID ${id} 삭제 시도`);
+          
+          // API를 통한 데이터 삭제 시도
+          const result = await deleteData('기업정보', id);
+          console.log(`API 삭제 결과 (ID: ${id}):`, result);
+          
+          if (result && result.success) {
+            console.log(`API를 통해 기업 ID ${id} 삭제 성공`);
+            deletedCount++;
+          } else {
+            console.warn(`API 삭제 실패 (ID: ${id}), 로컬에서만 삭제:`, result?.error);
+          }
+          
+          // 로컬 데이터에서 삭제
+          const index = companies.findIndex(c => c.id == id);
+          if (index !== -1) {
+            companies.splice(index, 1);
           }
         }
-        
-        // 로컬 데이터 업데이트 (성공, 실패 모두 로컬에서는 삭제)
-        companies = companies.filter(company => !idsToDelete.includes(company.id));
         
         // 로컬 스토리지 업데이트
         localStorage.setItem('companiesData', JSON.stringify(companies));
@@ -600,13 +598,13 @@
         renderCompaniesTable();
         
         // 성공 메시지
-        if (idsToDelete.length === 1) {
+        if (companyIds.length === 1) {
           alert('선택한 기업 정보가 삭제되었습니다.');
         } else {
-          alert(`${idsToDelete.length}개 기업 정보가 삭제되었습니다.`);
+          alert(`${deletedCount}개의 기업 정보가 삭제되었습니다.`);
         }
         
-        // 선택 초기화
+        // 선택 상태 초기화
         selectedCompanyId = null;
         
         // 모달 닫기
