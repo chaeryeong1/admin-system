@@ -622,10 +622,18 @@
       updateDeleteButtonState();
     }
     
-    // 엑셀 다운로드 버튼
+    // 파일 선택 시 파일명 표시 & 기업 다운로드 버튼
+    // 기업목록 내려받기 버튼
+    const downloadSampleButton = document.getElementById('downloadSampleButton');
+    if (downloadSampleButton) {
+      downloadSampleButton.addEventListener('click', downloadCompanyList);
+    }
+    
+    // 엑셀 다운로드 버튼을 '다운로드'로 표시 및 연결
     const excelButton = document.getElementById('excelButton');
     if (excelButton) {
       excelButton.addEventListener('click', downloadCompanyList);
+      excelButton.textContent = '다운로드';
     } else {
       console.warn('excelButton 요소를 찾을 수 없습니다.');
     }
