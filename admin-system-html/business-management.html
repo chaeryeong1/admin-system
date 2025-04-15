@@ -632,10 +632,31 @@
       
       // 모달 표시
       addModal.classList.remove('hidden');
+      
+      // 저장 버튼 초기화
+      const saveButton = document.getElementById('confirmAddButton');
+      if (saveButton) {
+        saveButton.textContent = '저장';
+        saveButton.disabled = false;
+        
+        // 기존 이벤트 리스너를 모두 제거
+        saveButton.replaceWith(saveButton.cloneNode(true));
+        
+        // 다시 참조 가져오기
+        const newSaveButton = document.getElementById('confirmAddButton');
+        // 이벤트 리스너 다시 등록
+        newSaveButton.addEventListener('click', addProject);
+      }
     }
     
     function closeAddModal() {
       addModal.classList.add('hidden');
+      
+      // 저장 버튼의 이벤트 리스너 제거
+      const saveButton = document.getElementById('confirmAddButton');
+      if (saveButton) {
+        saveButton.replaceWith(saveButton.cloneNode(true));
+      }
     }
     
     function openEditModal() {
@@ -1128,13 +1149,8 @@
       editButton.addEventListener('click', openEditModal);
       deleteButton.addEventListener('click', openDeleteModal);
       
-      // 모달 확인 버튼
-      const confirmAddBtn = document.getElementById('confirmAddButton');
-      if (confirmAddBtn) {
-        // 기존 이벤트 리스너 제거 후 다시 등록 (중복 방지)
-        confirmAddBtn.removeEventListener('click', addProject);
-        confirmAddBtn.addEventListener('click', addProject);
-      }
+      // 모달 확인 버튼 - 초기화면 로드 시에는 리스너를 붙이지 않음
+      // 대신 모달 열 때마다 리스너 추가
       
       document.getElementById('confirmEditButton').addEventListener('click', editProject);
       
