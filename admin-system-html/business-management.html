@@ -703,24 +703,44 @@
     
     // 사업 삭제 처리
     async function deleteProject() {
-      if (!selectedProjectId) return;
+      console.log('사업 삭제 시작', selectedProjectId);
+      if (!selectedProjectId) {
+        alert('삭제할 사업을 선택해주세요.');
+        return;
+      }
       
       try {
+        // 삭제 중 표시
+        const deleteButton = document.getElementById('confirmDeleteButton');
+        if (deleteButton) {
+          deleteButton.textContent = '삭제 중...';
+          deleteButton.disabled = true;
+        }
+        
         // API 호출
         const result = await deleteData('사업정보', selectedProjectId);
         
-        if (result.success) {
+        console.log('삭제 결과:', result);
+        
+        if (result && result.success) {
           // 성공 시 데이터 갱신
           await loadProjects();
           selectedProjectId = null;
           closeDeleteModal();
           alert('사업 정보가 삭제되었습니다.');
         } else {
-          throw new Error(result.error || '삭제 실패');
+          throw new Error(result.error || '삭제 실패: 서버에서 오류가 발생했습니다.');
         }
       } catch (error) {
         console.error('API 오류:', error);
-        alert('사업 정보 삭제 중 오류가 발생했습니다.');
+        alert('사업 정보 삭제 중 오류가 발생했습니다: ' + error.message);
+        
+        // 버튼 복원
+        const deleteButton = document.getElementById('confirmDeleteButton');
+        if (deleteButton) {
+          deleteButton.textContent = '삭제';
+          deleteButton.disabled = false;
+        }
         
         // API 실패 시 로컬 데이터만 갱신 (테스트용)
         projects = projects.filter(p => p.id !== selectedProjectId);
