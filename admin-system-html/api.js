@@ -26,24 +26,29 @@ async function fetchData(sheet = 'all') {
     
     // CORS 우회를 위한 방법: JSONP 스타일
     return new Promise((resolve, reject) => {
-      // 콜백 함수 정의
+      // 콜백 함수 정의 - 전역 객체에 등록
       window[callbackName] = function(data) {
         console.log(`${sheet} 데이터 로드 결과:`, data);
         // 메모리 정리
         delete window[callbackName];
-        document.head.removeChild(script);
+        if (document.getElementById(callbackName)) {
+          document.head.removeChild(document.getElementById(callbackName));
+        }
         resolve(data);
       };
       
       // 스크립트 태그 생성 및 추가
       const script = document.createElement('script');
+      script.id = callbackName; // ID 추가하여 나중에 쉽게 제거
       script.src = apiUrl;
       
       // 오류 처리
       script.onerror = (error) => {
         console.error('JSONP 요청 실패:', error);
         delete window[callbackName];
-        document.head.removeChild(script);
+        if (document.getElementById(callbackName)) {
+          document.head.removeChild(document.getElementById(callbackName));
+        }
         console.log('JSONP 방식 실패, 샘플 데이터 사용');
         
         // 샘플 데이터 반환
@@ -81,7 +86,9 @@ async function fetchData(sheet = 'all') {
         if (window[callbackName]) {
           console.error('JSONP 요청 타임아웃');
           delete window[callbackName];
-          document.head.removeChild(script);
+          if (document.getElementById(callbackName)) {
+            document.head.removeChild(document.getElementById(callbackName));
+          }
           
           if (sheet === '사업정보') {
             resolve({
@@ -140,7 +147,7 @@ async function addData(sheet, data) {
       throw new Error('추가할 데이터가 없거나 형식이 올바르지 않습니다.');
     }
     
-    // 항상 실제 API 호출하도록 수정
+    // 항상 실제 API 호출하도록 설정
     const isDebugMode = false;
     
     // 디버깅 모드일 때는 실제 API 호출 없이 로컬 저장만 수행
@@ -174,7 +181,9 @@ async function addData(sheet, data) {
     
     // 데이터를 URL 파라미터로 변환
     const dataParams = Object.entries(data).map(([key, value]) => {
-      return `data_${key}=${encodeURIComponent(value)}`;
+      // 데이터 타입에 따라 적절한 처리
+      const encodedValue = (value === null || value === undefined) ? '' : encodeURIComponent(value);
+      return `data_${key}=${encodedValue}`;
     }).join('&');
     
     const apiUrl = `${API_URL}?action=addData&sheet=${encodeURIComponent(actualSheet)}&${dataParams}&callback=${encodeURIComponent(callbackName)}`;
@@ -187,7 +196,9 @@ async function addData(sheet, data) {
         console.log(`${sheet} 데이터 추가 결과:`, response);
         // 메모리 정리
         delete window[callbackName];
-        document.head.removeChild(script);
+        if (document.getElementById(callbackName)) {
+          document.head.removeChild(document.getElementById(callbackName));
+        }
         
         // 성공 시 로컬 스토리지에도 저장
         if (response.success) {
@@ -199,13 +210,16 @@ async function addData(sheet, data) {
       
       // 스크립트 태그 생성 및 추가
       const script = document.createElement('script');
+      script.id = callbackName; // ID 설정
       script.src = apiUrl;
       
       // 오류 처리
       script.onerror = (error) => {
         console.error('데이터 추가 JSONP 요청 실패:', error);
         delete window[callbackName];
-        document.head.removeChild(script);
+        if (document.getElementById(callbackName)) {
+          document.head.removeChild(document.getElementById(callbackName));
+        }
         
         // CORS 이슈로 인한 모의 응답 반환
         console.log('JSONP 방식 실패, 모의 응답 사용');
@@ -222,12 +236,14 @@ async function addData(sheet, data) {
         });
       };
       
-      // 타임아웃 설정 (5초)
+      // 타임아웃 설정 (10초로 증가)
       const timeoutId = setTimeout(() => {
         if (window[callbackName]) {
           console.error('데이터 추가 JSONP 요청 타임아웃');
           delete window[callbackName];
-          document.head.removeChild(script);
+          if (document.getElementById(callbackName)) {
+            document.head.removeChild(document.getElementById(callbackName));
+          }
           
           // 타임아웃시 모의 응답 반환
           const tempId = Date.now().toString();
@@ -240,7 +256,7 @@ async function addData(sheet, data) {
             message: "항목이 추가되었습니다. (로컬 저장, 타임아웃)"
           });
         }
-      }, 5000);
+      }, 10000); // 10초로 증가
       
       // 성공 시 타임아웃 제거
       const originalCallback = window[callbackName];
@@ -320,7 +336,9 @@ async function updateData(sheet, data) {
     
     // 데이터를 URL 파라미터로 변환
     const dataParams = Object.entries(data).map(([key, value]) => {
-      return `data_${key}=${encodeURIComponent(value)}`;
+      // null 또는 undefined 값을 빈 문자열로 처리
+      const encodedValue = (value === null || value === undefined) ? '' : encodeURIComponent(value);
+      return `data_${key}=${encodedValue}`;
     }).join('&');
     
     const apiUrl = `${API_URL}?action=updateData&sheet=${encodeURIComponent(actualSheet)}&id=${encodeURIComponent(id)}&${dataParams}&callback=${encodeURIComponent(callbackName)}`;
@@ -333,19 +351,24 @@ async function updateData(sheet, data) {
         console.log(`${sheet} 데이터 업데이트 결과:`, response);
         // 메모리 정리
         delete window[callbackName];
-        document.head.removeChild(script);
+        if (document.getElementById(callbackName)) {
+          document.head.removeChild(document.getElementById(callbackName));
+        }
         resolve(response);
       };
       
       // 스크립트 태그 생성 및 추가
       const script = document.createElement('script');
+      script.id = callbackName;
       script.src = apiUrl;
       
       // 오류 처리
       script.onerror = (error) => {
         console.error('데이터 업데이트 JSONP 요청 실패:', error);
         delete window[callbackName];
-        document.head.removeChild(script);
+        if (document.getElementById(callbackName)) {
+          document.head.removeChild(document.getElementById(callbackName));
+        }
         
         // CORS 이슈로 인한 모의 응답 반환
         console.log('JSONP 방식 실패, 모의 응답 사용');
@@ -356,12 +379,14 @@ async function updateData(sheet, data) {
         });
       };
       
-      // 타임아웃 설정 (5초)
+      // 타임아웃 설정 (10초로 증가)
       const timeoutId = setTimeout(() => {
         if (window[callbackName]) {
           console.error('데이터 업데이트 JSONP 요청 타임아웃');
           delete window[callbackName];
-          document.head.removeChild(script);
+          if (document.getElementById(callbackName)) {
+            document.head.removeChild(document.getElementById(callbackName));
+          }
           
           // 타임아웃시 모의 응답 반환
           resolve({
@@ -370,7 +395,7 @@ async function updateData(sheet, data) {
             message: "항목이 업데이트되었습니다. (로컬 저장, 타임아웃)"
           });
         }
-      }, 5000);
+      }, 10000); // 10초로 증가
       
       // 성공 시 타임아웃 제거
       const originalCallback = window[callbackName];
@@ -415,19 +440,24 @@ async function deleteData(sheet, id) {
         console.log(`${sheet} 데이터 삭제 결과:`, response);
         // 메모리 정리
         delete window[callbackName];
-        document.head.removeChild(script);
+        if (document.getElementById(callbackName)) {
+          document.head.removeChild(document.getElementById(callbackName));
+        }
         resolve(response);
       };
       
       // 스크립트 태그 생성 및 추가
       const script = document.createElement('script');
+      script.id = callbackName;
       script.src = apiUrl;
       
       // 오류 처리
       script.onerror = (error) => {
         console.error('데이터 삭제 JSONP 요청 실패:', error);
         delete window[callbackName];
-        document.head.removeChild(script);
+        if (document.getElementById(callbackName)) {
+          document.head.removeChild(document.getElementById(callbackName));
+        }
         
         // CORS 이슈로 인한 모의 응답 반환
         console.log('JSONP 방식 실패, 모의 응답 사용');
@@ -441,12 +471,14 @@ async function deleteData(sheet, id) {
         });
       };
       
-      // 타임아웃 설정 (5초)
+      // 타임아웃 설정 (10초로 증가)
       const timeoutId = setTimeout(() => {
         if (window[callbackName]) {
           console.error('데이터 삭제 JSONP 요청 타임아웃');
           delete window[callbackName];
-          document.head.removeChild(script);
+          if (document.getElementById(callbackName)) {
+            document.head.removeChild(document.getElementById(callbackName));
+          }
           
           // 타임아웃시 모의 응답 반환
           resolve({
@@ -458,7 +490,7 @@ async function deleteData(sheet, id) {
             message: "항목이 삭제되었습니다. (로컬 저장, 타임아웃)"
           });
         }
-      }, 5000);
+      }, 10000); // 10초로 증가
       
       // 성공 시 타임아웃 제거
       const originalCallback = window[callbackName];
