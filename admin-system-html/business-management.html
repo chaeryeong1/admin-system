@@ -654,14 +654,36 @@
       
       // 단일 선택된 사업 ID
       const projectId = selectedProjectIds[0];
+      console.log('수정할 사업 ID:', projectId, typeof projectId);
+      console.log('프로젝트 배열:', projects);
       
-      const project = projects.find(p => p.id === projectId);
+      // ID 형식 일치 여부 확인을 위해 문자열로 변환하여 비교
+      const project = projects.find(p => String(p.id) === String(projectId));
       
       if (!project) {
+        // 모든 프로젝트의 ID를 로깅하여 디버깅
+        const allIds = projects.map(p => `ID: ${p.id} (${typeof p.id})`);
         console.error('선택된 ID에 해당하는 사업을 찾을 수 없음:', projectId);
-        console.log('현재 사업 목록:', projects);
-        alert('선택한 사업 정보를 찾을 수 없습니다.');
-        return;
+        console.log('현재 모든 사업 ID 목록:', allIds);
+        
+        // 다른 방법으로 시도: 배열 순회하면서 수동 비교
+        let foundProject = null;
+        for (let i = 0; i < projects.length; i++) {
+          console.log(`비교: 프로젝트[${i}].id (${projects[i].id}) vs 선택된 ID (${projectId})`);
+          if (String(projects[i].id).trim() === String(projectId).trim()) {
+            foundProject = projects[i];
+            console.log('일치하는 프로젝트 찾음:', foundProject);
+            break;
+          }
+        }
+        
+        if (foundProject) {
+          // 수동 검색으로 찾은 프로젝트 사용
+          project = foundProject;
+        } else {
+          alert('선택한 사업 정보를 찾을 수 없습니다.');
+          return;
+        }
       }
       
       console.log('수정할 사업 정보:', project);
@@ -700,28 +722,45 @@
       // 선택된 항목이 하나인 경우
       if (selectedProjectIds.length === 1) {
         const projectId = selectedProjectIds[0];
-        const project = projects.find(p => p.id === projectId);
-        
-        if (!project) {
-          console.error('선택된 ID에 해당하는 사업을 찾을 수 없음:', projectId);
-          console.log('현재 사업 목록:', projects);
-          alert('선택한 사업 정보를 찾을 수 없습니다.');
-          return;
-        }
-        
-        // 삭제할 사업 이름 표시
-        const deleteNameElement = document.getElementById('deleteProjectName');
-        if (deleteNameElement) {
-          deleteNameElement.textContent = project.name;
-        }
-        
-        // 모달 표시
-        deleteModal.classList.remove('hidden');
-      } 
+        deleteProjectById(projectId);
+        return;
+      }
+      
       // 다중 선택인 경우
-      else {
-        if (confirm(`선택한 ${selectedProjectIds.length}개의 사업을 모두 삭제하시겠습니까?`)) {
-          deleteProject(); // 직접 삭제 처리
+      if (!confirm(`선택한 ${selectedProjectIds.length}개의 사업을 모두 삭제하시겠습니까?`)) {
+        return;
+      }
+      
+      // 삭제 중 표시
+      const deleteButton = document.getElementById('confirmDeleteButton');
+      if (deleteButton) {
+        deleteButton.textContent = '삭제 중...';
+        deleteButton.disabled = true;
+      }
+      
+      try {
+        // 순차적으로 삭제 처리
+        for (const projectId of selectedProjectIds) {
+          await deleteData('사업정보', projectId);
+        }
+        
+        // 성공 시 로컬 캐시 삭제하고 새로 데이터 로드
+        localStorage.removeItem('projectsData');
+        selectedProjectIds = [];
+        selectedProjectId = null;
+        closeDeleteModal();
+        
+        // 서버에서 새로운 데이터 로드
+        await loadProjects();
+        alert('선택한 사업 정보가 삭제되었습니다.');
+      } catch (error) {
+        console.error('API 오류:', error);
+        alert('사업 정보 삭제 중 오류가 발생했습니다: ' + error.message);
+        
+        // 버튼 복원
+        if (deleteButton) {
+          deleteButton.textContent = '삭제';
+          deleteButton.disabled = false;
         }
       }
     }
