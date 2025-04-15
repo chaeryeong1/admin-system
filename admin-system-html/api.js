@@ -228,34 +228,31 @@ async function addData(sheet, data) {
 
 // 데이터 업데이트
 async function updateData(sheet, id, data) {
-  console.log(`${sheet} 데이터 업데이트 시작:`, { id, data });
+  console.log(`${sheet} 데이터 업데이트 시작:`, id, data);
   
   try {
     const actualSheet = getActualSheetName(sheet);
     
-    // 데이터가 객체인지 확인
-    if (!data || typeof data !== 'object') {
-      throw new Error('업데이트할 데이터가 올바른 형식이 아닙니다.');
-    }
-    
-    // ID가 있는지 확인
+    // 데이터 및 ID 검증
     if (!id) {
-      throw new Error('업데이트할 항목의 ID가 필요합니다.');
+      throw new Error('업데이트할 항목의 ID가 없습니다.');
     }
     
-    // 기존 ID 유지
-    const updateData = { ...data, id };
+    if (!data || typeof data !== 'object') {
+      throw new Error('업데이트할 데이터가 없거나 형식이 올바르지 않습니다.');
+    }
     
     // CORS 우회를 위한 JSONP 방식 사용
     const callbackName = 'googleScriptCallback_' + Math.floor(Math.random() * 1000000);
-    const apiUrl = `${API_URL}?action=updateData&sheet=${encodeURIComponent(actualSheet)}&id=${encodeURIComponent(id)}&callback=${encodeURIComponent(callbackName)}`;
+    
+    // 데이터를 URL 파라미터로 변환
+    const dataParams = Object.entries(data).map(([key, value]) => {
+      return `data_${key}=${encodeURIComponent(value)}`;
+    }).join('&');
+    
+    const apiUrl = `${API_URL}?action=updateData&sheet=${encodeURIComponent(actualSheet)}&id=${encodeURIComponent(id)}&${dataParams}&callback=${encodeURIComponent(callbackName)}`;
     
     console.log(`API 요청 URL: ${apiUrl}`);
-    console.log('API로 전송할 데이터:', updateData);
-    
-    // JSONP 스타일 요청 - POST 데이터를 URL 파라미터로 전달
-    const dataParam = encodeURIComponent(JSON.stringify(updateData));
-    const fullUrl = `${apiUrl}&data=${dataParam}`;
     
     return new Promise((resolve, reject) => {
       // 콜백 함수 정의
@@ -269,7 +266,7 @@ async function updateData(sheet, id, data) {
       
       // 스크립트 태그 생성 및 추가
       const script = document.createElement('script');
-      script.src = fullUrl;
+      script.src = apiUrl;
       
       // 오류 처리
       script.onerror = (error) => {
@@ -282,8 +279,8 @@ async function updateData(sheet, id, data) {
         resolve({
           success: true,
           data: {
-            updated: 1,
-            item: updateData
+            id: id,
+            ...data
           },
           message: "항목이 업데이트되었습니다. (로컬 저장)"
         });
@@ -300,8 +297,8 @@ async function updateData(sheet, id, data) {
           resolve({
             success: true,
             data: {
-              updated: 1,
-              item: updateData
+              id: id,
+              ...data
             },
             message: "항목이 업데이트되었습니다. (로컬 저장, 타임아웃)"
           });
