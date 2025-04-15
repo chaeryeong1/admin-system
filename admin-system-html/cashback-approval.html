@@ -69,19 +69,48 @@
             <thead>
               <tr class="border-b">
                 <th class="px-4 py-2 text-left">선택</th>
-                <th class="px-4 py-2 text-left">기업명</th>
-                <th class="px-4 py-2 text-left">담당자</th>
-                <th class="px-4 py-2 text-left">참여 사업</th>
-                <th class="px-4 py-2 text-left">요청일</th>
-                <th class="px-4 py-2 text-left">금액</th>
-                <th class="px-4 py-2 text-left">주문서</th>
-                <th class="px-4 py-2 text-left">상태</th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="companyName">기업명 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="bankInfo">계좌정보 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="amount">금액 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="requestDate">요청일 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="status">상태 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left">작업</th>
               </tr>
             </thead>
             <tbody id="approvalTableBody">
               <!-- JavaScript로 채워질 부분 -->
             </tbody>
           </table>
+        </div>
+        
+        <!-- 페이지네이션 -->
+        <div class="px-4 py-3 flex items-center justify-between border-t">
+          <div class="flex-1 flex justify-between items-center">
+            <div>
+              <span class="text-sm text-gray-700">
+                총 <span id="totalItems">0</span>개 항목 중 <span id="startItem">0</span>-<span id="endItem">0</span>
+              </span>
+            </div>
+            <div>
+              <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <button id="prevPageBtn" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                  <span class="sr-only">이전</span>
+                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+                <div id="paginationNumbers" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                  <!-- 페이지 번호가 여기에 동적으로 추가됩니다 -->
+                </div>
+                <button id="nextPageBtn" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                  <span class="sr-only">다음</span>
+                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </nav>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -172,192 +201,464 @@
 
   <script>
     // 상태 관리
-    let approvals = [
-      {
-        id: 1,
-        companyName: "(주)클라우드테크",
-        contactPerson: "홍길동",
-        project: "클라우드 보급사업",
-        requestDate: "2025-06-20",
-        amount: 500000,
-        status: "승인 대기",
-        hasOrderSheet: true
-      },
-      {
-        id: 2,
-        companyName: "데이터시스템즈",
-        contactPerson: "김철수",
-        project: "클라우드 보급사업",
-        requestDate: "2025-06-18",
-        amount: 800000,
-        status: "승인 대기",
-        hasOrderSheet: true
+    let approvals = [];
+    let selectedApprovalId = null;
+    
+    // 페이지네이션 상태
+    let currentPage = 1;
+    const itemsPerPage = 20;
+    let totalPages = 0;
+    
+    // 정렬 상태
+    let currentSort = {
+      field: null,
+      direction: 'asc' // 'asc' 또는 'desc'
+    };
+
+    async function loadApprovals() {
+      console.log('승인 데이터 로딩 시작');
+      document.getElementById('approvalTableBody').innerHTML = 
+        '<tr><td colspan="7" class="px-4 py-2 text-center">데이터를 불러오는 중입니다...</td></tr>';
+      
+      try {
+        // API를 통해 데이터 가져오기
+        const result = await fetchData('송금승인');
+        console.log('API 결과:', result);
+        
+        if (result && result.data && Array.isArray(result.data) && result.data.length > 0) {
+          approvals = result.data;
+          console.log(`${approvals.length}개의 송금 승인 로드됨`);
+        } else {
+          console.log('유효한 데이터가 없어 샘플 데이터를 사용합니다.');
+          // 샘플 데이터
+          approvals = [
+            {
+              id: "1",
+              companyName: "(주)클라우드솔루션",
+              bankInfo: "신한은행 123-456-789 (주)클라우드솔루션",
+              amount: 5000000,
+              requestDate: "2025-02-15",
+              status: "검토중"
+            },
+            {
+              id: "2",
+              companyName: "디지털테크(주)",
+              bankInfo: "국민은행 987-654-321 디지털테크(주)",
+              amount: 7500000,
+              requestDate: "2025-02-10",
+              status: "검토중"
+            },
+            {
+              id: "3",
+              companyName: "스마트비즈니스(주)",
+              bankInfo: "우리은행 555-555-555 스마트비즈니스",
+              amount: 12000000,
+              requestDate: "2025-02-05",
+              status: "승인완료"
+            }
+          ];
+        }
+        renderApprovals();
+      } catch (error) {
+        console.error('송금 승인 데이터 로드 중 오류 발생:', error);
+        document.getElementById('approvalTableBody').innerHTML = 
+          '<tr><td colspan="7" class="px-4 py-2 text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
       }
-    ];
-    let selectedId = null;
-
-    // DOM 요소
-    const approvalTableBody = document.getElementById('approvalTableBody');
-    const businessFilter = document.getElementById('businessFilter');
-    const searchInput = document.getElementById('searchInput');
-    const searchButton = document.getElementById('searchButton');
-    const approveButton = document.getElementById('approveButton');
-    const rejectButton = document.getElementById('rejectButton');
-    
-    const approveModal = document.getElementById('approveModal');
-    const approveCompanyName = document.getElementById('approveCompanyName');
-    const approveAmount = document.getElementById('approveAmount');
-    const cancelApproveButton = document.getElementById('cancelApproveButton');
-    const confirmApproveButton = document.getElementById('confirmApproveButton');
-    
-    const rejectModal = document.getElementById('rejectModal');
-    const rejectCompanyName = document.getElementById('rejectCompanyName');
-    const rejectReason = document.getElementById('rejectReason');
-    const cancelRejectButton = document.getElementById('cancelRejectButton');
-    const confirmRejectButton = document.getElementById('confirmRejectButton');
-
-    // 금액 포맷팅 함수
-    function formatAmount(amount) {
-      return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
 
-    // 승인 목록 렌더링
     function renderApprovals() {
-      const filteredApprovals = approvals.filter(approval => 
-        approval.companyName.includes(searchInput.value) && 
-        (businessFilter.value === "" || approval.project === businessFilter.value)
-      );
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const statusFilter = document.getElementById('statusFilter').value;
+      
+      let filteredApprovals = approvals.filter(approval => {
+        const matchSearch = approval.companyName.toLowerCase().includes(searchTerm);
+        const matchStatus = !statusFilter || approval.status === statusFilter;
+        return matchSearch && matchStatus;
+      });
+      
+      // 정렬 적용
+      if (currentSort.field) {
+        filteredApprovals.sort((a, b) => {
+          let aValue = a[currentSort.field];
+          let bValue = b[currentSort.field];
+          
+          // 날짜인 경우 특별 처리
+          if (currentSort.field === 'requestDate') {
+            const dateA = new Date(aValue);
+            const dateB = new Date(bValue);
+            return currentSort.direction === 'asc' ? dateA - dateB : dateB - dateA;
+          }
+          
+          // 금액인 경우 숫자로 처리
+          if (currentSort.field === 'amount') {
+            aValue = Number(aValue);
+            bValue = Number(bValue);
+            return currentSort.direction === 'asc' ? aValue - bValue : bValue - aValue;
+          }
+          
+          // 문자열인 경우
+          aValue = String(aValue || '').toLowerCase();
+          bValue = String(bValue || '').toLowerCase();
+          
+          if (aValue < bValue) return currentSort.direction === 'asc' ? -1 : 1;
+          if (aValue > bValue) return currentSort.direction === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+      
+      // 페이지네이션 계산
+      totalPages = Math.ceil(filteredApprovals.length / itemsPerPage);
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, filteredApprovals.length);
+      const paginatedApprovals = filteredApprovals.slice(startIndex, endIndex);
+      
+      // 페이지네이션 정보 업데이트
+      document.getElementById('totalItems').textContent = filteredApprovals.length;
+      document.getElementById('startItem').textContent = filteredApprovals.length === 0 ? 0 : startIndex + 1;
+      document.getElementById('endItem').textContent = endIndex;
+      
+      // 페이지네이션 버튼 업데이트
+      updatePaginationButtons();
 
+      const approvalTableBody = document.getElementById('approvalTableBody');
       approvalTableBody.innerHTML = '';
       
-      filteredApprovals.forEach(approval => {
+      if (filteredApprovals.length === 0) {
+        approvalTableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
+        return;
+      }
+
+      paginatedApprovals.forEach(approval => {
         const tr = document.createElement('tr');
         tr.className = 'border-b hover:bg-gray-50';
-        
-        // 상태에 따른 스타일 
-        let statusClass = 'bg-blue-100 text-blue-800';
-        
         tr.innerHTML = `
           <td class="px-4 py-2">
             <input 
               type="radio" 
               name="select-approval" 
               value="${approval.id}" 
-              ${selectedId === approval.id ? 'checked' : ''}
+              class="approval-select"
+              ${selectedApprovalId === approval.id ? 'checked' : ''}
             >
           </td>
           <td class="px-4 py-2">${approval.companyName}</td>
-          <td class="px-4 py-2">${approval.contactPerson}</td>
-          <td class="px-4 py-2">${approval.project}</td>
+          <td class="px-4 py-2">${approval.bankInfo}</td>
+          <td class="px-4 py-2">${formatNumber(approval.amount)}원</td>
           <td class="px-4 py-2">${approval.requestDate}</td>
-          <td class="px-4 py-2 text-right">${formatAmount(approval.amount)}원</td>
+          <td class="px-4 py-2"><span class="${getStatusClass(approval.status)}">${approval.status}</span></td>
           <td class="px-4 py-2">
-            ${approval.hasOrderSheet 
-              ? `<button class="text-blue-600 underline text-sm view-order" data-id="${approval.id}">주문서 보기</button>`
-              : `<span class="text-gray-400 text-sm">없음</span>`
-            }
-          </td>
-          <td class="px-4 py-2">
-            <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">
-              ${approval.status}
-            </span>
+            ${approval.status === '검토중' ? `
+              <button class="bg-green-500 hover:bg-green-600 text-white rounded px-3 py-1 text-sm approve-button" data-id="${approval.id}">승인</button>
+              <button class="bg-red-500 hover:bg-red-600 text-white rounded px-3 py-1 text-sm reject-button" data-id="${approval.id}">반려</button>
+            ` : ''}
           </td>
         `;
-        
         approvalTableBody.appendChild(tr);
       });
 
-      // 라디오 버튼 이벤트 리스너 추가
-      document.querySelectorAll('input[name="select-approval"]').forEach(radio => {
+      // 이벤트 리스너 추가
+      document.querySelectorAll('.approval-select').forEach(radio => {
         radio.addEventListener('change', (e) => {
-          selectedId = parseInt(e.target.value);
+          selectedApprovalId = e.target.value;
         });
       });
 
-      // 주문서 보기 버튼 이벤트 리스너
-      document.querySelectorAll('.view-order').forEach(button => {
+      document.querySelectorAll('.approve-button').forEach(button => {
         button.addEventListener('click', (e) => {
-          const id = parseInt(e.target.dataset.id);
-          const approval = approvals.find(a => a.id === id);
-          alert(`${approval.companyName}의 주문서 보기 기능은 아직 준비중입니다.`);
+          const approvalId = e.target.getAttribute('data-id');
+          openApproveModal(approvalId);
         });
       });
+
+      document.querySelectorAll('.reject-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+          const approvalId = e.target.getAttribute('data-id');
+          openRejectModal(approvalId);
+        });
+      });
+      
+      // 정렬 아이콘 업데이트
+      updateSortIcons();
+    }
+    
+    // 숫자 포맷팅
+    function formatNumber(num) {
+      if (num === undefined || num === null) return '';
+      return new Intl.NumberFormat('ko-KR').format(num);
+    }
+    
+    // 상태에 따른 클래스 반환
+    function getStatusClass(status) {
+      if (!status) return '';
+      
+      switch(status) {
+        case '승인완료': return 'text-green-600 font-medium';
+        case '검토중': return 'text-blue-600 font-medium';
+        case '요청완료': return 'text-yellow-600 font-medium';
+        case '반려': return 'text-red-600 font-medium';
+        default: return '';
+      }
+    }
+    
+    // 페이지네이션 버튼 업데이트
+    function updatePaginationButtons() {
+      const paginationNumbers = document.getElementById('paginationNumbers');
+      paginationNumbers.innerHTML = '';
+      
+      // 표시할 페이지 번호 범위 계산
+      const maxVisiblePages = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      // 페이지 범위 조정
+      if (endPage - startPage + 1 < maxVisiblePages && startPage > 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+      
+      // 이전 버튼 상태 업데이트
+      const prevPageBtn = document.getElementById('prevPageBtn');
+      prevPageBtn.disabled = currentPage <= 1;
+      prevPageBtn.classList.toggle('opacity-50', currentPage <= 1);
+      prevPageBtn.onclick = () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderApprovals();
+        }
+      };
+      
+      // 페이지 번호 버튼 생성
+      for (let i = startPage; i <= endPage; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.className = `relative inline-flex items-center px-4 py-2 border ${
+          i === currentPage ? 'bg-blue-50 border-blue-500 text-blue-600' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+        } text-sm font-medium`;
+        pageButton.textContent = i;
+        pageButton.onclick = () => {
+          currentPage = i;
+          renderApprovals();
+        };
+        paginationNumbers.appendChild(pageButton);
+      }
+      
+      // 다음 버튼 상태 업데이트
+      const nextPageBtn = document.getElementById('nextPageBtn');
+      nextPageBtn.disabled = currentPage >= totalPages;
+      nextPageBtn.classList.toggle('opacity-50', currentPage >= totalPages);
+      nextPageBtn.onclick = () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderApprovals();
+        }
+      };
+    }
+    
+    // 정렬 아이콘 업데이트
+    function updateSortIcons() {
+      document.querySelectorAll('.sort-icon').forEach(icon => {
+        icon.textContent = '';
+      });
+      
+      if (currentSort.field) {
+        const sortHeader = document.querySelector(`th[data-sort="${currentSort.field}"] .sort-icon`);
+        if (sortHeader) {
+          sortHeader.textContent = currentSort.direction === 'asc' ? '↑' : '↓';
+        }
+      }
+    }
+    
+    // 정렬 이벤트 처리
+    function handleSort(field) {
+      if (currentSort.field === field) {
+        // 같은 필드를 다시 클릭한 경우 방향 전환
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        // 새로운 필드로 정렬
+        currentSort.field = field;
+        currentSort.direction = 'asc';
+      }
+      
+      // 페이지를 1페이지로 리셋
+      currentPage = 1;
+      renderApprovals();
     }
 
-    // 초기 렌더링
-    renderApprovals();
+    // 승인 모달 열기
+    function openApproveModal(approvalId) {
+      const approval = approvals.find(a => a.id === approvalId);
+      if (!approval) {
+        alert('승인 정보를 찾을 수 없습니다.');
+        return;
+      }
+      
+      document.getElementById('approveCompanyName').textContent = approval.companyName;
+      document.getElementById('approveAmount').textContent = formatNumber(approval.amount) + '원';
+      document.getElementById('approveModal').classList.remove('hidden');
+      document.getElementById('approveForm').setAttribute('data-id', approvalId);
+    }
+
+    // 반려 모달 열기
+    function openRejectModal(approvalId) {
+      const approval = approvals.find(a => a.id === approvalId);
+      if (!approval) {
+        alert('승인 정보를 찾을 수 없습니다.');
+        return;
+      }
+      
+      document.getElementById('rejectCompanyName').textContent = approval.companyName;
+      document.getElementById('rejectReason').value = '';
+      document.getElementById('rejectModal').classList.remove('hidden');
+      document.getElementById('rejectForm').setAttribute('data-id', approvalId);
+    }
+
+    // 모달 닫기
+    function closeModals() {
+      document.getElementById('approveModal').classList.add('hidden');
+      document.getElementById('rejectModal').classList.add('hidden');
+    }
+
+    // 승인 처리
+    async function handleApproveSubmit(e) {
+      e.preventDefault();
+      
+      const form = document.getElementById('approveForm');
+      const approvalId = form.getAttribute('data-id');
+      const confirmButton = document.getElementById('approveConfirmButton');
+      
+      if (!approvalId) return;
+      
+      try {
+        confirmButton.disabled = true;
+        confirmButton.textContent = '처리 중...';
+        
+        const approval = approvals.find(a => a.id === approvalId);
+        if (!approval) {
+          throw new Error('승인 정보를 찾을 수 없습니다.');
+        }
+        
+        // API 호출로 승인 처리
+        const updatedData = {
+          ...approval,
+          status: '승인완료',
+          approvalDate: new Date().toISOString().split('T')[0]
+        };
+        
+        const result = await updateData('송금승인', updatedData);
+        
+        if (result.success) {
+          // 로컬 배열 업데이트
+          const index = approvals.findIndex(a => a.id === approvalId);
+          if (index !== -1) {
+            approvals[index] = updatedData;
+          }
+          
+          closeModals();
+          renderApprovals();
+          alert('송금 요청이 승인되었습니다.');
+        } else {
+          throw new Error(result.error || '알 수 없는 오류');
+        }
+      } catch (error) {
+        console.error('승인 처리 중 오류:', error);
+        alert('승인 처리 중 오류가 발생했습니다: ' + error.message);
+      } finally {
+        confirmButton.disabled = false;
+        confirmButton.textContent = '승인';
+      }
+    }
+
+    // 반려 처리
+    async function handleRejectSubmit(e) {
+      e.preventDefault();
+      
+      const form = document.getElementById('rejectForm');
+      const approvalId = form.getAttribute('data-id');
+      const rejectReason = document.getElementById('rejectReason').value.trim();
+      const confirmButton = document.getElementById('rejectConfirmButton');
+      
+      if (!approvalId) return;
+      
+      if (!rejectReason) {
+        alert('반려 사유를 입력해주세요.');
+        return;
+      }
+      
+      try {
+        confirmButton.disabled = true;
+        confirmButton.textContent = '처리 중...';
+        
+        const approval = approvals.find(a => a.id === approvalId);
+        if (!approval) {
+          throw new Error('승인 정보를 찾을 수 없습니다.');
+        }
+        
+        // API 호출로 반려 처리
+        const updatedData = {
+          ...approval,
+          status: '반려',
+          rejectReason: rejectReason,
+          rejectDate: new Date().toISOString().split('T')[0]
+        };
+        
+        const result = await updateData('송금승인', updatedData);
+        
+        if (result.success) {
+          // 로컬 배열 업데이트
+          const index = approvals.findIndex(a => a.id === approvalId);
+          if (index !== -1) {
+            approvals[index] = updatedData;
+          }
+          
+          closeModals();
+          renderApprovals();
+          alert('송금 요청이 반려되었습니다.');
+        } else {
+          throw new Error(result.error || '알 수 없는 오류');
+        }
+      } catch (error) {
+        console.error('반려 처리 중 오류:', error);
+        alert('반려 처리 중 오류가 발생했습니다: ' + error.message);
+      } finally {
+        confirmButton.disabled = false;
+        confirmButton.textContent = '반려';
+      }
+    }
 
     // 이벤트 리스너
-    searchButton.addEventListener('click', () => {
-      renderApprovals();
-    });
-
-    approveButton.addEventListener('click', () => {
-      if (!selectedId) {
-        alert('승인할 항목을 선택하세요.');
-        return;
-      }
-
-      const approval = approvals.find(a => a.id === selectedId);
-      if (!approval) return;
-
-      approveCompanyName.textContent = approval.companyName;
-      approveAmount.value = formatAmount(approval.amount);
-      approveModal.classList.remove('hidden');
-    });
-
-    cancelApproveButton.addEventListener('click', () => {
-      approveModal.classList.add('hidden');
-    });
-
-    confirmApproveButton.addEventListener('click', () => {
-      const index = approvals.findIndex(a => a.id === selectedId);
-      if (index !== -1) {
-        approvals.splice(index, 1);
-      }
+    window.addEventListener('load', () => {
+      loadApprovals();
       
-      selectedId = null;
-      approveModal.classList.add('hidden');
-      renderApprovals();
+      // 정렬 이벤트 리스너 추가
+      document.querySelectorAll('th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          const field = th.getAttribute('data-sort');
+          handleSort(field);
+        });
+      });
       
-      alert('송금이 승인되었습니다.');
-    });
-
-    rejectButton.addEventListener('click', () => {
-      if (!selectedId) {
-        alert('거절할 항목을 선택하세요.');
-        return;
-      }
-
-      const approval = approvals.find(a => a.id === selectedId);
-      if (!approval) return;
-
-      rejectCompanyName.textContent = approval.companyName;
-      rejectReason.value = '';
-      rejectModal.classList.remove('hidden');
-    });
-
-    cancelRejectButton.addEventListener('click', () => {
-      rejectModal.classList.add('hidden');
-    });
-
-    confirmRejectButton.addEventListener('click', () => {
-      const reason = rejectReason.value.trim();
-      if (!reason) {
-        alert('거절 사유를 입력하세요.');
-        return;
-      }
+      document.getElementById('searchButton').addEventListener('click', () => {
+        currentPage = 1; // 검색 시 1페이지로 리셋
+        renderApprovals();
+      });
       
-      const index = approvals.findIndex(a => a.id === selectedId);
-      if (index !== -1) {
-        approvals.splice(index, 1);
-      }
+      document.getElementById('statusFilter').addEventListener('change', () => {
+        currentPage = 1; // 필터링 시 1페이지로 리셋
+        renderApprovals();
+      });
       
-      selectedId = null;
-      rejectModal.classList.add('hidden');
-      renderApprovals();
+      document.getElementById('searchInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          currentPage = 1;
+          renderApprovals();
+        }
+      });
       
-      alert('송금이 거절되었습니다.');
+      document.getElementById('approveForm').addEventListener('submit', handleApproveSubmit);
+      document.getElementById('rejectForm').addEventListener('submit', handleRejectSubmit);
+      
+      // 모달 닫기 버튼들
+      document.querySelectorAll('.modal-close').forEach(button => {
+        button.addEventListener('click', closeModals);
+      });
     });
   </script>
 </body>
