@@ -413,29 +413,29 @@
             {
               id: 'sample1',
               name: '(주)샘플테크',
-              business_number: '123-45-67890',
-              representative: '홍길동',
-              contact_email: 'sample@example.com',
-              contact_phone: '02-1234-5678',
-              created_at: '2023-01-15'
+              businessNumber: '123-45-67890',
+              contactPerson: '홍길동',
+              email: 'sample@example.com',
+              contact: '02-1234-5678',
+              registrationDate: '2023-01-15'
             },
             {
               id: 'sample2',
               name: '한국 제조 주식회사',
-              business_number: '234-56-78901',
-              representative: '김철수',
-              contact_email: 'manufacturing@example.com',
-              contact_phone: '051-987-6543',
-              created_at: '2023-02-20'
+              businessNumber: '234-56-78901',
+              contactPerson: '김철수',
+              email: 'manufacturing@example.com',
+              contact: '051-987-6543',
+              registrationDate: '2023-02-20'
             },
             {
               id: 'sample3',
               name: '클라우드서비스(주)',
-              business_number: '345-67-89012',
-              representative: '이영희',
-              contact_email: 'cloud@example.com',
-              contact_phone: '032-456-7890',
-              created_at: '2023-03-10'
+              businessNumber: '345-67-89012',
+              contactPerson: '이영희',
+              email: 'cloud@example.com',
+              contact: '032-456-7890',
+              registrationDate: '2023-03-10'
             }
           ];
         }
@@ -530,11 +530,11 @@
                    value="${company.id}" onchange="updateDeleteButtonState()">
           </td>
           <td class="px-4 py-2 text-left">${company.name || '-'}</td>
-          <td class="px-4 py-2 text-left">${company.business_number || '-'}</td>
-          <td class="px-4 py-2 text-left">${company.representative || '-'}</td>
-          <td class="px-4 py-2 text-left">${company.contact_email || '-'}</td>
-          <td class="px-4 py-2 text-left">${company.contact_phone || '-'}</td>
-          <td class="px-4 py-2 text-left">${company.created_at || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.businessNumber || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.contactPerson || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.email || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.contact || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.registrationDate || '-'}</td>
           <td class="px-4 py-2 text-left">
             <div class="flex space-x-2">
               <button onclick="openEditModal('${company.id}')" class="text-blue-500 hover:text-blue-700">
