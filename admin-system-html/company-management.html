@@ -267,8 +267,15 @@
         document.getElementById('selectedFileName').textContent = '선택된 파일 없음';
       }
       
-      // 버튼 이벤트 처리 - 모달이 열릴 때마다 새로 등록 (이중 이벤트 방지)
+      // 버튼 초기화 (이전 상태 초기화 - 중요)
       const confirmAddButton = document.getElementById('confirmAddButton');
+      if (confirmAddButton) {
+        confirmAddButton.disabled = false;
+        confirmAddButton.textContent = '추가';
+        confirmAddButton.removeAttribute('data-processing');
+      }
+      
+      // 버튼 이벤트 처리 - 모달이 열릴 때마다 새로 등록 (이중 이벤트 방지)
       const cancelAddButton = document.getElementById('cancelAddButton');
       
       if (confirmAddButton) {
@@ -276,23 +283,8 @@
         const newConfirmButton = confirmAddButton.cloneNode(true);
         confirmAddButton.parentNode.replaceChild(newConfirmButton, confirmAddButton);
         
-        // 새 이벤트 리스너 등록
-        newConfirmButton.addEventListener('click', function(event) {
-          // 이중 클릭 방지
-          if (this.getAttribute('data-processing') === 'true') {
-            console.log('이미 처리 중인 요청입니다.');
-            return;
-          }
-          
-          // 처리 중 플래그 설정
-          this.setAttribute('data-processing', 'true');
-          
-          // 기업 추가 함수 호출
-          addCompanies().finally(() => {
-            // 처리 완료 후 플래그 제거
-            this.removeAttribute('data-processing');
-          });
-        });
+        // 새 이벤트 리스너 등록 - 간소화된 버전
+        newConfirmButton.addEventListener('click', addCompanies);
       }
       
       if (cancelAddButton) {
@@ -679,8 +671,10 @@
     async function addCompanies() {
       console.log('기업 정보 추가 시작');
       
-      // 이미 처리 중인지 확인 (추가 안전장치)
+      // 현재 버튼 참조 가져오기
       const confirmAddButton = document.getElementById('confirmAddButton');
+      
+      // 이미 처리 중인지 확인
       if (confirmAddButton && confirmAddButton.getAttribute('data-processing') === 'true') {
         console.log('이미 처리 중인 요청입니다.');
         return;
@@ -702,52 +696,53 @@
       }
       
       // 버튼 상태 변경
+      let originalText = '추가';
       if (confirmAddButton) {
-        const originalText = confirmAddButton.textContent;
+        originalText = confirmAddButton.textContent;
         confirmAddButton.textContent = '처리 중...';
         confirmAddButton.disabled = true;
         confirmAddButton.setAttribute('data-processing', 'true');
+      }
+      
+      try {
+        // FormData 준비
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('sheet', '기업정보');
         
+        console.log('엑셀 파일 업로드 중:', file.name);
+        
+        // API 호출
+        const result = await uploadFile(formData);
+        console.log('파일 업로드 결과:', result);
+        
+        if (result && result.success) {
+          // 성공 시
+          alert(result.message || '기업 정보가 성공적으로 추가되었습니다.');
+          
+          // 데이터 다시 로드
+          await loadCompanies();
+          
+          // 모달 닫기
+          closeAddModal();
+        } else {
+          // 실패 시
+          alert(result?.error || '기업 정보를 추가하지 못했습니다. 관리자에게 문의하세요.');
+        }
+      } catch (error) {
+        console.error('기업 정보 추가 중 오류 발생:', error);
+        alert(`기업 정보 추가 중 오류가 발생했습니다: ${error.message}`);
+      } finally {
+        // 버튼 상태 복원 - 항상 실행되도록 함 (중요)
         try {
-          // FormData 준비
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('sheet', '기업정보');
-          
-          console.log('엑셀 파일 업로드 중:', file.name);
-          
-          // API 호출
-          const result = await uploadFile(formData);
-          console.log('파일 업로드 결과:', result);
-          
-          if (result && result.success) {
-            // 성공 시
-            alert(result.message || '기업 정보가 성공적으로 추가되었습니다.');
-            
-            // 데이터 다시 로드
-            await loadCompanies();
-            
-            // 모달 닫기
-            closeAddModal();
-          } else {
-            // 실패 시
-            alert(result?.error || '기업 정보를 추가하지 못했습니다. 관리자에게 문의하세요.');
+          const button = document.getElementById('confirmAddButton');
+          if (button) {
+            button.textContent = originalText;
+            button.disabled = false;
+            button.removeAttribute('data-processing');
           }
-        } catch (error) {
-          console.error('기업 정보 추가 중 오류 발생:', error);
-          alert(`기업 정보 추가 중 오류가 발생했습니다: ${error.message}`);
-        } finally {
-          // 버튼 상태 복원 (중요: 모달이 닫힌 후에도 상태 초기화)
-          try {
-            const button = document.getElementById('confirmAddButton');
-            if (button) {
-              button.textContent = originalText;
-              button.disabled = false;
-              button.removeAttribute('data-processing');
-            }
-          } catch (e) {
-            console.error('버튼 상태 복원 오류:', e);
-          }
+        } catch (e) {
+          console.error('버튼 상태 복원 오류:', e);
         }
       }
     }
