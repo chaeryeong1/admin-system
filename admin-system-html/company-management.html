@@ -666,7 +666,7 @@
       console.log('구글 시트 기업 정보 다운로드');
       
       // 버튼 상태 변경
-      const button = this;
+      const button = event ? event.currentTarget : document.getElementById('excelButton');
       const originalText = button.textContent;
       button.textContent = '데이터 가져오는 중...';
       button.disabled = true;
