@@ -723,30 +723,23 @@
       editButton.addEventListener('click', openEditModal);
       deleteButton.addEventListener('click', openDeleteModal);
       
-      // 폼 제출 이벤트
-      addForm.addEventListener('submit', addProject);
-      editForm.addEventListener('submit', editProject);
+      // 모달 확인 버튼
+      document.getElementById('confirmAddButton').addEventListener('click', addProject);
+      document.getElementById('confirmEditButton').addEventListener('click', editProject);
       
       // 모달 닫기 버튼
       document.getElementById('cancelAddButton').addEventListener('click', closeAddModal);
       document.getElementById('cancelEditButton').addEventListener('click', closeEditModal);
-      document.getElementById('deleteNoButton').addEventListener('click', closeDeleteModal);
+      document.getElementById('cancelDeleteButton').addEventListener('click', closeDeleteModal);
       
       // 삭제 확인 버튼
-      document.getElementById('deleteYesButton').addEventListener('click', deleteProject);
+      document.getElementById('confirmDeleteButton').addEventListener('click', deleteProject);
       
-      // 엑셀 다운로드 버튼
-      document.getElementById('excelButton').addEventListener('click', downloadExcel);
-      
-      // 포맷팅 이벤트
-      const budgetInputs = [document.getElementById('addBudget'), document.getElementById('editBudget')];
-      budgetInputs.forEach(input => {
+      // 숫자만 입력 가능하도록 설정
+      const numberInputs = [document.getElementById('addBudget'), document.getElementById('editBudget')];
+      numberInputs.forEach(input => {
         input.addEventListener('input', function() {
-          let value = this.value.replace(/[^\d]/g, '');
-          if (value) {
-            value = parseInt(value).toLocaleString('ko-KR');
-            this.value = value;
-          }
+          this.value = this.value.replace(/[^0-9]/g, '');
         });
       });
     });
