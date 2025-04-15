@@ -68,7 +68,13 @@
           <table class="min-w-full">
             <thead>
               <tr class="border-b">
-                <th class="px-4 py-2 text-left">선택</th>
+                <th class="px-4 py-2 text-left">
+                  <input 
+                    type="checkbox" 
+                    id="selectAllCheckbox" 
+                    class="cursor-pointer"
+                  >
+                </th>
                 <th class="px-4 py-2 text-left">사업명</th>
                 <th class="px-4 py-2 text-left">목표 업체 수</th>
                 <th class="px-4 py-2 text-left">사업 기간</th>
@@ -300,7 +306,7 @@
     
     // 데이터 상태
     let projects = [];
-    let selectedProjectId = null;
+    let selectedProjectIds = [];
     
     // 사업 데이터 로드
     async function loadProjects() {
@@ -424,10 +430,10 @@
         <tr class="border-b hover:bg-gray-50" data-id="${project.id}">
           <td class="px-4 py-2">
             <input 
-              type="radio" 
-              name="project-select" 
-              class="project-radio"
-              ${selectedProjectId === project.id ? 'checked' : ''}
+              type="checkbox" 
+              class="project-checkbox" 
+              data-id="${project.id}"
+              ${selectedProjectIds.includes(project.id) ? 'checked' : ''}
             >
           </td>
           <td class="px-4 py-2">${project.name || '-'}</td>
@@ -440,25 +446,37 @@
         </tr>
       `).join('');
       
-      // 라디오 버튼 이벤트 리스너 추가
-      document.querySelectorAll('.project-radio').forEach(radio => {
-        radio.addEventListener('change', handleProjectSelection);
+      // 체크박스 이벤트 리스너 추가
+      document.querySelectorAll('.project-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', handleProjectSelection);
       });
       
       // 테이블 행 클릭 이벤트 추가
       document.querySelectorAll('#projectTableBody tr').forEach(row => {
-        row.addEventListener('click', function() {
-          const radio = this.querySelector('.project-radio');
-          if (radio) {
-            radio.checked = true;
-            selectedProjectId = this.dataset.id;
-            updateButtonStates();
+        row.addEventListener('click', function(e) {
+          // 링크 클릭은 무시
+          if (e.target.tagName === 'A') return;
+          
+          // 체크박스 클릭은 체크박스 자체가 처리
+          if (e.target.type === 'checkbox') return;
+          
+          // 행 클릭 시 해당 체크박스 토글
+          const checkbox = this.querySelector('.project-checkbox');
+          if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+            
+            // 체크박스 변경 이벤트 발생시키기
+            const event = new Event('change', { bubbles: true });
+            checkbox.dispatchEvent(event);
           }
         });
       });
       
       // 버튼 상태 업데이트
       updateButtonStates();
+      
+      // 전체 선택 체크박스 상태 업데이트
+      updateSelectAllCheckbox();
     }
     
     // 상태에 따른 클래스 반환
@@ -474,15 +492,82 @@
       }
     }
     
-    // 프로젝트 선택 처리
+    // 프로젝트 선택 처리 (이제 다중 선택 가능)
     function handleProjectSelection(event) {
-      selectedProjectId = event.target.closest('tr').dataset.id;
+      const checkbox = event.target;
+      const projectId = checkbox.dataset.id;
+      
+      if (checkbox.checked) {
+        // 체크된 경우 배열에 ID 추가
+        if (!selectedProjectIds.includes(projectId)) {
+          selectedProjectIds.push(projectId);
+        }
+      } else {
+        // 체크 해제된 경우 배열에서 ID 제거
+        selectedProjectIds = selectedProjectIds.filter(id => id !== projectId);
+      }
+      
+      // 단일 선택 기능 유지를 위한 마지막 선택 ID 저장
+      selectedProjectId = selectedProjectIds.length > 0 ? selectedProjectIds[selectedProjectIds.length - 1] : null;
+      
+      console.log('선택된 사업 ID 목록:', selectedProjectIds);
+      console.log('현재 선택된 사업 ID (마지막):', selectedProjectId);
+      
+      updateButtonStates();
+      updateSelectAllCheckbox();
+    }
+    
+    // 전체 선택 체크박스 상태 업데이트
+    function updateSelectAllCheckbox() {
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      const checkboxes = document.querySelectorAll('.project-checkbox');
+      
+      if (!selectAllCheckbox || checkboxes.length === 0) return;
+      
+      // 모든 체크박스가 선택되었는지 확인
+      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+      // 일부 체크박스만 선택되었는지 확인
+      const someChecked = Array.from(checkboxes).some(cb => cb.checked);
+      
+      selectAllCheckbox.checked = allChecked;
+      // 여기서 필요하면 indeterminate 상태 추가 가능
+      selectAllCheckbox.indeterminate = someChecked && !allChecked;
+    }
+    
+    // 전체 선택/해제 처리
+    function handleSelectAll() {
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      const checkboxes = document.querySelectorAll('.project-checkbox');
+      
+      if (!selectAllCheckbox || checkboxes.length === 0) return;
+      
+      const isChecked = selectAllCheckbox.checked;
+      
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = isChecked;
+        
+        const projectId = checkbox.dataset.id;
+        
+        if (isChecked) {
+          // 전체 선택 시 모든 ID 추가
+          if (!selectedProjectIds.includes(projectId)) {
+            selectedProjectIds.push(projectId);
+          }
+        } else {
+          // 전체 해제 시 배열 비우기
+          selectedProjectIds = [];
+        }
+      });
+      
+      // 마지막 선택 ID 업데이트
+      selectedProjectId = selectedProjectIds.length > 0 ? selectedProjectIds[selectedProjectIds.length - 1] : null;
+      
       updateButtonStates();
     }
     
     // 버튼 상태 업데이트
     function updateButtonStates() {
-      const hasSelection = selectedProjectId !== null;
+      const hasSelection = selectedProjectIds.length > 0;
       
       editButton.disabled = !hasSelection;
       deleteButton.disabled = !hasSelection;
@@ -576,28 +661,40 @@
     }
     
     function openDeleteModal() {
-      console.log('사업 삭제 모달 열기', selectedProjectId);
-      if (!selectedProjectId) {
+      console.log('사업 삭제 모달 열기', selectedProjectIds);
+      
+      if (selectedProjectIds.length === 0) {
         alert('삭제할 사업을 선택해주세요.');
         return;
       }
       
-      const project = projects.find(p => p.id === selectedProjectId);
-      if (!project) {
-        console.error('선택된 ID에 해당하는 사업을 찾을 수 없음:', selectedProjectId);
-        console.log('현재 사업 목록:', projects);
-        alert('선택한 사업 정보를 찾을 수 없습니다.');
-        return;
+      // 선택된 항목이 하나인 경우
+      if (selectedProjectIds.length === 1) {
+        const projectId = selectedProjectIds[0];
+        const project = projects.find(p => p.id === projectId);
+        
+        if (!project) {
+          console.error('선택된 ID에 해당하는 사업을 찾을 수 없음:', projectId);
+          console.log('현재 사업 목록:', projects);
+          alert('선택한 사업 정보를 찾을 수 없습니다.');
+          return;
+        }
+        
+        // 삭제할 사업 이름 표시
+        const deleteNameElement = document.getElementById('deleteProjectName');
+        if (deleteNameElement) {
+          deleteNameElement.textContent = project.name;
+        }
+        
+        // 모달 표시
+        deleteModal.classList.remove('hidden');
+      } 
+      // 다중 선택인 경우
+      else {
+        if (confirm(`선택한 ${selectedProjectIds.length}개의 사업을 모두 삭제하시겠습니까?`)) {
+          deleteProject(); // 직접 삭제 처리
+        }
       }
-      
-      // 삭제할 사업 이름 표시
-      const deleteNameElement = document.getElementById('deleteProjectName');
-      if (deleteNameElement) {
-        deleteNameElement.textContent = project.name;
-      }
-      
-      // 모달 표시
-      deleteModal.classList.remove('hidden');
     }
     
     function closeDeleteModal() {
@@ -789,16 +886,26 @@
       }
     }
     
-    // 사업 삭제 처리
+    // 사업 삭제 처리 - 다중 삭제 지원
     async function deleteProject() {
-      console.log('deleteProject 함수 호출됨, 선택된 ID:', selectedProjectId);
+      console.log('deleteProject 함수 호출됨, 선택된 ID들:', selectedProjectIds);
       
-      if (!selectedProjectId) {
+      if (selectedProjectIds.length === 0) {
         alert('삭제할 사업을 선택해주세요.');
         return;
       }
       
-      console.log('사업 ID 삭제:', selectedProjectId);
+      // 단일 항목 삭제인 경우
+      if (selectedProjectIds.length === 1) {
+        const projectId = selectedProjectIds[0];
+        deleteProjectById(projectId);
+        return;
+      }
+      
+      // 다중 항목 삭제인 경우
+      if (!confirm(`선택한 ${selectedProjectIds.length}개의 사업을 모두 삭제하시겠습니까?`)) {
+        return;
+      }
       
       // 삭제 중 표시
       const deleteButton = document.getElementById('confirmDeleteButton');
@@ -808,15 +915,66 @@
       }
       
       try {
-        const result = await deleteData('사업정보', selectedProjectId);
+        // 순차적으로 삭제 처리
+        for (const projectId of selectedProjectIds) {
+          await deleteData('사업정보', projectId);
+        }
+        
+        // 성공 시 로컬 캐시 삭제하고 새로 데이터 로드
+        localStorage.removeItem('projectsData');
+        selectedProjectIds = [];
+        selectedProjectId = null;
+        closeDeleteModal();
+        
+        // 서버에서 새로운 데이터 로드
+        await loadProjects();
+        alert('선택한 사업 정보가 삭제되었습니다.');
+      } catch (error) {
+        console.error('API 오류:', error);
+        alert('사업 정보 삭제 중 오류가 발생했습니다: ' + error.message);
+        
+        // 버튼 복원
+        if (deleteButton) {
+          deleteButton.textContent = '삭제';
+          deleteButton.disabled = false;
+        }
+      }
+    }
+    
+    // ID로 단일 사업 삭제
+    async function deleteProjectById(projectId) {
+      if (!projectId) return;
+      
+      console.log('사업 ID 삭제:', projectId);
+      
+      const project = projects.find(p => p.id === projectId);
+      if (!project) {
+        console.error('선택된 ID에 해당하는 사업을 찾을 수 없음:', projectId);
+        alert('선택한 사업 정보를 찾을 수 없습니다.');
+        return;
+      }
+      
+      if (!confirm(`"${project.name}" 사업을 삭제하시겠습니까?`)) {
+        return;
+      }
+      
+      // 삭제 중 표시
+      const deleteButton = document.getElementById('confirmDeleteButton');
+      if (deleteButton) {
+        deleteButton.textContent = '삭제 중...';
+        deleteButton.disabled = true;
+      }
+      
+      try {
+        const result = await deleteData('사업정보', projectId);
         
         console.log('삭제 결과:', result);
         
         if (result && result.success) {
           // 성공 시 로컬 캐시 삭제하고 새로 데이터 로드
           localStorage.removeItem('projectsData');
-          selectedProjectId = null;
-          closeDeleteModal();
+          selectedProjectIds = selectedProjectIds.filter(id => id !== projectId);
+          selectedProjectId = selectedProjectIds.length > 0 ? selectedProjectIds[selectedProjectIds.length - 1] : null;
           
           // 서버에서 새로운 데이터 로드
           await loadProjects();
@@ -827,12 +985,6 @@
       } catch (error) {
         console.error('API 오류:', error);
         alert('사업 정보 삭제 중 오류가 발생했습니다: ' + error.message);
-        
-        // 버튼 복원
-        if (deleteButton) {
-          deleteButton.textContent = '삭제';
-          deleteButton.disabled = false;
-        }
       }
     }
     
@@ -890,6 +1042,12 @@
           this.value = this.value.replace(/[^0-9]/g, '');
         });
       });
+      
+      // 전체 선택 체크박스 이벤트 추가
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', handleSelectAll);
+      }
     });
   </script>
 </body>
