@@ -71,7 +71,7 @@
                 <th class="px-4 py-2 text-left">선택</th>
                 <th class="px-4 py-2 text-left">사업명</th>
                 <th class="px-4 py-2 text-left">목표 업체 수</th>
-                <th class="px-4 py-2 text-left">진행 기간</th>
+                <th class="px-4 py-2 text-left">사업 기간</th>
                 <th class="px-4 py-2 text-left">주최기관</th>
                 <th class="px-4 py-2 text-left">공고</th>
               </tr>
@@ -363,12 +363,11 @@
       
       const filteredProjects = projects.filter(project => 
         project.name.toLowerCase().includes(searchTerm) || 
-        project.department.toLowerCase().includes(searchTerm) ||
-        project.manager.toLowerCase().includes(searchTerm)
+        (project.organizer && project.organizer.toLowerCase().includes(searchTerm))
       );
       
       if (filteredProjects.length === 0) {
-        projectTableBody.innerHTML = '<tr><td colspan="8" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
+        projectTableBody.innerHTML = '<tr><td colspan="6" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
         return;
       }
       
@@ -384,13 +383,11 @@
             >
           </td>
           <td class="px-4 py-2">${project.name || '-'}</td>
-          <td class="px-4 py-2">${formatNumber(project.budget) || '-'}</td>
-          <td class="px-4 py-2">${formatDate(project.startDate) || '-'}</td>
-          <td class="px-4 py-2">${formatDate(project.endDate) || '-'}</td>
-          <td class="px-4 py-2">${project.manager || '-'}</td>
-          <td class="px-4 py-2">${project.department || '-'}</td>
+          <td class="px-4 py-2">${project.targetCompanies || '-'}</td>
+          <td class="px-4 py-2">${formatDate(project.startDate) || '-'} ~ ${formatDate(project.endDate) || '-'}</td>
+          <td class="px-4 py-2">${project.organizer || '-'}</td>
           <td class="px-4 py-2">
-            <span class="${getStatusClass(project.status)}">${project.status || '-'}</span>
+            ${project.noticeUrl ? `<a href="${project.noticeUrl}" target="_blank" class="text-blue-600 hover:underline">공고 보기</a>` : '-'}
           </td>
         </tr>
       `).join('');
