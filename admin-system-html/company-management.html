@@ -664,7 +664,7 @@
             const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
             
             // CSV 데이터 생성 (필요한 5개 필드만 포함)
-            let csvContent = "기업명,사업자등록번호,대표자명,전화번호,이메일\n";
+            let csvContent = "기업명,사업자 등록번호,대표자,전화번호,이메일";
             
             companies.forEach(company => {
               // 데이터 정제 - 쉼표나 줄바꿈 있으면 따옴표로 감싸기
