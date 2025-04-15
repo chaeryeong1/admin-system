@@ -84,17 +84,47 @@
                     class="cursor-pointer"
                   >
                 </th>
-                <th class="px-4 py-2 text-left">기업명</th>
-                <th class="px-4 py-2 text-left">사업자등록번호</th>
-                <th class="px-4 py-2 text-left">대표자</th>
-                <th class="px-4 py-2 text-left">계약금수령액</th>
-                <th class="px-4 py-2 text-left">처리일</th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="companyName">기업명 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="businessNumber">사업자등록번호 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="representative">대표자 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="contractAmount">계약금수령액 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="processDate">처리일 <span class="sort-icon"></span></th>
               </tr>
             </thead>
             <tbody id="cashbackTableBody">
               <!-- JavaScript로 채워질 부분 -->
             </tbody>
           </table>
+        </div>
+        
+        <!-- 페이지네이션 -->
+        <div class="px-4 py-3 flex items-center justify-between border-t">
+          <div class="flex-1 flex justify-between items-center">
+            <div>
+              <span class="text-sm text-gray-700">
+                총 <span id="totalItems">0</span>개 항목 중 <span id="startItem">0</span>-<span id="endItem">0</span>
+              </span>
+            </div>
+            <div>
+              <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <button id="prevPageBtn" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                  <span class="sr-only">이전</span>
+                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+                <div id="paginationNumbers" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                  <!-- 페이지 번호가 여기에 동적으로 추가됩니다 -->
+                </div>
+                <button id="nextPageBtn" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                  <span class="sr-only">다음</span>
+                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </nav>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -277,6 +307,17 @@
     let projects = [];
     let companies = [];
     
+    // 페이지네이션 상태
+    let currentPage = 1;
+    const itemsPerPage = 20;
+    let totalPages = 0;
+    
+    // 정렬 상태
+    let currentSort = {
+      field: null,
+      direction: 'asc' // 'asc' 또는 'desc'
+    };
+    
     // 테이블 렌더링
     function renderContracts() {
       const searchTerm = searchInput.value.toLowerCase();
@@ -288,13 +329,48 @@
         return matchSearch && matchBusiness;
       });
       
+      // 정렬 적용
+      if (currentSort.field) {
+        filteredContracts.sort((a, b) => {
+          let aValue = a[currentSort.field];
+          let bValue = b[currentSort.field];
+          
+          // 숫자인 경우
+          if (typeof aValue === 'number' && typeof bValue === 'number') {
+            return currentSort.direction === 'asc' ? aValue - bValue : bValue - aValue;
+          }
+          
+          // 문자열인 경우
+          aValue = String(aValue || '').toLowerCase();
+          bValue = String(bValue || '').toLowerCase();
+          
+          if (aValue < bValue) return currentSort.direction === 'asc' ? -1 : 1;
+          if (aValue > bValue) return currentSort.direction === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+      
+      // 페이지네이션 계산
+      totalPages = Math.ceil(filteredContracts.length / itemsPerPage);
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, filteredContracts.length);
+      const paginatedContracts = filteredContracts.slice(startIndex, endIndex);
+      
+      // 페이지네이션 정보 업데이트
+      document.getElementById('totalItems').textContent = filteredContracts.length;
+      document.getElementById('startItem').textContent = filteredContracts.length === 0 ? 0 : startIndex + 1;
+      document.getElementById('endItem').textContent = endIndex;
+      
+      // 페이지네이션 버튼 업데이트
+      updatePaginationButtons();
+      
       if (filteredContracts.length === 0) {
         cashbackTableBody.innerHTML = '<tr><td colspan="6" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
         return;
       }
       
       // 테이블 생성
-      cashbackTableBody.innerHTML = filteredContracts.map(contract => `
+      cashbackTableBody.innerHTML = paginatedContracts.map(contract => `
         <tr class="border-b hover:bg-gray-50" data-id="${contract.id}">
           <td class="px-4 py-2">
             <input 
@@ -319,6 +395,91 @@
       
       // 버튼 상태 업데이트
       updateButtonStates();
+      
+      // 정렬 아이콘 업데이트
+      updateSortIcons();
+    }
+    
+    // 페이지네이션 버튼 업데이트
+    function updatePaginationButtons() {
+      const paginationNumbers = document.getElementById('paginationNumbers');
+      paginationNumbers.innerHTML = '';
+      
+      // 표시할 페이지 번호 범위 계산
+      const maxVisiblePages = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      // 페이지 범위 조정
+      if (endPage - startPage + 1 < maxVisiblePages && startPage > 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+      
+      // 이전 버튼 상태 업데이트
+      const prevPageBtn = document.getElementById('prevPageBtn');
+      prevPageBtn.disabled = currentPage <= 1;
+      prevPageBtn.classList.toggle('opacity-50', currentPage <= 1);
+      prevPageBtn.onclick = () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderContracts();
+        }
+      };
+      
+      // 페이지 번호 버튼 생성
+      for (let i = startPage; i <= endPage; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.className = `relative inline-flex items-center px-4 py-2 border ${
+          i === currentPage ? 'bg-blue-50 border-blue-500 text-blue-600' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+        } text-sm font-medium`;
+        pageButton.textContent = i;
+        pageButton.onclick = () => {
+          currentPage = i;
+          renderContracts();
+        };
+        paginationNumbers.appendChild(pageButton);
+      }
+      
+      // 다음 버튼 상태 업데이트
+      const nextPageBtn = document.getElementById('nextPageBtn');
+      nextPageBtn.disabled = currentPage >= totalPages;
+      nextPageBtn.classList.toggle('opacity-50', currentPage >= totalPages);
+      nextPageBtn.onclick = () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderContracts();
+        }
+      };
+    }
+    
+    // 정렬 아이콘 업데이트
+    function updateSortIcons() {
+      document.querySelectorAll('.sort-icon').forEach(icon => {
+        icon.textContent = '';
+      });
+      
+      if (currentSort.field) {
+        const sortHeader = document.querySelector(`th[data-sort="${currentSort.field}"] .sort-icon`);
+        if (sortHeader) {
+          sortHeader.textContent = currentSort.direction === 'asc' ? '↑' : '↓';
+        }
+      }
+    }
+    
+    // 정렬 이벤트 처리
+    function handleSort(field) {
+      if (currentSort.field === field) {
+        // 같은 필드를 다시 클릭한 경우 방향 전환
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        // 새로운 필드로 정렬
+        currentSort.field = field;
+        currentSort.direction = 'asc';
+      }
+      
+      // 페이지를 1페이지로 리셋
+      currentPage = 1;
+      renderContracts();
     }
 
     // 데이터 로드 함수
@@ -532,14 +693,32 @@
       loadData();
       
       // 검색 및 필터링
-      searchButton.addEventListener('click', renderContracts);
-      businessFilter.addEventListener('change', renderContracts);
-      statusFilter.addEventListener('change', renderContracts);
+      searchButton.addEventListener('click', () => {
+        currentPage = 1; // 검색 시 1페이지로 리셋
+        renderContracts();
+      });
+      businessFilter.addEventListener('change', () => {
+        currentPage = 1; // 필터링 시 1페이지로 리셋
+        renderContracts();
+      });
+      statusFilter.addEventListener('change', () => {
+        currentPage = 1; // 필터링 시 1페이지로 리셋
+        renderContracts();
+      });
       
       searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
+          currentPage = 1; // 검색 시 1페이지로 리셋
           renderContracts();
         }
+      });
+      
+      // 정렬 이벤트 리스너 추가
+      document.querySelectorAll('th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          const field = th.getAttribute('data-sort');
+          handleSort(field);
+        });
       });
       
       // 엑셀로 관리 버튼
