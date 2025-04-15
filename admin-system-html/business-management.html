@@ -740,7 +740,13 @@
         return;
       }
       
-      // 수정된 프로젝트 정보
+      // 저장 중 표시
+      const saveButton = document.getElementById('confirmEditButton');
+      if (saveButton) {
+        saveButton.textContent = '저장 중...';
+        saveButton.disabled = true;
+      }
+      
       const updatedProject = {
         id: selectedProjectId,
         name,
@@ -751,58 +757,62 @@
         noticeUrl
       };
       
+      console.log('수정할 사업 정보:', updatedProject);
+      
       try {
-        // API 호출
         const result = await updateData('사업정보', updatedProject);
         
-        if (result.success) {
-          // 성공 시 데이터 갱신
-          await loadProjects();
+        console.log('수정 결과:', result);
+        
+        if (result && result.success) {
+          // 성공 시 로컬 캐시 삭제하고 새로 데이터 로드
+          localStorage.removeItem('projectsData');
           closeEditModal();
+          
+          // 서버에서 새로운 데이터 로드
+          await loadProjects();
           alert('사업 정보가 수정되었습니다.');
         } else {
-          throw new Error(result.error || '수정 실패');
+          throw new Error(result.error || '수정 실패: 서버에서 오류가 발생했습니다.');
         }
       } catch (error) {
         console.error('API 오류:', error);
-        alert('사업 정보 수정 중 오류가 발생했습니다.');
+        alert('사업 정보 수정 중 오류가 발생했습니다: ' + error.message);
         
-        // API 실패 시 로컬 데이터만 갱신 (테스트용)
-        const index = projects.findIndex(p => p.id === selectedProjectId);
-        if (index !== -1) {
-          projects[index] = updatedProject;
-          renderProjects();
-          closeEditModal();
+        // 버튼 복원
+        if (saveButton) {
+          saveButton.textContent = '저장';
+          saveButton.disabled = false;
         }
       }
     }
     
     // 사업 삭제 처리
     async function deleteProject() {
-      console.log('사업 삭제 시작', selectedProjectId);
-      if (!selectedProjectId) {
-        alert('삭제할 사업을 선택해주세요.');
-        return;
+      if (!selectedProjectId) return;
+      
+      console.log('사업 ID 삭제:', selectedProjectId);
+      
+      // 삭제 중 표시
+      const deleteButton = document.getElementById('confirmDeleteButton');
+      if (deleteButton) {
+        deleteButton.textContent = '삭제 중...';
+        deleteButton.disabled = true;
       }
       
       try {
-        // 삭제 중 표시
-        const deleteButton = document.getElementById('confirmDeleteButton');
-        if (deleteButton) {
-          deleteButton.textContent = '삭제 중...';
-          deleteButton.disabled = true;
-        }
-        
-        // API 호출
         const result = await deleteData('사업정보', selectedProjectId);
         
         console.log('삭제 결과:', result);
         
         if (result && result.success) {
-          // 성공 시 데이터 갱신
-          await loadProjects();
+          // 성공 시 로컬 캐시 삭제하고 새로 데이터 로드
+          localStorage.removeItem('projectsData');
           selectedProjectId = null;
           closeDeleteModal();
+          
+          // 서버에서 새로운 데이터 로드
+          await loadProjects();
           alert('사업 정보가 삭제되었습니다.');
         } else {
           throw new Error(result.error || '삭제 실패: 서버에서 오류가 발생했습니다.');
@@ -812,17 +822,10 @@
         alert('사업 정보 삭제 중 오류가 발생했습니다: ' + error.message);
         
         // 버튼 복원
-        const deleteButton = document.getElementById('confirmDeleteButton');
         if (deleteButton) {
           deleteButton.textContent = '삭제';
           deleteButton.disabled = false;
         }
-        
-        // API 실패 시 로컬 데이터만 갱신 (테스트용)
-        projects = projects.filter(p => p.id !== selectedProjectId);
-        selectedProjectId = null;
-        renderProjects();
-        closeDeleteModal();
       }
     }
     
