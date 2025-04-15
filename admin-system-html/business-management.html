@@ -1078,6 +1078,17 @@
       closeModals();
       loadProjects();
     }
+
+    function addAutoRefreshToggle() {
+      // 토글 버튼 생성 코드
+    }
+
+    function enableAutoRefresh() {
+      // 자동 갱신 활성화 코드
+      dataRefreshInterval = setInterval(() => {
+        loadProjects(true);
+      }, 60000); // 60초마다 갱신
+    }
   </script>
 </body>
 </html>
