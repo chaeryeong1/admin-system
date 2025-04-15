@@ -418,48 +418,152 @@ async function downloadExcelFile(sheet) {
   }
 }
 
-// 파일 업로드
+/**
+ * 파일을 업로드하는 함수
+ * @param {FormData} formData - 업로드할 파일 및 정보가 담긴 FormData 객체
+ * @returns {Promise<Object>} - 업로드 결과
+ */
 async function uploadFile(formData) {
   try {
     console.log('파일 업로드 시도');
     
-    // CORS 이슈로 인한 모의 응답
+    // CORS 이슈로 인해 API 직접 호출 대신 모의 응답 사용
     console.log('CORS 이슈로 인해 API 직접 호출 대신 모의 응답 사용');
     
-    // 업로드 파일 정보 확인
-    let fileName = '알 수 없는 파일';
-    let fileSize = 0;
+    // 파일 정보 출력
+    const file = formData.get('file');
+    const sheetName = formData.get('sheet');
     
-    if (formData && formData.has('file')) {
-      const file = formData.get('file');
-      if (file && file.name) {
-        fileName = file.name;
-        fileSize = file.size;
-      }
+    console.log(`파일 정보: ${file.name} (${file.size} bytes)`);
+    console.log(`대상 시트: ${sheetName}`);
+    
+    // 로컬에서 CSV 파일 내용 분석 시도
+    if (file.name.endsWith('.csv')) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          try {
+            const content = event.target.result;
+            // BOM 제거
+            const csvText = content.charCodeAt(0) === 0xFEFF ? content.slice(1) : content;
+            const lines = csvText.split(/\r\n|\n/).filter(line => line.trim());
+            
+            if (lines.length > 0) {
+              console.log(`CSV 파일 파싱 중: ${lines.length}개 라인 발견`);
+              
+              // 헤더 및 데이터 파싱
+              const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
+              const records = [];
+              
+              for (let i = 1; i < lines.length; i++) {
+                const line = lines[i];
+                if (!line.trim()) continue;
+                
+                // CSV 행 파싱 (복잡한 CSV 파싱은 간소화함)
+                const values = line.split(',').map(v => v.replace(/^"|"$/g, '').trim());
+                
+                const record = {};
+                headers.forEach((header, index) => {
+                  if (index < values.length) {
+                    const headerKey = header.toLowerCase();
+                    if (headerKey.includes('기업명') || headerKey.includes('회사명') || headerKey.includes('name')) {
+                      record.name = values[index];
+                    } else if (headerKey.includes('사업자') || headerKey.includes('등록번호') || headerKey.includes('business')) {
+                      record.businessNumber = values[index];
+                    } else if (headerKey.includes('담당자') || headerKey.includes('contact')) {
+                      record.contactPerson = values[index];
+                    } else if (headerKey.includes('이메일') || headerKey.includes('email')) {
+                      record.email = values[index];
+                    } else if (headerKey.includes('연락처') || headerKey.includes('전화') || headerKey.includes('phone')) {
+                      record.contact = values[index];
+                    }
+                  }
+                });
+                
+                // 필수 필드 검증
+                if (record.name) {
+                  record.id = `upload_${Date.now()}_${i}`;
+                  record.registrationDate = new Date().toISOString().split('T')[0];
+                  records.push(record);
+                }
+              }
+              
+              console.log(`파싱된 레코드: ${records.length}개`);
+              
+              // 성공 응답
+              const mockResult = {
+                success: true,
+                data: {
+                  records: records,
+                  processed: records.length
+                },
+                message: `${records.length}개 데이터가 성공적으로 처리되었습니다.`
+              };
+              
+              console.log('업로드 결과(시뮬레이션):', mockResult);
+              setTimeout(() => resolve(mockResult), 500);
+            } else {
+              // 빈 파일
+              const errorResult = {
+                success: false,
+                error: '파일에 데이터가 없습니다.',
+                data: null
+              };
+              console.log('업로드 실패(시뮬레이션):', errorResult);
+              setTimeout(() => resolve(errorResult), 500);
+            }
+          } catch (error) {
+            console.error('CSV 파싱 오류:', error);
+            const errorResult = {
+              success: false,
+              error: '파일 파싱 중 오류가 발생했습니다: ' + error.message,
+              data: null
+            };
+            console.log('업로드 실패(시뮬레이션):', errorResult);
+            setTimeout(() => resolve(errorResult), 500);
+          }
+        };
+        
+        reader.onerror = function(error) {
+          console.error('파일 읽기 오류:', error);
+          const errorResult = {
+            success: false,
+            error: '파일을 읽는 중 오류가 발생했습니다.',
+            data: null
+          };
+          console.log('업로드 실패(시뮬레이션):', errorResult);
+          setTimeout(() => resolve(errorResult), 500);
+        };
+        
+        reader.readAsText(file);
+      });
     }
     
-    console.log(`파일 정보: ${fileName} (${fileSize} bytes)`);
-    
-    // 시뮬레이션된 응답 지연
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // 모의 응답 반환
-    const mockResponse = {
+    // 모의 응답 생성
+    const mockResult = {
       success: true,
       data: {
-        fileName,
-        fileSize,
-        processedRecords: Math.floor(Math.random() * 10) + 5, // 랜덤한 5~15개 레코드 처리
-        timestamp: new Date().toISOString()
+        processed: 1, // 처리된 항목 수
+        fileName: file.name
       },
-      message: '파일이 성공적으로 처리되었습니다.'
+      message: '파일이 성공적으로 업로드되었습니다.'
     };
     
-    console.log('업로드 결과(시뮬레이션):', mockResponse);
-    return mockResponse;
+    console.log('업로드 결과(시뮬레이션):', mockResult);
+    
+    // 실제 API 호출 대신 모의 응답 반환
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve(mockResult);
+      }, 1000);
+    });
   } catch (error) {
     console.error('파일 업로드 오류:', error);
-    return { success: false, error: error.message };
+    return {
+      success: false,
+      error: error.message,
+      data: null
+    };
   }
 }
 
