@@ -1,19 +1,23 @@
 // 구글 스크립트 API URL
 const API_URL = 'https://script.google.com/macros/s/AKfycbyVdRXxOVKWQ5wdJQZYKHIx7w9YIpk8cQ7dVAaynTGhyvwFBzM9Y6VO9jWWrZZDXOo_/exec';
 
+// 시트 이름 맵핑 함수
+function getActualSheetName(sheet) {
+  const sheetMapping = {
+    '사업정보': '사업정보',
+    '기업정보': '기업정보',
+    '계약금수령': '계약정보', 
+    '송금정보': '송금정보',
+    'all': 'all'
+  };
+  
+  return sheetMapping[sheet] || sheet;
+}
+
 // 데이터 가져오기
 async function fetchData(sheet = 'all') {
   try {
-    // 시트 이름 맵핑: 내부 시트명을 실제 구글 시트명으로 변환
-    const sheetMapping = {
-      '사업정보': '사업정보',
-      '기업정보': '기업정보',
-      '계약금수령': '계약정보',
-      '송금정보': '송금정보',
-      'all': 'all'
-    };
-    
-    const actualSheet = sheetMapping[sheet] || sheet;
+    const actualSheet = getActualSheetName(sheet);
     const response = await fetch(`${API_URL}?action=getData&sheet=${actualSheet}`);
     const data = await response.json();
     
@@ -28,14 +32,19 @@ async function fetchData(sheet = 'all') {
 // 데이터 추가하기
 async function addData(sheet, data) {
   try {
-    const response = await fetch(`${API_URL}?action=addData&sheet=${sheet}`, {
+    const actualSheet = getActualSheetName(sheet);
+    console.log(`${sheet}(${actualSheet})에 데이터 추가:`, data);
+    
+    const response = await fetch(`${API_URL}?action=addData&sheet=${actualSheet}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(data)
     });
-    return await response.json();
+    const result = await response.json();
+    console.log('추가 결과:', result);
+    return result;
   } catch (error) {
     console.error('데이터 추가 오류:', error);
     return { success: false, error: error.message };
@@ -45,14 +54,19 @@ async function addData(sheet, data) {
 // 데이터 업데이트하기
 async function updateData(sheet, data) {
   try {
-    const response = await fetch(`${API_URL}?action=updateData&sheet=${sheet}`, {
+    const actualSheet = getActualSheetName(sheet);
+    console.log(`${sheet}(${actualSheet})의 데이터 업데이트:`, data);
+    
+    const response = await fetch(`${API_URL}?action=updateData&sheet=${actualSheet}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(data)
     });
-    return await response.json();
+    const result = await response.json();
+    console.log('업데이트 결과:', result);
+    return result;
   } catch (error) {
     console.error('데이터 업데이트 오류:', error);
     return { success: false, error: error.message };
@@ -62,8 +76,13 @@ async function updateData(sheet, data) {
 // 데이터 삭제하기
 async function deleteData(sheet, id) {
   try {
-    const response = await fetch(`${API_URL}?action=deleteData&sheet=${sheet}&id=${id}`);
-    return await response.json();
+    const actualSheet = getActualSheetName(sheet);
+    console.log(`${sheet}(${actualSheet})에서 ID:${id} 삭제`);
+    
+    const response = await fetch(`${API_URL}?action=deleteData&sheet=${actualSheet}&id=${id}`);
+    const result = await response.json();
+    console.log('삭제 결과:', result);
+    return result;
   } catch (error) {
     console.error('데이터 삭제 오류:', error);
     return { success: false, error: error.message };
