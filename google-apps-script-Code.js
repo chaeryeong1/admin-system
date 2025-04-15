@@ -64,11 +64,17 @@ function handleRequest(e) {
         result = getData(sheet);
         break;
       case 'addData':
-        var postData = e.postData ? JSON.parse(e.postData.contents) : {};
+        // jsonData 파라미터에서 JSON 데이터 파싱
+        var jsonData = params.jsonData;
+        var postData = jsonData ? JSON.parse(decodeURIComponent(jsonData)) : {};
+        Logger.log('데이터 추가 요청: ' + JSON.stringify(postData));
         result = addData(sheet, postData);
         break;
       case 'updateData':
-        var postData = e.postData ? JSON.parse(e.postData.contents) : {};
+        // jsonData 파라미터에서 JSON 데이터 파싱
+        var jsonData = params.jsonData;
+        var postData = jsonData ? JSON.parse(decodeURIComponent(jsonData)) : {};
+        Logger.log('데이터 업데이트 요청: ' + JSON.stringify(postData));
         result = updateData(sheet, postData);
         break;
       case 'deleteData':
@@ -155,43 +161,75 @@ function addData(sheetName, data) {
   var sheet = spreadsheet.getSheetByName(sheetName);
   
   if (!sheet) {
+    Logger.log(sheetName + " 시트를 찾을 수 없습니다");
     return { success: false, error: "시트를 찾을 수 없습니다" };
   }
   
-  // 헤더 확인
-  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-  
-  // 자동 ID 생성
-  var lastRow = sheet.getLastRow();
-  var newId = 1;
-  
-  if (lastRow > 1) {
-    var lastId = sheet.getRange(lastRow, 1).getValue();
-    if (!isNaN(lastId) && lastId > 0) {
-      newId = Number(lastId) + 1;
+  try {
+    // 헤더 확인
+    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    
+    // 헤더가 없으면 생성
+    if (headers.length === 0) {
+      // 데이터의 키를 기반으로 헤더 생성 (id는 항상 첫번째)
+      headers = ['id'];
+      for (var key in data) {
+        if (key !== 'id') {
+          headers.push(key);
+        }
+      }
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     }
+    
+    // 자동 ID 생성
+    var lastRow = sheet.getLastRow();
+    var newId = 1;
+    
+    if (lastRow > 1) {
+      var idCol = headers.indexOf('id') + 1;
+      if (idCol > 0) {
+        var lastId = sheet.getRange(lastRow, idCol).getValue();
+        if (!isNaN(lastId) && lastId > 0) {
+          newId = Number(lastId) + 1;
+        }
+      }
+    }
+    
+    // 로그 출력
+    Logger.log("추가할 데이터: " + JSON.stringify(data));
+    Logger.log("헤더: " + JSON.stringify(headers));
+    
+    // 새 행 데이터 생성
+    var newRow = [];
+    for (var i = 0; i < headers.length; i++) {
+      if (headers[i] === 'id') {
+        newRow.push(newId);
+      } else if (data[headers[i]] !== undefined) {
+        newRow.push(data[headers[i]]);
+      } else {
+        newRow.push('');
+      }
+    }
+    
+    // 행 추가
+    Logger.log("추가할 행: " + JSON.stringify(newRow));
+    sheet.appendRow(newRow);
+    
+    return { 
+      success: true,
+      data: {
+        ...data,
+        id: String(newId)
+      },
+      message: "데이터가 성공적으로 추가되었습니다."
+    };
+  } catch (error) {
+    Logger.log("데이터 추가 오류: " + error.toString());
+    return { 
+      success: false, 
+      error: error.toString() 
+    };
   }
-  
-  // 새 행 데이터 생성
-  var newRow = [];
-  for (var i = 0; i < headers.length; i++) {
-    if (headers[i] === 'id') {
-      newRow.push(newId);
-    } else {
-      newRow.push(data[headers[i]] || '');
-    }
-  }
-  
-  // 행 추가
-  sheet.appendRow(newRow);
-  
-  return { 
-    success: true,
-    data: {
-      ...data,
-      id: String(newId)
-    }
-  };
 }
 
 // 데이터 업데이트하기
