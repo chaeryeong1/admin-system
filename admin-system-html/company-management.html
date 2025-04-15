@@ -859,7 +859,10 @@
           renderCompanies();
         }
       });
-      businessFilter.addEventListener('change', renderCompanies);
+      const businessFilterElement = document.getElementById('businessFilter');
+      if (businessFilterElement) {
+        businessFilterElement.addEventListener('change', renderCompanies);
+      }
       
       // 버튼 이벤트
       addButton.addEventListener('click', openAddModal);
@@ -878,20 +881,44 @@
       
       // 체크박스 관련 이벤트 처리
       document.addEventListener('click', function(event) {
-        if (event.target.matches('.company-checkbox') || event.target.closest('tr')) {
-          updateButtonStates();
+        const target = event.target;
+        
+        // 체크박스 클릭 처리
+        if (target.matches('.company-checkbox')) {
+          // 체크박스 이벤트는 handleCompanySelection에서 처리됨
+          return;
+        }
+        
+        // 행 클릭 처리 (이미 renderCompanies에서 처리)
+        if (target.closest('tr') && !target.closest('th')) {
+          // 클릭 이벤트는 이미 설정되어 있음
+          return;
         }
       });
       
       // 전체선택 체크박스
-      document.getElementById('selectAllCheckbox').addEventListener('change', handleSelectAll);
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', handleSelectAll);
+      }
       
       // 엑셀 다운로드 버튼
-      document.getElementById('excelButton').addEventListener('click', downloadExcel);
+      const excelButton = document.getElementById('excelButton');
+      if (excelButton) {
+        excelButton.addEventListener('click', downloadExcel);
+      }
       
       // 샘플 다운로드 버튼
-      document.getElementById('downloadSampleButton').addEventListener('click', downloadSample);
-      document.getElementById('downloadCurrentDataButton').addEventListener('click', downloadCurrentData);
+      const downloadSampleButton = document.getElementById('downloadSampleButton');
+      if (downloadSampleButton) {
+        downloadSampleButton.addEventListener('click', downloadSample);
+      }
+      
+      // 현재 데이터 다운로드 버튼
+      const downloadCurrentDataButton = document.getElementById('downloadCurrentDataButton');
+      if (downloadCurrentDataButton) {
+        downloadCurrentDataButton.addEventListener('click', downloadCurrentData);
+      }
     });
   </script>
 </body>
