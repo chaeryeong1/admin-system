@@ -118,59 +118,21 @@
   <div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-lg p-6 w-96">
       <h2 class="text-lg font-semibold mb-4">기업 정보 추가</h2>
-      <form id="addForm" class="space-y-4">
+      <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium mb-1">기업명</label>
+          <label class="block text-sm font-medium mb-1">파일 업로드 <span class="text-red-500">*</span></label>
           <input
-            id="addName"
-            type="text"
+            id="addExcelFile"
+            type="file"
+            accept=".xlsx, .xls"
             class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
+          <p class="text-xs text-gray-500 mt-1">Excel 파일만 업로드 가능합니다</p>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">사업자등록번호</label>
-          <input
-            id="addBusinessNumber"
-            type="text"
-            placeholder="123-45-67890"
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          >
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">주소</label>
-          <input
-            id="addAddress"
-            type="text"
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">대표자</label>
-          <input
-            id="addRepresentative"
-            type="text"
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">연락처</label>
-          <input
-            id="addContact"
-            type="text"
-            placeholder="010-1234-5678"
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">이메일</label>
-          <input
-            id="addEmail"
-            type="email"
-            placeholder="example@company.com"
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
+          <a href="#" id="downloadSampleButton" class="text-blue-600 hover:underline text-sm">샘플 다운로드</a>
+          <p class="text-xs text-gray-500 mt-1">양식에 맞춰 작성 후 업로드해주세요</p>
         </div>
         <div class="flex justify-end space-x-2 mt-6">
           <button 
@@ -181,13 +143,14 @@
             취소
           </button>
           <button 
-            type="submit"
+            id="confirmAddButton"
+            type="button"
             class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             저장
           </button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 
@@ -195,55 +158,26 @@
   <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-lg p-6 w-96">
       <h2 class="text-lg font-semibold mb-4">기업 정보 수정</h2>
-      <form id="editForm" class="space-y-4">
+      <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium mb-1">기업명</label>
+          <label class="block text-sm font-medium mb-1">기존 데이터 다운로드</label>
+          <button 
+            id="downloadCurrentDataButton"
+            type="button" 
+            class="w-full px-3 py-2 bg-gray-100 border rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            엑셀 파일 다운로드
+          </button>
+          <p class="text-xs text-gray-500 mt-1">기존 데이터를 수정 후 아래에 업로드하세요</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">파일 업로드 <span class="text-red-500">*</span></label>
           <input
-            id="editName"
-            type="text"
+            id="editExcelFile"
+            type="file"
+            accept=".xlsx, .xls"
             class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
-          >
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">사업자등록번호</label>
-          <input
-            id="editBusinessNumber"
-            type="text"
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          >
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">주소</label>
-          <input
-            id="editAddress"
-            type="text"
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">대표자</label>
-          <input
-            id="editRepresentative"
-            type="text"
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">연락처</label>
-          <input
-            id="editContact"
-            type="text"
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">이메일</label>
-          <input
-            id="editEmail"
-            type="email"
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
         </div>
         <div class="flex justify-end space-x-2 mt-6">
@@ -255,13 +189,14 @@
             취소
           </button>
           <button 
-            type="submit"
+            id="confirmEditButton"
+            type="button"
             class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             저장
           </button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 
@@ -269,17 +204,19 @@
   <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-lg p-6 w-96">
       <h2 class="text-lg font-semibold mb-4">기업 삭제</h2>
-      <p>정말 이 기업을 삭제하시겠습니까?</p>
-      <p id="deleteCompanyName" class="font-semibold mt-2"></p>
+      <p>선택한 기업을 정말 삭제하시겠습니까?</p>
+      <div id="deleteCompanyList" class="mt-4 mb-4 bg-gray-100 p-3 rounded text-sm max-h-40 overflow-y-auto">
+        <!-- 선택된 기업 목록이 표시될 영역 -->
+      </div>
       <div class="flex justify-end space-x-2 mt-6">
         <button 
-          id="deleteNoButton"
+          id="cancelDeleteButton"
           class="px-4 py-2 border rounded hover:bg-gray-100"
         >
           취소
         </button>
         <button 
-          id="deleteYesButton"
+          id="confirmDeleteButton"
           class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
         >
           삭제
