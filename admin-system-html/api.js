@@ -333,7 +333,7 @@ async function deleteData(sheet, id) {
     
     // ID 검증
     if (!id) {
-      throw new Error('삭제할 항목의 ID가 필요합니다.');
+      throw new Error('삭제할 항목의 ID가 없습니다.');
     }
     
     // CORS 우회를 위한 JSONP 방식 사용
@@ -367,8 +367,8 @@ async function deleteData(sheet, id) {
         resolve({
           success: true,
           data: {
-            deleted: 1,
-            id: id
+            id: id,
+            deleted: true
           },
           message: "항목이 삭제되었습니다. (로컬 저장)"
         });
@@ -385,8 +385,8 @@ async function deleteData(sheet, id) {
           resolve({
             success: true,
             data: {
-              deleted: 1,
-              id: id
+              id: id,
+              deleted: true
             },
             message: "항목이 삭제되었습니다. (로컬 저장, 타임아웃)"
           });
