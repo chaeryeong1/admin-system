@@ -138,20 +138,21 @@
             <span id="selectedFileName" class="ml-2 text-gray-600">선택된 파일 없음</span>
           </div>
           <p class="text-sm text-gray-500 mt-1">엑셀(.xlsx, .xls) 또는 CSV(.csv) 파일만 업로드 가능합니다.</p>
+          <p class="text-sm text-gray-500">* 등록일은 시스템에서 자동 생성되므로 입력하지 않아도 됩니다.</p>
         </div>
 
         <div class="mt-4">
           <button id="downloadSampleButton" onclick="downloadSample()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-sm">
-            샘플 다운로드
+            샘플 파일 다운로드
           </button>
         </div>
       </div>
       
       <div class="flex justify-end mt-4">
-        <button id="confirmAddButton" onclick="addCompanies()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">
+        <button id="confirmAddButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">
           등록
         </button>
-        <button id="cancelAddButton" onclick="closeAddModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+        <button id="cancelAddButton" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
           취소
         </button>
       </div>
@@ -755,28 +756,26 @@
       console.log('샘플 CSV 파일 생성');
       
       try {
-        // 샘플 데이터 정의
+        // 샘플 데이터 정의 (등록일 필드 제거)
         const sampleData = [
           {
             name: '(주)샘플테크',
             businessNumber: '123-45-67890',
             contactPerson: '홍길동',
             email: 'hong@sample.com',
-            contact: '02-1234-5678',
-            registrationDate: '2023-01-15'
+            contact: '02-1234-5678'
           },
           {
             name: '한국 제조 주식회사',
             businessNumber: '234-56-78901',
             contactPerson: '김철수',
             email: 'kim@manufacturing.kr',
-            contact: '051-987-6543',
-            registrationDate: '2023-02-20'
+            contact: '051-987-6543'
           }
         ];
         
-        // CSV 헤더와 내용 생성
-        const headers = ['기업명', '사업자등록번호', '담당자', '이메일', '연락처', '등록일'];
+        // CSV 헤더와 내용 생성 (등록일 필드 제거)
+        const headers = ['기업명', '사업자등록번호', '담당자', '이메일', '연락처'];
         let csvContent = headers.join(',') + '\n';
         
         sampleData.forEach(item => {
@@ -786,7 +785,6 @@
             `"${item.contactPerson || ''}"`,
             `"${item.email || ''}"`,
             `"${item.contact || ''}"`,
-            `"${item.registrationDate || ''}"`,
           ].join(',') + '\n';
         });
         
@@ -801,6 +799,7 @@
         document.body.removeChild(link);
         
         console.log('샘플 CSV 다운로드 완료');
+        alert('샘플 파일이 다운로드되었습니다. 등록일은 시스템에서 자동으로 생성되므로 입력하지 않아도 됩니다.');
       } catch (error) {
         console.error('샘플 CSV 생성 오류:', error);
         alert('샘플 파일 다운로드 중 오류가 발생했습니다.');
