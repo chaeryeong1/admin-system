@@ -1129,7 +1129,13 @@
       deleteButton.addEventListener('click', openDeleteModal);
       
       // 모달 확인 버튼
-      document.getElementById('confirmAddButton').addEventListener('click', addProject);
+      const confirmAddBtn = document.getElementById('confirmAddButton');
+      if (confirmAddBtn) {
+        // 기존 이벤트 리스너 제거 후 다시 등록 (중복 방지)
+        confirmAddBtn.removeEventListener('click', addProject);
+        confirmAddBtn.addEventListener('click', addProject);
+      }
+      
       document.getElementById('confirmEditButton').addEventListener('click', editProject);
       
       // 모달 닫기 버튼
