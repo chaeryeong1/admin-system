@@ -240,8 +240,8 @@
           name: company.name || company.companyName || company.company_name || '',
           businessNumber: company.businessNumber || company.business_number || company.businessNo || '',
           contactPerson: company.contactPerson || company.representative || company.contact_person || '',
-          email: company.email || company.contact_email || company.email_address || '',
           contact: company.contact || company.contact_phone || company.phone || company.phoneNumber || '',
+          email: company.email || company.contact_email || company.email_address || '',
           registrationDate: company.registrationDate || company.created_at || company.regDate || today // 등록일 자동 설정
         };
       });
@@ -612,21 +612,17 @@
           
           console.log('엑셀 파일 업로드 중:', file.name);
           
-          // API 호출 (CORS 이슈로 인해 로컬 처리로 대체)
-          try {
-            const result = await uploadFile(formData);
-            console.log('파일 업로드 결과:', result);
-            
-            if (result && result.success) {
-              processUploadSuccess(result);
-            } else {
-              // API 실패 시 로컬 처리
-              processLocalData(file);
-            }
-          } catch (apiError) {
-            console.warn('API 호출 실패, 로컬 처리로 전환:', apiError);
-            // API 오류 시 로컬 처리
-            processLocalData(file);
+          // API 호출
+          const result = await uploadFile(formData);
+          console.log('파일 업로드 결과:', result);
+          
+          if (result && result.success) {
+            // API 호출 성공 처리
+            processUploadSuccess(result);
+          } else {
+            // API 실패 메시지만 표시 (로컬 처리는 하지 않음)
+            console.error('기업 정보 추가 실패:', result?.error || '알 수 없는 오류');
+            alert(`기업 정보 추가 실패: ${result?.error || '알 수 없는 오류'}`);
           }
         } catch (error) {
           console.error('기업 정보 추가 중 오류 발생:', error);
@@ -636,90 +632,6 @@
           confirmAddButton.textContent = originalText;
           confirmAddButton.disabled = false;
         }
-      }
-    }
-    
-    // 로컬에서 파일 처리 (CORS 이슈 대응)
-    async function processLocalData(file) {
-      try {
-        console.log('로컬에서 파일 처리 중:', file.name);
-        
-        // CSV 파일 처리 예시
-        if (file.name.endsWith('.csv')) {
-          const text = await readFileAsText(file);
-          const rows = parseCSV(text);
-          
-          if (rows.length > 0) {
-            console.log('CSV 파싱 결과:', rows);
-            // 헤더 확인 (첫 줄)
-            const headers = rows[0];
-            const newCompanies = [];
-            
-            // 데이터 행 처리 (두 번째 행부터)
-            for (let i = 1; i < rows.length; i++) {
-              if (rows[i].length === 0 || (rows[i].length === 1 && !rows[i][0])) continue;
-              
-              const company = {};
-              rows[i].forEach((value, index) => {
-                if (index < headers.length) {
-                  const header = headers[index].toLowerCase();
-                  if (header.includes('기업명') || header.includes('회사명') || header.includes('name')) {
-                    company.name = value;
-                  } else if (header.includes('사업자') || header.includes('등록번호') || header.includes('business')) {
-                    company.businessNumber = value;
-                  } else if (header.includes('담당자') || header.includes('contact')) {
-                    company.contactPerson = value;
-                  } else if (header.includes('이메일') || header.includes('email')) {
-                    company.email = value;
-                  } else if (header.includes('연락처') || header.includes('전화') || header.includes('phone')) {
-                    company.contact = value;
-                  }
-                }
-              });
-              
-              // 필수 필드 확인
-              if (company.name) {
-                company.id = `local_${Date.now()}_${i}`;
-                company.registrationDate = new Date().toISOString().split('T')[0];
-                newCompanies.push(company);
-              }
-            }
-            
-            console.log('파싱된 기업 데이터:', newCompanies);
-            
-            // 기업 정보 추가
-            if (newCompanies.length > 0) {
-              // 데이터 정규화
-              const normalizedData = normalizeCompanyData(newCompanies);
-              
-              // 기존 데이터와 병합
-              companies = [...companies, ...normalizedData];
-              
-              // 로컬 스토리지에 저장
-              localStorage.setItem('companiesData', JSON.stringify(companies));
-              
-              // 테이블 갱신
-              renderCompaniesTable();
-              
-              // 성공 메시지
-              alert(`${normalizedData.length}개 기업 정보가 추가되었습니다.`);
-              
-              // 모달 닫기
-              closeAddModal();
-              return;
-            } else {
-              alert('파일에서 유효한 기업 정보를 찾을 수 없습니다. 샘플 파일 형식을 확인해주세요.');
-            }
-          } else {
-            alert('파일에 데이터가 없거나 형식이 올바르지 않습니다.');
-          }
-        } else {
-          // 엑셀 파일은 현재 브라우저에서 직접 처리하기 어려움
-          alert('현재 테스트 환경에서는 CSV 파일만 처리 가능합니다. 파일을 CSV 형식으로 변환하여 다시 시도해주세요.');
-        }
-      } catch (error) {
-        console.error('로컬 파일 처리 오류:', error);
-        alert('파일 처리 중 오류가 발생했습니다: ' + error.message);
       }
     }
     
@@ -748,8 +660,8 @@
                 name: `업로드된 기업 ${i+1}`,
                 businessNumber: '',
                 contactPerson: '',
-                email: '',
                 contact: '',
+                email: '',
                 registrationDate: new Date().toISOString().split('T')[0]
               });
             }
@@ -770,91 +682,82 @@
           
           // 성공 메시지
           alert(`${newData.length}개 기업 정보가 성공적으로 추가되었습니다.`);
+          
+          // 테이블 다시 렌더링
+          renderCompaniesTable();
+          
+          // 모달 닫기
+          closeAddModal();
         } else {
-          // 데이터가 없을 경우 로컬 처리 시도
-          const fileInput = document.getElementById('companyFileInput');
-          if (fileInput && fileInput.files && fileInput.files.length > 0) {
-            processLocalData(fileInput.files[0]);
-            return;
-          } else {
-            alert('업로드된 파일에서 기업 정보를 찾을 수 없습니다.');
-          }
+          alert('업로드된 파일에서 기업 정보를 찾을 수 없습니다.');
         }
-        
-        // 데이터 다시 로드
-        renderCompaniesTable();
-        
-        // 모달 닫기
-        closeAddModal();
       } catch (error) {
         console.error('API 응답 처리 오류:', error);
-        
-        // 오류 시 로컬 처리 시도
-        const fileInput = document.getElementById('companyFileInput');
-        if (fileInput && fileInput.files && fileInput.files.length > 0) {
-          processLocalData(fileInput.files[0]);
-        } else {
-          alert('데이터 처리 중 오류가 발생했습니다: ' + error.message);
-        }
+        alert('데이터 처리 중 오류가 발생했습니다: ' + error.message);
       }
     }
     
-    // 파일을 텍스트로 읽기
-    function readFileAsText(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = event => resolve(event.target.result);
-        reader.onerror = error => reject(error);
-        reader.readAsText(file, 'UTF-8');
-      });
+    // 샘플 파일 다운로드
+    function downloadSample() {
+      console.log('샘플 파일 다운로드');
+      // 직접 로컬에서 샘플 CSV 생성 (CORS 회피)
+      generateSampleCSV();
     }
     
-    // CSV 파싱 함수
-    function parseCSV(text) {
+    // 샘플 CSV 파일 생성
+    function generateSampleCSV() {
+      console.log('샘플 CSV 파일 생성');
+      
       try {
-        console.log('CSV 파싱 시작');
-        // BOM 제거
-        const content = text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text;
-        
-        const lines = content.split(/\r\n|\n/);
-        console.log(`CSV 파일 라인 수: ${lines.length}`);
-        
-        const result = [];
-        
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i].trim();
-          if (!line) continue;
-          
-          // "로 둘러싸인 필드 처리
-          const row = [];
-          let cell = '';
-          let inQuotes = false;
-          
-          for (let j = 0; j < line.length; j++) {
-            const char = line[j];
-            
-            if (char === '"' && (j === 0 || line[j-1] !== '\\')) {
-              inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
-              row.push(cell.replace(/^"|"$/g, '').replace(/\\"/g, '"').trim());
-              cell = '';
-            } else {
-              cell += char;
-            }
+        // 샘플 데이터 정의 (구글 시트 구조에 맞춤)
+        const sampleData = [
+          {
+            name: '(주)샘플테크',
+            businessNumber: '123-45-67890',
+            contactPerson: '홍길동',
+            contact: '02-1234-5678',
+            email: 'hong@sample.com'
+          },
+          {
+            name: '한국 제조 주식회사',
+            businessNumber: '234-56-78901',
+            contactPerson: '김철수',
+            contact: '051-987-6543',
+            email: 'kim@manufacturing.kr'
           }
-          
-          // 마지막 셀 추가
-          if (cell || row.length > 0) {
-            row.push(cell.replace(/^"|"$/g, '').replace(/\\"/g, '"').trim());
-            result.push(row);
-          }
-        }
+        ];
         
-        console.log('CSV 파싱 결과:', result);
-        return result;
+        // CSV 헤더와 내용 생성 (구글 시트 구조에 맞춤)
+        const headers = ['기업명', '사업자등록번호', '담당자', '연락처', '이메일'];
+        let csvContent = headers.join(',') + '\n';
+        
+        sampleData.forEach(item => {
+          csvContent += [
+            `"${item.name || ''}"`,
+            `"${item.businessNumber || ''}"`,
+            `"${item.contactPerson || ''}"`,
+            `"${item.contact || ''}"`,
+            `"${item.email || ''}"`,
+          ].join(',') + '\n';
+        });
+        
+        console.log('생성된 샘플 CSV 내용:', csvContent);
+        
+        // Blob 생성 및 다운로드
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = '기업정보_샘플.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log('샘플 CSV 다운로드 완료');
+        alert('샘플 파일이 다운로드되었습니다. CSV 형식으로 저장되었는지 확인해주세요.');
       } catch (error) {
-        console.error('CSV 파싱 오류:', error);
-        return [];
+        console.error('샘플 CSV 생성 오류:', error);
+        alert('샘플 파일 다운로드 중 오류가 발생했습니다: ' + error.message);
       }
     }
     
@@ -933,70 +836,6 @@
         
         // 선택 상태 초기화
         selectedCompanyId = null;
-      }
-    }
-    
-    // 샘플 파일 다운로드
-    function downloadSample() {
-      console.log('샘플 파일 다운로드');
-      // 직접 로컬에서 샘플 CSV 생성 (CORS 회피)
-      generateSampleCSV();
-    }
-    
-    // 샘플 CSV 파일 생성
-    function generateSampleCSV() {
-      console.log('샘플 CSV 파일 생성');
-      
-      try {
-        // 샘플 데이터 정의 (등록일 필드 제거)
-        const sampleData = [
-          {
-            name: '(주)샘플테크',
-            businessNumber: '123-45-67890',
-            contactPerson: '홍길동',
-            email: 'hong@sample.com',
-            contact: '02-1234-5678'
-          },
-          {
-            name: '한국 제조 주식회사',
-            businessNumber: '234-56-78901',
-            contactPerson: '김철수',
-            email: 'kim@manufacturing.kr',
-            contact: '051-987-6543'
-          }
-        ];
-        
-        // CSV 헤더와 내용 생성 (등록일 필드 제거)
-        const headers = ['기업명', '사업자등록번호', '담당자', '이메일', '연락처'];
-        let csvContent = headers.join(',') + '\n';
-        
-        sampleData.forEach(item => {
-          csvContent += [
-            `"${item.name || ''}"`,
-            `"${item.businessNumber || ''}"`,
-            `"${item.contactPerson || ''}"`,
-            `"${item.email || ''}"`,
-            `"${item.contact || ''}"`,
-          ].join(',') + '\n';
-        });
-        
-        console.log('생성된 샘플 CSV 내용:', csvContent);
-        
-        // Blob 생성 및 다운로드
-        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = '기업정보_샘플.csv';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        console.log('샘플 CSV 다운로드 완료');
-        alert('샘플 파일이 다운로드되었습니다. CSV 형식으로 저장되었는지 확인해주세요.');
-      } catch (error) {
-        console.error('샘플 CSV 생성 오류:', error);
-        alert('샘플 파일 다운로드 중 오류가 발생했습니다: ' + error.message);
       }
     }
     
