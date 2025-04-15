@@ -309,29 +309,60 @@ function deleteData(sheetName, id) {
   var sheet = spreadsheet.getSheetByName(sheetName);
   
   if (!sheet) {
+    Logger.log(sheetName + " 시트를 찾을 수 없습니다");
     return { success: false, error: "시트를 찾을 수 없습니다" };
   }
   
-  var dataRange = sheet.getDataRange();
-  var values = dataRange.getValues();
-  
-  // ID로 행 찾기
-  var rowIndex = -1;
-  for (var i = 1; i < values.length; i++) {
-    if (values[i][0] == id) {
-      rowIndex = i;
-      break;
+  try {
+    if (!id) {
+      Logger.log("삭제 실패: ID가 없습니다");
+      return { success: false, error: "ID가 없습니다" };
     }
+    
+    // 헤더 확인
+    var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    
+    // ID 열 찾기
+    var idColumnIndex = headers.indexOf('id') + 1;
+    if (idColumnIndex <= 0) {
+      Logger.log("삭제 실패: ID 열을 찾을 수 없습니다");
+      return { success: false, error: "ID 열을 찾을 수 없습니다" };
+    }
+    
+    // ID로 행 찾기
+    var idValues = sheet.getRange(2, idColumnIndex, sheet.getLastRow() - 1, 1).getValues();
+    var rowIndex = -1;
+    
+    for (var i = 0; i < idValues.length; i++) {
+      if (String(idValues[i][0]) === String(id)) {
+        rowIndex = i + 2; // +2 because we start at row 2 and i is 0-indexed
+        break;
+      }
+    }
+    
+    if (rowIndex === -1) {
+      Logger.log("삭제 실패: ID " + id + "를 찾을 수 없습니다");
+      return { success: false, error: "해당 ID의 데이터를 찾을 수 없습니다: " + id };
+    }
+    
+    // 로그 출력
+    Logger.log("삭제할 행 인덱스: " + rowIndex);
+    
+    // 행 삭제
+    sheet.deleteRow(rowIndex);
+    
+    Logger.log("데이터 삭제 완료: ID " + id);
+    return { 
+      success: true,
+      message: "데이터가 성공적으로 삭제되었습니다."
+    };
+  } catch (error) {
+    Logger.log("데이터 삭제 오류: " + error.toString());
+    return { 
+      success: false, 
+      error: error.toString() 
+    };
   }
-  
-  if (rowIndex === -1) {
-    return { success: false, error: "데이터를 찾을 수 없습니다" };
-  }
-  
-  // 행 삭제
-  sheet.deleteRow(rowIndex + 1);
-  
-  return { success: true };
 }
 
 // 엑셀 파일 다운로드
