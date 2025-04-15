@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 시스템</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <!-- 상단 대메뉴 -->
+  <header class="bg-white border-b px-6 py-3 text-sm font-semibold flex space-x-6">
+    <a href="business-management.html" class="text-gray-500">사업 관리</a>
+    <a href="company-management.html" class="text-gray-500">기업 관리</a>
+    <a href="cashback-management.html" class="text-gray-500">캐시백 송금</a>
+  </header>
+
+  <div class="flex justify-center items-center min-h-screen">
+    <div class="text-center">
+      <h1 class="text-3xl font-bold mb-8">관리자 시스템</h1>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <a href="business-management.html" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+          <div class="text-blue-600 text-5xl mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-semibold mb-2">사업 관리</h2>
+          <p class="text-gray-600">사업 추가, 수정, 삭제 및 관리</p>
+        </a>
+        
+        <a href="company-management.html" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+          <div class="text-green-600 text-5xl mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-semibold mb-2">기업 관리</h2>
+          <p class="text-gray-600">기업 정보 관리 및 엑셀 다운로드</p>
+        </a>
+        
+        <a href="cashback-management.html" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+          <div class="text-red-600 text-5xl mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-semibold mb-2">캐시백 송금</h2>
+          <p class="text-gray-600">계약금 관리 및 송금 처리</p>
+        </a>
+      </div>
+      
+      <div class="mt-12 text-sm text-gray-500">
+        <p>© 2025 관리자 시스템. All rights reserved.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // API 테스트를 위한 코드
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        // API 상태 확인
+        console.log('API 연결 테스트 중...');
+
+        // Google Apps Script API 호출
+        const apiUrl = 'https://script.google.com/macros/s/AKfycby-9fAUMpLbkN7ISysznuKXeI9lo3NB7xN1ssv6gq3Zj5L2CLKThTyut88VwxM1ImQ/exec';
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        
+        console.log('API 응답:', data);
+        
+        if (data.success && data.companies) {
+          console.log('기업 목록:', data.companies);
+          // 성공 메시지를 페이지에 표시
+          const messageElement = document.createElement('div');
+          messageElement.className = 'mt-6 p-4 bg-green-100 text-green-800 rounded-lg';
+          messageElement.textContent = '데이터가 성공적으로 로드되었습니다!';
+          document.querySelector('.text-center').appendChild(messageElement);
+        } else {
+          console.error('API 응답에 데이터가 없습니다.');
+        }
+
+        console.log('API가 정상적으로 응답했습니다.');
+      } catch (error) {
+        console.error('API 호출 중 오류 발생:', error);
+        
+        // 오류 메시지를 페이지에 표시
+        const messageElement = document.createElement('div');
+        messageElement.className = 'mt-6 p-4 bg-red-100 text-red-800 rounded-lg';
+        messageElement.textContent = 'API 연결 오류: ' + error.message;
+        document.querySelector('.text-center').appendChild(messageElement);
+      }
+    });
+  </script>
+</body>
+</html> 

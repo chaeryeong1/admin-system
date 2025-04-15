@@ -1,0 +1,192 @@
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+
+let nextId = 2;
+
+export default function ProjectList() {
+  const [projects, setProjects] = useState([
+    {
+      id: 1,
+      name: "클라우드 보급사업",
+      target: 50,
+      startDate: "2025-05-01",
+      endDate: "2025-12-31",
+      status: "접수중",
+      noticeUrl: "https://www.bizinfo.go.kr",
+      organizer: "중소벤처기업부",
+    },
+  ]);
+  const [filter, setFilter] = useState("");
+  const [selectedId, setSelectedId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [newProjectName, setNewProjectName] = useState("");
+
+  const filteredProjects = projects.filter((project) =>
+    project.name.includes(filter)
+  );
+
+  const addProject = () => {
+    if (!newProjectName.trim()) return;
+    const newProject = {
+      id: nextId++,
+      name: newProjectName,
+      target: 0,
+      startDate: "2025-05-01",
+      endDate: "2025-12-31",
+      status: "신규",
+      noticeUrl: "",
+      organizer: "주최기관 미정",
+    };
+    setProjects([...projects, newProject]);
+    setNewProjectName("");
+    setShowModal(false);
+  };
+
+  const deleteProject = () => {
+    if (!selectedId) return alert("삭제할 항목을 선택하세요.");
+    if (confirm("정말 삭제하시겠습니까?")) {
+      setProjects(projects.filter((p) => p.id !== selectedId));
+      setSelectedId(null);
+    }
+  };
+
+  const editProject = () => {
+    const project = projects.find((p) => p.id === selectedId);
+    if (!project) return alert("수정할 항목을 선택하세요.");
+    const name = prompt("새 사업명:", project.name);
+    if (name) {
+      setProjects(
+        projects.map((p) =>
+          p.id === selectedId ? { ...p, name } : p
+        )
+      );
+    }
+  };
+
+  const viewProject = (project) => {
+    alert(`사업명: ${project.name}\n목표: ${project.target}\n기간: ${project.startDate} ~ ${project.endDate}\n상태: ${project.status}\n주최기관: ${project.organizer}`);
+  };
+
+  return (
+    <div className="min-h-screen relative">
+      {/* 상단 대메뉴 */}
+      <header className="bg-white border-b px-6 py-3 text-sm font-semibold flex space-x-6">
+        <span className="text-blue-600">사업 관리</span>
+        <span className="text-gray-500">기업 관리</span>
+        {/* ...다른 메뉴 생략 */}
+      </header>
+
+      <div className="flex">
+        {/* 좌측 소메뉴 */}
+        <aside className="w-60 bg-gray-50 p-4 text-sm border-r h-full">
+          <h2 className="text-base font-semibold mb-4">사업 관리</h2>
+          <ul className="space-y-2">
+            <li className="text-blue-600 font-semibold">ㆍ사업 리스트 관리</li>
+          </ul>
+        </aside>
+
+        {/* 메인 콘텐츠 */}
+        <div className="flex-1 p-6 space-y-6">
+          <div className="text-xl font-bold border-b pb-2">사업 리스트 관리</div>
+
+          {/* 검색/조회 */}
+          <div className="flex items-center space-x-4">
+            <Input
+              placeholder="사업명 검색"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="max-w-sm"
+            />
+            <Button variant="outline" onClick={() => {
+              const match = projects.find((p) => p.name.includes(filter));
+              if (match) viewProject(match);
+              else alert("검색된 사업이 없습니다.");
+            }}>
+              조회
+            </Button>
+            <div className="flex-1 text-right">
+              <Button onClick={() => setShowModal(true)}>+ 추가</Button>
+            </div>
+          </div>
+
+          {/* 표 */}
+          <Card>
+            <CardContent className="p-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>선택</TableHead>
+                    <TableHead>사업명</TableHead>
+                    <TableHead>목표 업체 수</TableHead>
+                    <TableHead>진행 기간</TableHead>
+                    <TableHead>주최기관</TableHead>
+                    <TableHead>공고</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredProjects.map((project) => (
+                    <TableRow key={project.id}>
+                      <TableCell>
+                        <input
+                          type="radio"
+                          name="select-project"
+                          checked={selectedId === project.id}
+                          onChange={() => setSelectedId(project.id)}
+                        />
+                      </TableCell>
+                      <TableCell>{project.name}</TableCell>
+                      <TableCell>{project.target}</TableCell>
+                      <TableCell>{`${project.startDate} ~ ${project.endDate}`}</TableCell>
+                      <TableCell>{project.organizer}</TableCell>
+                      <TableCell>
+                        {project.noticeUrl ? (
+                          <a
+                            href={project.noticeUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-blue-600 underline text-sm"
+                          >
+                            공고 보기
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 text-sm">공고 없음</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* 하단 버튼 */}
+          <div className="flex justify-end space-x-4">
+            <Button variant="secondary" onClick={editProject}>수정</Button>
+            <Button variant="destructive" onClick={deleteProject}>삭제</Button>
+          </div>
+        </div>
+      </div>
+
+      {/* 추가 모달 */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+            <h2 className="text-lg font-semibold mb-4">사업명을 입력하세요</h2>
+            <Input
+              placeholder="클라우드 고도화 지원사업"
+              value={newProjectName}
+              onChange={(e) => setNewProjectName(e.target.value)}
+            />
+            <div className="flex justify-end space-x-2 mt-6">
+              <Button variant="outline" onClick={() => setShowModal(false)}>취소</Button>
+              <Button onClick={addProject}>확인</Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

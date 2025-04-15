@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 시스템 - 기업 관리</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <!-- 상단 대메뉴 -->
+  <header class="bg-white border-b px-6 py-3 text-sm font-semibold flex space-x-6">
+    <a href="business-management.html" class="text-gray-500">사업 관리</a>
+    <a href="company-management.html" class="text-blue-600">기업 관리</a>
+    <a href="cashback-management.html" class="text-gray-500">캐시백 송금</a>
+  </header>
+
+  <div class="flex">
+    <!-- 좌측 소메뉴 -->
+    <aside class="w-60 bg-gray-50 p-4 text-sm border-r h-screen">
+      <h2 class="text-base font-semibold mb-4">기업 관리</h2>
+      <ul class="space-y-2">
+        <li class="text-blue-600 font-semibold">ㆍ기업 리스트 관리</li>
+      </ul>
+    </aside>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="flex-1 p-6 space-y-6">
+      <div class="text-xl font-bold border-b pb-2">기업 리스트 관리</div>
+
+      <!-- 검색/필터링 -->
+      <div class="flex items-center space-x-4">
+        <select 
+          id="businessFilter" 
+          class="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">모든 사업</option>
+          <option value="클라우드 보급사업">클라우드 보급사업</option>
+        </select>
+        <input 
+          id="searchInput"
+          type="text" 
+          placeholder="기업명 검색" 
+          class="px-3 py-2 border rounded max-w-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+        <button 
+          id="searchButton"
+          class="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          조회
+        </button>
+        <div class="flex-1 text-right space-x-2">
+          <button 
+            id="excelDownloadButton"
+            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            엑셀 다운로드
+          </button>
+          <button 
+            id="excelUploadButton"
+            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            엑셀 추가
+          </button>
+        </div>
+      </div>
+
+      <!-- 표 -->
+      <div class="bg-white border rounded shadow">
+        <div class="p-4">
+          <table class="min-w-full">
+            <thead>
+              <tr class="border-b">
+                <th class="px-4 py-2 text-left">선택</th>
+                <th class="px-4 py-2 text-left">기업명</th>
+                <th class="px-4 py-2 text-left">사업자등록번호</th>
+                <th class="px-4 py-2 text-left">담당자</th>
+                <th class="px-4 py-2 text-left">연락처</th>
+                <th class="px-4 py-2 text-left">이메일</th>
+                <th class="px-4 py-2 text-left">참여 사업</th>
+                <th class="px-4 py-2 text-left">상태</th>
+              </tr>
+            </thead>
+            <tbody id="companyTableBody">
+              <!-- JavaScript로 채워질 부분 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 하단 버튼 -->
+      <div class="flex justify-end space-x-4">
+        <button 
+          id="editButton"
+          class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+        >
+          수정
+        </button>
+        <button 
+          id="deleteButton"
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          삭제
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 수정 모달 -->
+  <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+      <h2 class="text-lg font-semibold mb-4">기업 정보 수정</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">기업명</label>
+          <input
+            id="editCompanyName"
+            type="text"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">사업자등록번호</label>
+          <input
+            id="editCompanyNumber"
+            type="text"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">담당자</label>
+          <input
+            id="editContactPerson"
+            type="text"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">연락처</label>
+          <input
+            id="editContactPhone"
+            type="text"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">이메일</label>
+          <input
+            id="editContactEmail"
+            type="email"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">참여 사업</label>
+          <select
+            id="editBusinessProject"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="클라우드 보급사업">클라우드 보급사업</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">상태</label>
+          <select
+            id="editStatus"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="접수">접수</option>
+            <option value="심사중">심사중</option>
+            <option value="선정">선정</option>
+            <option value="탈락">탈락</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end space-x-2 mt-6">
+        <button 
+          id="cancelEditButton"
+          class="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          취소
+        </button>
+        <button 
+          id="confirmEditButton"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          저장
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 삭제 확인 모달 -->
+  <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+      <h2 class="text-lg font-semibold mb-4">기업 삭제</h2>
+      <p>정말 이 기업을 삭제하시겠습니까?</p>
+      <p id="deleteCompanyName" class="font-semibold mt-2"></p>
+      <div class="flex justify-end space-x-2 mt-6">
+        <button 
+          id="cancelDeleteButton"
+          class="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          취소
+        </button>
+        <button 
+          id="confirmDeleteButton"
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          삭제
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 엑셀 다운로드 모달 -->
+  <div id="excelDownloadModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+      <h2 class="text-lg font-semibold mb-4">엑셀 다운로드</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">다운로드 기간</label>
+          <div class="flex space-x-2">
+            <input
+              id="startDate"
+              type="date"
+              class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+            <span class="flex items-center">~</span>
+            <input
+              id="endDate"
+              type="date"
+              class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">참여 사업</label>
+          <select
+            id="downloadBusinessProject"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">모든 사업</option>
+            <option value="클라우드 보급사업">클라우드 보급사업</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end space-x-2 mt-6">
+        <button 
+          id="cancelDownloadButton"
+          class="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          취소
+        </button>
+        <button 
+          id="confirmDownloadButton"
+          class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          다운로드
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 엑셀 업로드 모달 -->
+  <div id="excelUploadModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+      <h2 class="text-lg font-semibold mb-4">엑셀 업로드</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">참여 사업</label>
+          <select
+            id="uploadBusinessProject"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="클라우드 보급사업">클라우드 보급사업</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">엑셀 파일</label>
+          <input
+            id="excelFile"
+            type="file"
+            accept=".xlsx, .xls"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div class="text-xs text-gray-500">
+          * 양식에 맞게 작성된 엑셀 파일만 업로드 가능합니다.
+        </div>
+      </div>
+      <div class="flex justify-end space-x-2 mt-6">
+        <button 
+          id="cancelUploadButton"
+          class="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          취소
+        </button>
+        <button 
+          id="confirmUploadButton"
+          class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          업로드
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Google Apps Script API URL
+    const API_URL = 'https://script.google.com/macros/s/AKfycby-9fAUMpLbkN7ISysznuKXeI9lo3NB7xN1ssv6gq3Zj5L2CLKThTyut88VwxM1ImQ/exec';
+    
+    // DOM 요소
+    const companyTableBody = document.getElementById('companyTableBody');
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const businessFilter = document.getElementById('businessFilter');
+    const editButton = document.getElementById('editButton');
+    const deleteButton = document.getElementById('deleteButton');
+    
+    // 기업 데이터
+    let companies = [];
+    let selectedCompanyIds = [];
+    
+    // 기업 데이터 로드
+    async function loadCompanies() {
+      try {
+        // 로딩 표시
+        companyTableBody.innerHTML = '<tr><td colspan="8" class="px-4 py-2 text-center">데이터를 불러오는 중...</td></tr>';
+        
+        // API에서 데이터 가져오기
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        
+        if (data.success && data.companies) {
+          companies = data.companies;
+          renderCompanies();
+        } else {
+          companyTableBody.innerHTML = '<tr><td colspan="8" class="px-4 py-2 text-center text-red-500">데이터를 불러오는데 실패했습니다.</td></tr>';
+          console.error('API 응답에 데이터가 없습니다:', data);
+        }
+      } catch (error) {
+        companyTableBody.innerHTML = '<tr><td colspan="8" class="px-4 py-2 text-center text-red-500">서버 연결 오류</td></tr>';
+        console.error('API 호출 오류:', error);
+      }
+    }
+    
+    // 기업 목록 렌더링
+    function renderCompanies() {
+      // 필터링 적용
+      const searchTerm = searchInput.value.toLowerCase();
+      const businessType = businessFilter.value;
+      
+      const filteredCompanies = companies.filter(company => {
+        const nameMatch = company.name ? company.name.toLowerCase().includes(searchTerm) : false;
+        const businessMatch = !businessType || (company.project === businessType);
+        return nameMatch && businessMatch;
+      });
+      
+      // 결과가 없을 경우
+      if (filteredCompanies.length === 0) {
+        companyTableBody.innerHTML = '<tr><td colspan="8" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
+        return;
+      }
+      
+      // 테이블 생성
+      let html = '';
+      filteredCompanies.forEach(company => {
+        html += `
+          <tr class="border-b hover:bg-gray-50">
+            <td class="px-4 py-2">
+              <input 
+                type="checkbox" 
+                class="company-checkbox" 
+                data-id="${company.id || ''}"
+              >
+            </td>
+            <td class="px-4 py-2">${company.name || ''}</td>
+            <td class="px-4 py-2">${company.businessNumber || ''}</td>
+            <td class="px-4 py-2">${company.contactPerson || ''}</td>
+            <td class="px-4 py-2">${company.contact || ''}</td>
+            <td class="px-4 py-2">${company.email || ''}</td>
+            <td class="px-4 py-2">${company.project || ''}</td>
+            <td class="px-4 py-2">
+              <span class="${getStatusClass(company.status)}">${company.status || '접수'}</span>
+            </td>
+          </tr>
+        `;
+      });
+      
+      companyTableBody.innerHTML = html;
+      setupCheckboxes();
+    }
+    
+    // 상태에 따른 클래스
+    function getStatusClass(status) {
+      switch (status) {
+        case '선정': return 'px-2 py-1 bg-green-100 text-green-800 rounded text-xs';
+        case '탈락': return 'px-2 py-1 bg-red-100 text-red-800 rounded text-xs';
+        case '심사중': return 'px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs';
+        default: return 'px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs';
+      }
+    }
+    
+    // 체크박스 이벤트 설정
+    function setupCheckboxes() {
+      const checkboxes = document.querySelectorAll('.company-checkbox');
+      checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          const companyId = this.getAttribute('data-id');
+          
+          if (this.checked) {
+            selectedCompanyIds.push(companyId);
+          } else {
+            const index = selectedCompanyIds.indexOf(companyId);
+            if (index > -1) {
+              selectedCompanyIds.splice(index, 1);
+            }
+          }
+          
+          // 버튼 활성화/비활성화
+          updateButtonStates();
+        });
+      });
+    }
+    
+    // 버튼 상태 업데이트
+    function updateButtonStates() {
+      if (selectedCompanyIds.length === 0) {
+        editButton.disabled = true;
+        deleteButton.disabled = true;
+        editButton.classList.add('opacity-50');
+        deleteButton.classList.add('opacity-50');
+      } else if (selectedCompanyIds.length === 1) {
+        editButton.disabled = false;
+        deleteButton.disabled = false;
+        editButton.classList.remove('opacity-50');
+        deleteButton.classList.remove('opacity-50');
+      } else {
+        editButton.disabled = true;
+        deleteButton.disabled = false;
+        editButton.classList.add('opacity-50');
+        deleteButton.classList.remove('opacity-50');
+      }
+    }
+    
+    // 문서 로드 시 실행
+    document.addEventListener('DOMContentLoaded', function() {
+      // 초기 데이터 로드
+      loadCompanies();
+      
+      // 버튼 초기 상태 설정
+      updateButtonStates();
+      
+      // 검색 이벤트
+      searchButton.addEventListener('click', renderCompanies);
+      searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          renderCompanies();
+        }
+      });
+      
+      // 사업 필터 변경 이벤트
+      businessFilter.addEventListener('change', renderCompanies);
+      
+      // 엑셀 다운로드 버튼
+      document.getElementById('excelDownloadButton').addEventListener('click', function() {
+        document.getElementById('excelDownloadModal').classList.remove('hidden');
+      });
+      
+      // 엑셀 업로드 버튼
+      document.getElementById('excelUploadButton').addEventListener('click', function() {
+        alert('준비 중인 기능입니다.');
+      });
+      
+      // 수정 버튼
+      editButton.addEventListener('click', function() {
+        if (selectedCompanyIds.length !== 1) return;
+        
+        const companyId = selectedCompanyIds[0];
+        const company = companies.find(c => c.id === companyId);
+        
+        if (company) {
+          // 모달에 데이터 채우기
+          document.getElementById('editCompanyName').value = company.name || '';
+          document.getElementById('editCompanyNumber').value = company.businessNumber || '';
+          document.getElementById('editContactPerson').value = company.contactPerson || '';
+          document.getElementById('editContactPhone').value = company.contact || '';
+          document.getElementById('editContactEmail').value = company.email || '';
+          
+          if (company.project) {
+            const select = document.getElementById('editBusinessProject');
+            for (let i = 0; i < select.options.length; i++) {
+              if (select.options[i].value === company.project) {
+                select.selectedIndex = i;
+                break;
+              }
+            }
+          }
+          
+          if (company.status) {
+            const select = document.getElementById('editStatus');
+            for (let i = 0; i < select.options.length; i++) {
+              if (select.options[i].value === company.status) {
+                select.selectedIndex = i;
+                break;
+              }
+            }
+          }
+          
+          // 모달 표시
+          document.getElementById('editModal').classList.remove('hidden');
+        }
+      });
+      
+      // 삭제 버튼
+      deleteButton.addEventListener('click', function() {
+        if (selectedCompanyIds.length === 0) return;
+        
+        if (selectedCompanyIds.length === 1) {
+          const companyId = selectedCompanyIds[0];
+          const company = companies.find(c => c.id === companyId);
+          
+          if (company) {
+            document.getElementById('deleteCompanyName').textContent = company.name;
+          }
+        } else {
+          document.getElementById('deleteCompanyName').textContent = `선택된 ${selectedCompanyIds.length}개 기업`;
+        }
+        
+        // 모달 표시
+        document.getElementById('deleteModal').classList.remove('hidden');
+      });
+      
+      // 모달 닫기 버튼들
+      document.getElementById('cancelEditButton').addEventListener('click', function() {
+        document.getElementById('editModal').classList.add('hidden');
+      });
+      
+      document.getElementById('cancelDeleteButton').addEventListener('click', function() {
+        document.getElementById('deleteModal').classList.add('hidden');
+      });
+      
+      document.getElementById('cancelDownloadButton').addEventListener('click', function() {
+        document.getElementById('excelDownloadModal').classList.add('hidden');
+      });
+      
+      // 모달 확인 버튼들
+      document.getElementById('confirmEditButton').addEventListener('click', async function() {
+        if (selectedCompanyIds.length !== 1) return;
+        
+        const companyId = selectedCompanyIds[0];
+        
+        const updatedCompany = {
+          id: companyId,
+          name: document.getElementById('editCompanyName').value,
+          businessNumber: document.getElementById('editCompanyNumber').value,
+          contactPerson: document.getElementById('editContactPerson').value,
+          contact: document.getElementById('editContactPhone').value,
+          email: document.getElementById('editContactEmail').value,
+          project: document.getElementById('editBusinessProject').value,
+          status: document.getElementById('editStatus').value
+        };
+        
+        // API 연동 부분 - 현재는 임시로 처리
+        alert('수정 기능은 아직 준비 중입니다.');
+        
+        // 모달 닫기
+        document.getElementById('editModal').classList.add('hidden');
+      });
+      
+      document.getElementById('confirmDeleteButton').addEventListener('click', function() {
+        // API 연동 부분 - 현재는 임시로 처리
+        alert('삭제 기능은 아직 준비 중입니다.');
+        
+        // 모달 닫기
+        document.getElementById('deleteModal').classList.add('hidden');
+      });
+      
+      document.getElementById('confirmDownloadButton').addEventListener('click', function() {
+        // 현재는 임시로 처리
+        alert('다운로드 기능은 아직 준비 중입니다.');
+        
+        // 모달 닫기
+        document.getElementById('excelDownloadModal').classList.add('hidden');
+      });
+    });
+  </script>
+</body>
+</html> 

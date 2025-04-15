@@ -1,0 +1,39 @@
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+
+export default function ExcelDownloadModal({ onDownload, onClose }) {
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-[450px]">
+        <h2 className="text-lg font-semibold mb-4 flex items-center space-x-2">
+  <span>📥</span>
+  <span>기업 리스트 엑셀 다운로드</span>
+</h2>
+
+        <div className="text-sm text-gray-800 mb-4 space-y-1">
+  <p><strong>대상:</strong> 총 37개 기업</p>
+  <p><strong>마지막 수정일:</strong> 2025-04-11</p>
+  <p><strong>포함 항목:</strong> 기업명, 대표자, 이메일, 연락처, 등록일</p>
+  <p className="text-red-500">※ 다운로드한 엑셀은 시스템 업로드용으로 사용 가능합니다.</p>
+</div>
+
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" onClick={onClose}>닫기</Button>
+          <Button className="bg-[#0F172A] text-white hover:bg-[#1E293B] flex items-center space-x-1" onClick={onDownload}>
+            <Download size={16} />
+            <span>엑셀 다운로드</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

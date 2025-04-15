@@ -1,0 +1,12 @@
+{
+  "name": "admin-system",
+  "version": "1.0.0",
+  "description": "관리자 시스템",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+} 

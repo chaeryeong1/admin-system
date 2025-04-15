@@ -1,0 +1,77 @@
+import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+export default function CashbackRequestModal({ receiver = {}, onClose, onSave }) {
+  const [amount, setAmount] = useState("");
+  const [requestDate, setRequestDate] = useState("");
+  const [status, setStatus] = useState("요청");
+
+  useEffect(() => {
+    if (receiver) {
+      setAmount(receiver.amount || "");
+      setRequestDate(receiver.requestDate || "");
+      setStatus(receiver.status || "요청");
+    }
+  }, [receiver]);
+
+  const handleRequest = () => {
+    if (!amount || !requestDate) {
+      alert("금액과 요청일을 모두 입력해주세요.");
+      return;
+    }
+    const updatedRequest = {
+      ...receiver,
+      amount: Number(amount),
+      requestDate,
+      status,
+    };
+    onSave(updatedRequest);  // 송금 요청을 부모 컴포넌트로 전달
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-[420px]">
+        <h2 className="text-lg font-semibold mb-4">💸 송금 요청</h2>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">송금 금액</label>
+            <Input
+              type="number"
+              placeholder="금액 입력"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">요청일</label>
+            <Input
+              type="date"
+              value={requestDate}
+              onChange={(e) => setRequestDate(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">상태</label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="w-full p-2 border rounded"
+            >
+              <option value="요청">요청</option>
+              <option value="완료">완료</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex justify-end space-x-2 mt-6">
+          <Button variant="outline" onClick={onClose}>취소</Button>
+          <Button onClick={handleRequest}>요청</Button>
+        </div>
+      </div>
+    </div>
+  );
+}

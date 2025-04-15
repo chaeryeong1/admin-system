@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 시스템 - 송금 요청</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <!-- 상단 대메뉴 -->
+  <header class="bg-white border-b px-6 py-3 text-sm font-semibold flex space-x-6">
+    <a href="business-management.html" class="text-gray-500">사업 관리</a>
+    <a href="company-management.html" class="text-gray-500">기업 관리</a>
+    <a href="cashback-management.html" class="text-blue-600">캐시백 송금</a>
+  </header>
+
+  <div class="flex">
+    <!-- 좌측 소메뉴 -->
+    <aside class="w-60 bg-gray-50 p-4 text-sm border-r h-screen">
+      <h2 class="text-base font-semibold mb-4">캐시백 송금</h2>
+      <ul class="space-y-2">
+        <li class="text-gray-600">
+          <a href="cashback-management.html">ㆍ계약금수령기업</a>
+        </li>
+        <li class="text-blue-600 font-semibold">
+          <a href="cashback-request.html">ㆍ송금 요청</a>
+        </li>
+        <li class="text-gray-600">
+          <a href="cashback-approval.html">ㆍ송금 승인</a>
+        </li>
+        <li class="text-gray-600">
+          <a href="cashback-transfer.html">ㆍ송금</a>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="flex-1 p-6 space-y-6">
+      <div class="text-xl font-bold border-b pb-2">송금 요청</div>
+
+      <!-- 검색/필터링 -->
+      <div class="flex items-center space-x-4">
+        <select 
+          id="businessFilter" 
+          class="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">모든 사업</option>
+          <option value="클라우드 보급사업">클라우드 보급사업</option>
+        </select>
+        <input 
+          id="searchInput"
+          type="text" 
+          placeholder="기업명 검색" 
+          class="px-3 py-2 border rounded max-w-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+        <button 
+          id="searchButton"
+          class="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          조회
+        </button>
+      </div>
+
+      <!-- 표 -->
+      <div class="bg-white border rounded shadow">
+        <div class="p-4">
+          <table class="min-w-full">
+            <thead>
+              <tr class="border-b">
+                <th class="px-4 py-2 text-left">선택</th>
+                <th class="px-4 py-2 text-left">기업명</th>
+                <th class="px-4 py-2 text-left">담당자</th>
+                <th class="px-4 py-2 text-left">참여 사업</th>
+                <th class="px-4 py-2 text-left">요청일</th>
+                <th class="px-4 py-2 text-left">금액</th>
+                <th class="px-4 py-2 text-left">상태</th>
+                <th class="px-4 py-2 text-left">승인 대기일</th>
+              </tr>
+            </thead>
+            <tbody id="requestTableBody">
+              <!-- JavaScript로 채워질 부분 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 하단 버튼 -->
+      <div class="flex justify-end space-x-4">
+        <button 
+          id="cancelButton"
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          요청 취소
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 요청 취소 확인 모달 -->
+  <div id="cancelModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+      <h2 class="text-lg font-semibold mb-4">송금 요청 취소</h2>
+      <p>다음 기업에 대한 송금 요청을 취소하시겠습니까?</p>
+      <p id="cancelCompanyName" class="font-semibold mt-2"></p>
+      <div class="flex justify-end space-x-2 mt-6">
+        <button 
+          id="cancelModalNoButton"
+          class="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          아니오
+        </button>
+        <button 
+          id="confirmCancelButton"
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          예, 취소합니다
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 상태 관리
+    let requests = [
+      {
+        id: 1,
+        companyName: "(주)클라우드테크",
+        contactPerson: "홍길동",
+        project: "클라우드 보급사업",
+        requestDate: "2025-06-20",
+        amount: 500000,
+        status: "요청중",
+        waitingDays: 3
+      },
+      {
+        id: 2,
+        companyName: "데이터시스템즈",
+        contactPerson: "김철수",
+        project: "클라우드 보급사업",
+        requestDate: "2025-06-18",
+        amount: 800000,
+        status: "요청중",
+        waitingDays: 5
+      }
+    ];
+    let selectedId = null;
+
+    // DOM 요소
+    const requestTableBody = document.getElementById('requestTableBody');
+    const businessFilter = document.getElementById('businessFilter');
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const cancelButton = document.getElementById('cancelButton');
+    
+    const cancelModal = document.getElementById('cancelModal');
+    const cancelCompanyName = document.getElementById('cancelCompanyName');
+    const cancelModalNoButton = document.getElementById('cancelModalNoButton');
+    const confirmCancelButton = document.getElementById('confirmCancelButton');
+
+    // 금액 포맷팅 함수
+    function formatAmount(amount) {
+      return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    // 요청 목록 렌더링
+    function renderRequests() {
+      const filteredRequests = requests.filter(request => 
+        request.companyName.includes(searchInput.value) && 
+        (businessFilter.value === "" || request.project === businessFilter.value)
+      );
+
+      requestTableBody.innerHTML = '';
+      
+      filteredRequests.forEach(request => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b hover:bg-gray-50';
+        
+        // 상태에 따른 스타일 
+        let statusClass = 'bg-yellow-100 text-yellow-800';
+        
+        tr.innerHTML = `
+          <td class="px-4 py-2">
+            <input 
+              type="radio" 
+              name="select-request" 
+              value="${request.id}" 
+              ${selectedId === request.id ? 'checked' : ''}
+            >
+          </td>
+          <td class="px-4 py-2">${request.companyName}</td>
+          <td class="px-4 py-2">${request.contactPerson}</td>
+          <td class="px-4 py-2">${request.project}</td>
+          <td class="px-4 py-2">${request.requestDate}</td>
+          <td class="px-4 py-2 text-right">${formatAmount(request.amount)}원</td>
+          <td class="px-4 py-2">
+            <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">
+              ${request.status}
+            </span>
+          </td>
+          <td class="px-4 py-2">${request.waitingDays}일</td>
+        `;
+        
+        requestTableBody.appendChild(tr);
+      });
+
+      // 라디오 버튼 이벤트 리스너 추가
+      document.querySelectorAll('input[name="select-request"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          selectedId = parseInt(e.target.value);
+        });
+      });
+    }
+
+    // 초기 렌더링
+    renderRequests();
+
+    // 이벤트 리스너
+    searchButton.addEventListener('click', () => {
+      renderRequests();
+    });
+
+    cancelButton.addEventListener('click', () => {
+      if (!selectedId) {
+        alert('취소할 송금 요청을 선택하세요.');
+        return;
+      }
+
+      const request = requests.find(r => r.id === selectedId);
+      if (!request) return;
+
+      cancelCompanyName.textContent = request.companyName;
+      cancelModal.classList.remove('hidden');
+    });
+
+    cancelModalNoButton.addEventListener('click', () => {
+      cancelModal.classList.add('hidden');
+    });
+
+    confirmCancelButton.addEventListener('click', () => {
+      requests = requests.filter(r => r.id !== selectedId);
+      selectedId = null;
+      cancelModal.classList.add('hidden');
+      renderRequests();
+      
+      alert('송금 요청이 취소되었습니다.');
+    });
+  </script>
+</body>
+</html> 

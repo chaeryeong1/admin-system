@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 시스템 - 캐시백 송금</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <!-- 상단 대메뉴 -->
+  <header class="bg-white border-b px-6 py-3 text-sm font-semibold flex space-x-6">
+    <a href="business-management.html" class="text-gray-500">사업 관리</a>
+    <a href="company-management.html" class="text-gray-500">기업 관리</a>
+    <a href="cashback-management.html" class="text-blue-600">캐시백 송금</a>
+  </header>
+
+  <div class="flex">
+    <!-- 좌측 소메뉴 -->
+    <aside class="w-60 bg-gray-50 p-4 text-sm border-r h-screen">
+      <h2 class="text-base font-semibold mb-4">캐시백 송금</h2>
+      <ul class="space-y-2">
+        <li class="text-blue-600 font-semibold">
+          <a href="cashback-management.html">ㆍ계약금수령기업</a>
+        </li>
+        <li class="text-gray-600">
+          <a href="cashback-request.html">ㆍ송금 요청</a>
+        </li>
+        <li class="text-gray-600">
+          <a href="cashback-approval.html">ㆍ송금 승인</a>
+        </li>
+        <li class="text-gray-600">
+          <a href="cashback-transfer.html">ㆍ송금</a>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="flex-1 p-6 space-y-6">
+      <div class="text-xl font-bold border-b pb-2">계약금수령기업</div>
+
+      <!-- 검색/필터링 -->
+      <div class="flex items-center space-x-4">
+        <select 
+          id="businessFilter" 
+          class="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">모든 사업</option>
+          <option value="클라우드 보급사업">클라우드 보급사업</option>
+        </select>
+        <select 
+          id="statusFilter" 
+          class="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">모든 상태</option>
+          <option value="미지급">미지급</option>
+          <option value="지급예정">지급예정</option>
+          <option value="지급완료">지급완료</option>
+        </select>
+        <input 
+          id="searchInput"
+          type="text" 
+          placeholder="기업명 검색" 
+          class="px-3 py-2 border rounded max-w-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+        <button 
+          id="searchButton"
+          class="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          조회
+        </button>
+      </div>
+
+      <!-- 표 -->
+      <div class="bg-white border rounded shadow">
+        <div class="p-4">
+          <table class="min-w-full">
+            <thead>
+              <tr class="border-b">
+                <th class="px-4 py-2 text-left">선택</th>
+                <th class="px-4 py-2 text-left">기업명</th>
+                <th class="px-4 py-2 text-left">담당자</th>
+                <th class="px-4 py-2 text-left">참여 사업</th>
+                <th class="px-4 py-2 text-left">계약일</th>
+                <th class="px-4 py-2 text-left">계약금액</th>
+                <th class="px-4 py-2 text-left">캐시백</th>
+                <th class="px-4 py-2 text-left">캐시백 상태</th>
+                <th class="px-4 py-2 text-left">주문서</th>
+              </tr>
+            </thead>
+            <tbody id="cashbackTableBody">
+              <!-- JavaScript로 채워질 부분 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 하단 버튼 -->
+      <div class="flex justify-end space-x-4">
+        <button 
+          id="requestButton"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          송금 요청
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 송금 요청 모달 -->
+  <div id="requestModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+      <h2 class="text-lg font-semibold mb-4">송금 요청</h2>
+      <p>다음 기업에 대한 캐시백 송금을 요청하시겠습니까?</p>
+      <p id="requestCompanyName" class="font-semibold mt-2"></p>
+      <div class="mt-4">
+        <label class="block text-sm font-medium mb-1">캐시백 금액</label>
+        <div class="flex items-center">
+          <input
+            id="cashbackAmount"
+            type="text"
+            readonly
+            class="w-full px-3 py-2 border rounded bg-gray-50"
+          >
+          <span class="ml-2">원</span>
+        </div>
+      </div>
+      <div class="flex justify-end space-x-2 mt-6">
+        <button 
+          id="cancelRequestButton"
+          class="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          취소
+        </button>
+        <button 
+          id="confirmRequestButton"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          요청
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Google Apps Script API URL
+    const API_URL = 'https://script.google.com/macros/s/AKfycby-9fAUMpLbkN7ISysznuKXeI9lo3NB7xN1ssv6gq3Zj5L2CLKThTyut88VwxM1ImQ/exec';
+    
+    // DOM 요소
+    const cashbackTableBody = document.getElementById('cashbackTableBody');
+    const businessFilter = document.getElementById('businessFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const requestButton = document.getElementById('requestButton');
+    
+    // 데이터 상태
+    let cashbacks = [];
+    let selectedCashbackId = null;
+    
+    // 캐시백 데이터 로드
+    async function loadCashbacks() {
+      try {
+        // 로딩 표시
+        cashbackTableBody.innerHTML = '<tr><td colspan="9" class="px-4 py-2 text-center">데이터를 불러오는 중...</td></tr>';
+        
+        // API에서 데이터 가져오기
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        
+        if (data.success && data.companies) {
+          // 지금은 회사 데이터를 가져오지만 나중에 캐시백 데이터를 추가할 수 있습니다
+          // 임시로 기본 캐시백 데이터 사용
+          cashbacks = [
+            {
+              id: 1,
+              companyName: "(주)클라우드테크",
+              contactPerson: "홍길동",
+              project: "클라우드 보급사업",
+              contractDate: "2025-06-15",
+              contractAmount: 5000000,
+              cashbackAmount: 500000,
+              status: "미지급",
+              hasOrderSheet: true
+            },
+            {
+              id: 2,
+              companyName: "데이터시스템즈",
+              contactPerson: "김철수",
+              project: "클라우드 보급사업",
+              contractDate: "2025-06-10",
+              contractAmount: 8000000,
+              cashbackAmount: 800000,
+              status: "지급예정",
+              hasOrderSheet: true
+            },
+            {
+              id: 3,
+              companyName: "모바일솔루션",
+              contactPerson: "이영희",
+              project: "클라우드 보급사업",
+              contractDate: "2025-05-20",
+              contractAmount: 6000000,
+              cashbackAmount: 600000,
+              status: "지급완료",
+              hasOrderSheet: true
+            }
+          ];
+          renderCashbacks();
+          updateButtonStates();
+        } else {
+          cashbackTableBody.innerHTML = '<tr><td colspan="9" class="px-4 py-2 text-center text-red-500">데이터를 불러오는데 실패했습니다.</td></tr>';
+          console.error('API 응답에 데이터가 없습니다:', data);
+        }
+      } catch (error) {
+        cashbackTableBody.innerHTML = '<tr><td colspan="9" class="px-4 py-2 text-center text-red-500">서버 연결 오류</td></tr>';
+        console.error('API 호출 오류:', error);
+      }
+    }
+    
+    // 금액 포맷팅 함수
+    function formatAmount(amount) {
+      return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+    
+    // 캐시백 목록 렌더링
+    function renderCashbacks() {
+      // 필터링 적용
+      const searchTerm = searchInput.value.toLowerCase();
+      const business = businessFilter.value;
+      const status = statusFilter.value;
+      
+      const filteredCashbacks = cashbacks.filter(cashback => {
+        const nameMatch = cashback.companyName.toLowerCase().includes(searchTerm);
+        const businessMatch = !business || cashback.project === business;
+        const statusMatch = !status || cashback.status === status;
+        return nameMatch && businessMatch && statusMatch;
+      });
+      
+      // 결과가 없을 경우
+      if (filteredCashbacks.length === 0) {
+        cashbackTableBody.innerHTML = '<tr><td colspan="9" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
+        return;
+      }
+      
+      // 테이블 생성
+      let html = '';
+      filteredCashbacks.forEach(cashback => {
+        // 상태에 따른 스타일 
+        let statusClass = getStatusClass(cashback.status);
+        
+        html += `
+          <tr class="border-b hover:bg-gray-50">
+            <td class="px-4 py-2">
+              <input 
+                type="radio" 
+                name="select-cashback" 
+                value="${cashback.id}" 
+                ${selectedCashbackId === cashback.id ? 'checked' : ''}
+                ${cashback.status !== '미지급' ? 'disabled' : ''}
+                class="cashback-radio"
+              >
+            </td>
+            <td class="px-4 py-2">${cashback.companyName}</td>
+            <td class="px-4 py-2">${cashback.contactPerson}</td>
+            <td class="px-4 py-2">${cashback.project}</td>
+            <td class="px-4 py-2">${cashback.contractDate}</td>
+            <td class="px-4 py-2 text-right">${formatAmount(cashback.contractAmount)}원</td>
+            <td class="px-4 py-2 text-right">${formatAmount(cashback.cashbackAmount)}원</td>
+            <td class="px-4 py-2">
+              <span class="${statusClass}">${cashback.status}</span>
+            </td>
+            <td class="px-4 py-2">
+              ${cashback.hasOrderSheet 
+                ? `<button class="px-2 py-1 bg-gray-200 text-xs rounded hover:bg-gray-300">보기</button>` 
+                : `<span class="text-gray-400 text-xs">없음</span>`
+              }
+            </td>
+          </tr>
+        `;
+      });
+      
+      cashbackTableBody.innerHTML = html;
+      setupRadioButtons();
+    }
+    
+    // 상태에 따른 클래스
+    function getStatusClass(status) {
+      switch (status) {
+        case '지급완료': return 'px-2 py-1 bg-green-100 text-green-800 rounded text-xs';
+        case '지급예정': return 'px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs';
+        case '미지급': return 'px-2 py-1 bg-red-100 text-red-800 rounded text-xs';
+        default: return 'px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs';
+      }
+    }
+    
+    // 라디오 버튼 이벤트 설정
+    function setupRadioButtons() {
+      const radios = document.querySelectorAll('.cashback-radio');
+      radios.forEach(radio => {
+        radio.addEventListener('change', function() {
+          selectedCashbackId = parseInt(this.value);
+          updateButtonStates();
+        });
+      });
+    }
+    
+    // 버튼 상태 업데이트
+    function updateButtonStates() {
+      if (!selectedCashbackId) {
+        requestButton.disabled = true;
+        requestButton.classList.add('opacity-50');
+      } else {
+        const selected = cashbacks.find(c => c.id === selectedCashbackId);
+        if (selected && selected.status === '미지급') {
+          requestButton.disabled = false;
+          requestButton.classList.remove('opacity-50');
+        } else {
+          requestButton.disabled = true;
+          requestButton.classList.add('opacity-50');
+        }
+      }
+    }
+    
+    // 문서 로드 시 실행
+    document.addEventListener('DOMContentLoaded', function() {
+      // 초기 데이터 로드
+      loadCashbacks();
+      
+      // 검색 이벤트
+      searchButton.addEventListener('click', renderCashbacks);
+      searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          renderCashbacks();
+        }
+      });
+      
+      // 필터 변경 이벤트
+      businessFilter.addEventListener('change', renderCashbacks);
+      statusFilter.addEventListener('change', renderCashbacks);
+      
+      // 송금 요청 버튼
+      requestButton.addEventListener('click', function() {
+        if (!selectedCashbackId) return;
+        
+        const cashback = cashbacks.find(c => c.id === selectedCashbackId);
+        if (!cashback || cashback.status !== '미지급') return;
+        
+        // 모달에 데이터 채우기
+        document.getElementById('requestCompanyName').textContent = cashback.companyName;
+        document.getElementById('cashbackAmount').value = formatAmount(cashback.cashbackAmount);
+        
+        // 모달 표시
+        document.getElementById('requestModal').classList.remove('hidden');
+      });
+      
+      // 모달 닫기 버튼
+      document.getElementById('cancelRequestButton').addEventListener('click', function() {
+        document.getElementById('requestModal').classList.add('hidden');
+      });
+      
+      // 모달 확인 버튼
+      document.getElementById('confirmRequestButton').addEventListener('click', function() {
+        if (!selectedCashbackId) return;
+        
+        // 상태 변경
+        const index = cashbacks.findIndex(c => c.id === selectedCashbackId);
+        if (index !== -1) {
+          cashbacks[index].status = '지급예정';
+          selectedCashbackId = null;
+          renderCashbacks();
+          updateButtonStates();
+        }
+        
+        // 성공 메시지
+        alert('송금 요청이 완료되었습니다.');
+        
+        // 모달 닫기
+        document.getElementById('requestModal').classList.add('hidden');
+      });
+    });
+  </script>
+</body>
+</html> 

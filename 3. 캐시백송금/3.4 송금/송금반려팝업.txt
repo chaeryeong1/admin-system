@@ -1,0 +1,83 @@
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { XCircle } from "lucide-react";
+
+export default function CashbackRejectModal({ onClose, onReject, info }) {
+  const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [onClose]);
+
+  const mockInfo = {
+    name: "주식회사 이엑스",
+    ceo: "홍길동",
+    contractAmount: 2000000,
+    cashbackAmount: 200000,
+    bankName: "국민은행",
+    accountNumber: "110-123-456789",
+    holder: "홍길동",
+    attachmentName: "통장사본.pdf",
+    note: "관리자 메모 예시"
+  };
+
+  const data = info && info.bankName ? info : mockInfo;
+
+  const handleRejectClick = () => {
+    if (!reason.trim()) {
+      alert("반려 사유를 입력해 주세요.");
+      return;
+    }
+    onReject({ reason });
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-[460px]">
+        <h2 className="text-lg font-semibold mb-4 flex items-center space-x-2">
+          <XCircle className="text-red-600" size={20} />
+          <span>송금 반려</span>
+        </h2>
+
+        <div className="text-sm text-gray-800 space-y-2">
+          <p><strong>기업명:</strong> {data.name}</p>
+          <p><strong>대표자:</strong> {data.ceo}</p>
+          <p><strong>계약금액:</strong> {Number(data.contractAmount).toLocaleString()}원</p>
+          <p><strong>캐시백 금액:</strong> {Number(data.cashbackAmount).toLocaleString()}원</p>
+          <p><strong>계좌정보:</strong> {data.bankName} / {data.accountNumber} / {data.holder}</p>
+          <p><strong>통장사본:</strong> {data.attachmentName ? <a href="#" className="text-blue-600 underline">{data.attachmentName}</a> : "없음"}</p>
+          <div>
+            <p className="text-sm font-medium">관리자 메모</p>
+            <textarea
+              className="mt-1 w-full border border-gray-300 rounded px-3 py-2 text-sm bg-gray-100"
+              rows={3}
+              readOnly
+              value={data.note || "-"}
+            />
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <p className="text-sm font-medium">반려 사유 <span className="text-red-500">*</span></p>
+          <textarea
+            className="mt-1 w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            rows={4}
+            placeholder="반려 사유를 입력해 주세요"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+        </div>
+
+        <div className="flex justify-end space-x-2 mt-6">
+          <Button className="text-gray-700 hover:text-black border border-gray-300" variant="ghost" onClick={onClose}>닫기</Button>
+          <Button className="bg-red-600 text-white hover:bg-red-700" onClick={handleRejectClick}>반려 확정</Button>
+        </div>
+      </div>
+    </div>
+  );
+}

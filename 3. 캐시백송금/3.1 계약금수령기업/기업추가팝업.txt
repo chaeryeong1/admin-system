@@ -1,0 +1,124 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+const mockCompanies = Array.from({ length: 100 }, (_, i) => ({
+  id: i + 1,
+  name: `기업 ${i + 1}`,
+  bizNo: `100-${String(i + 1).padStart(2, '0')}-00000`,
+  ceo: `대표자 ${i + 1}`,
+  registered: i % 10 === 0 // 10번째마다 등록된 것으로 설정
+}));
+
+export default function CompanyMultiAddModal({ onAdd, onClose }) {
+  const [project, setProject] = useState("2025 클라우드 보급사업");
+  const [filter, setFilter] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [amounts, setAmounts] = useState({});
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
+    );
+  };
+
+  const updateAmount = (id, value) => {
+    setAmounts((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleAdd = () => {
+    const selectedCompanies = mockCompanies.filter(
+      (c) => selectedIds.includes(c.id) && amounts[c.id] && Number(amounts[c.id]) > 0
+    );
+    if (selectedCompanies.length === 0) {
+      alert("기업을 선택하고 수령액을 모두 입력해주세요.");
+      return;
+    }
+    onAdd(selectedCompanies.map((c) => ({ ...c, amount: Number(amounts[c.id]) })));
+  };
+
+  const filtered = mockCompanies.filter((c) => c.name.includes(filter));
+  const selectedCompanies = filtered.filter((c) => selectedIds.includes(c.id));
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-[580px]">
+        <h2 className="text-lg font-semibold mb-4"> 계약금 수령 기업 선택</h2>
+
+        <div className="mb-4 flex gap-2 items-center">
+          <select
+            value={project}
+            onChange={(e) => setProject(e.target.value)}
+            className="border rounded px-3 py-2 text-sm"
+          >
+            <option>2025 클라우드 보급사업</option>
+            <option>2024 스마트공장 도입사업</option>
+          </select>
+          <Input
+            placeholder="기업명 검색"
+            className="flex-1"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
+        </div>
+
+        <div className="max-h-48 overflow-y-auto border p-3 rounded mb-4">
+          {filtered.map((c) => (
+            <label
+              key={c.id}
+              className={`flex items-center justify-between gap-2 py-1 ${c.registered ? "text-gray-400" : "text-gray-900"}`}
+            >
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  disabled={c.registered}
+                  checked={selectedIds.includes(c.id)}
+                  onChange={() => toggleSelect(c.id)}
+                />
+                <span>{c.name} / {c.ceo} / {c.bizNo} {c.registered && "(등록됨)"}</span>
+              </div>
+            </label>
+          ))}
+        </div>
+
+        {selectedCompanies.length > 0 && (
+          <div className="mb-4 border-t pt-3">
+            <p className="text-sm font-medium mb-2">선택된 기업별 수령액 입력</p>
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+              {selectedCompanies.map((c) => (
+                <div key={c.id} className="flex items-center justify-between gap-2">
+                  <span className="truncate w-[280px]">{c.name} / {c.ceo} / {c.bizNo}</span>
+<button
+  className="ml-2 text-sm text-red-500 hover:underline"
+  onClick={() => {
+    setSelectedIds((prev) => prev.filter((id) => id !== c.id));
+    setAmounts((prev) => {
+      const newAmounts = { ...prev };
+      delete newAmounts[c.id];
+      return newAmounts;
+    });
+  }}
+>
+  ✕
+</button>
+                  <Input
+                    type="number"
+                    placeholder="수령액"
+                    className="w-40"
+                    value={amounts[c.id] || ""}
+                    onChange={(e) => updateAmount(c.id, e.target.value)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>취소</Button>
+          <Button onClick={handleAdd}>등록하기</Button>
+        </div>
+      </div>
+    </div>
+  );
+}

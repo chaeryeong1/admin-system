@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google API 테스트</title>
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .card {
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #3367d6;
+    }
+    pre {
+      background-color: #f1f1f1;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+  <script src="api.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Google 스크립트 API 테스트</h1>
+    
+    <div class="card">
+      <h2>API 연결 테스트</h2>
+      <p>아래 버튼을 클릭하여 API 연결을 테스트합니다.</p>
+      <button id="testButton">API 테스트</button>
+      <div id="status" style="margin-top: 10px;"></div>
+      <div id="result" style="margin-top: 10px;"></div>
+    </div>
+    
+    <div class="card">
+      <h2>API 응답 데이터</h2>
+      <pre id="data">아직 데이터가 로드되지 않았습니다.</pre>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const testButton = document.getElementById('testButton');
+      const statusDiv = document.getElementById('status');
+      const resultDiv = document.getElementById('result');
+      const dataDiv = document.getElementById('data');
+      
+      testButton.addEventListener('click', async function() {
+        statusDiv.innerHTML = '연결 중...';
+        statusDiv.className = '';
+        
+        try {
+          // api.js에서 정의한 fetchData 함수 사용
+          const data = await fetchData();
+          
+          // 결과 표시
+          statusDiv.innerHTML = '연결 성공!';
+          statusDiv.className = 'success';
+          
+          // 데이터 구조 분석
+          const companiesCount = data.companies ? data.companies.length : 0;
+          const projectsCount = data.projects ? data.projects.length : 0;
+          const contractsCount = data.contracts ? data.contracts.length : 0;
+          const transfersCount = data.transfers ? data.transfers.length : 0;
+          
+          resultDiv.innerHTML = `
+            <div class="success">
+              <p>API 응답 상태: ${data.success ? '성공' : '실패'}</p>
+              <p>기업 데이터: ${companiesCount}개</p>
+              <p>사업 데이터: ${projectsCount}개</p>
+              <p>계약 데이터: ${contractsCount}개</p>
+              <p>송금 데이터: ${transfersCount}개</p>
+            </div>
+          `;
+          
+          // JSON 데이터 표시
+          dataDiv.textContent = JSON.stringify(data, null, 2);
+          
+          console.log('API 응답:', data);
+        } catch (error) {
+          statusDiv.innerHTML = '연결 실패!';
+          statusDiv.className = 'error';
+          
+          resultDiv.innerHTML = `
+            <div class="error">
+              <p>오류 메시지: ${error.message}</p>
+              <p>자세한 정보는 브라우저 콘솔(F12)을 확인하세요.</p>
+            </div>
+          `;
+          
+          console.error('API 호출 오류:', error);
+        }
+      });
+    });
+  </script>
+  
+</body>
+</html> 

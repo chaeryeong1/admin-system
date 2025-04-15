@@ -1,0 +1,87 @@
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { SendHorizonal } from "lucide-react";
+
+export default function CashbackTransferModal({ onClose, onConfirm, info }) {
+  const [receiptFile, setReceiptFile] = useState(null);
+
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [onClose]);
+
+  const mockInfo = {
+    name: "주식회사 이엑스",
+    ceo: "홍길동",
+    contractAmount: 2000000,
+    cashbackAmount: 200000,
+    bankName: "국민은행",
+    accountNumber: "110-123-456789",
+    holder: "홍길동",
+  };
+
+  const data = info && info.bankName ? info : mockInfo;
+
+  const handleConfirmClick = () => {
+    if (!receiptFile) {
+      alert("입금 확인증을 첨부해 주세요.");
+      return;
+    }
+    onConfirm(receiptFile);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-[460px]">
+        <h2 className="text-lg font-semibold mb-4 flex items-center space-x-2">
+          <SendHorizonal className="text-blue-600" size={18} />
+          <span>송금</span>
+        </h2>
+
+        <div className="text-sm text-gray-800 space-y-2">
+          <p><strong>기업명:</strong> {data.name}</p>
+          <p><strong>대표자:</strong> {data.ceo}</p>
+          <p><strong>계약금액:</strong> {Number(data.contractAmount).toLocaleString()}원</p>
+          <p><strong>캐시백 금액:</strong> {Number(data.cashbackAmount).toLocaleString()}원</p>
+          <p><strong>계좌정보:</strong> {data.bankName} / {data.accountNumber} / {data.holder}</p>
+          <p><strong>통장사본:</strong> {data.attachmentName ? <a href="#" className="text-blue-600 underline">{data.attachmentName}</a> : "없음"}</p>
+
+          <div>
+            <p className="text-sm font-medium">승인자 메모</p>
+            <textarea
+              className="mt-1 w-full border border-gray-300 rounded px-3 py-2 text-sm bg-gray-100"
+              rows={3}
+              readOnly
+              value={data.note || "-"}
+            />
+          </div>
+
+          <div>
+            <p className="text-sm font-medium">
+              입금 확인증 첨부 <span className="text-red-500">*</span>
+            </p>
+            <input
+              type="file"
+              className="mt-1 w-full border border-gray-300 rounded px-3 py-2 text-sm"
+              accept=".pdf,.jpg,.png"
+              onChange={(e) => setReceiptFile(e.target.files[0])}
+            />
+            <p className="text-xs text-red-500 mt-1">※ 입금 확인증 첨부는 필수입니다.</p>
+          </div>
+        </div>
+
+        <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 rounded px-3 py-2 text-sm mt-4">
+          ⚠️ 실제 송금 완료 후 버튼을 눌러주세요. 시스템에는 송금 완료로 처리됩니다.
+        </div>
+
+        <div className="flex justify-end space-x-2 mt-6">
+          <Button className="text-gray-700 hover:text-black border border-gray-300" variant="ghost" onClick={onClose}>닫기</Button>
+          <Button className="bg-[#0F172A] text-white hover:bg-[#1E293B]" onClick={handleConfirmClick}>송금 완료</Button>
+        </div>
+      </div>
+    </div>
+  );
+}

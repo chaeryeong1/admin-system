@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 시스템 - 송금</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <!-- 상단 대메뉴 -->
+  <header class="bg-white border-b px-6 py-3 text-sm font-semibold flex space-x-6">
+    <a href="business-management.html" class="text-gray-500">사업 관리</a>
+    <a href="company-management.html" class="text-gray-500">기업 관리</a>
+    <a href="cashback-management.html" class="text-blue-600">캐시백 송금</a>
+  </header>
+
+  <div class="flex">
+    <!-- 좌측 소메뉴 -->
+    <aside class="w-60 bg-gray-50 p-4 text-sm border-r h-screen">
+      <h2 class="text-base font-semibold mb-4">캐시백 송금</h2>
+      <ul class="space-y-2">
+        <li class="text-gray-600">
+          <a href="cashback-management.html">ㆍ계약금수령기업</a>
+        </li>
+        <li class="text-gray-600">
+          <a href="cashback-request.html">ㆍ송금 요청</a>
+        </li>
+        <li class="text-gray-600">
+          <a href="cashback-approval.html">ㆍ송금 승인</a>
+        </li>
+        <li class="text-blue-600 font-semibold">
+          <a href="cashback-transfer.html">ㆍ송금</a>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="flex-1 p-6 space-y-6">
+      <div class="text-xl font-bold border-b pb-2">송금</div>
+
+      <!-- 검색/필터링 -->
+      <div class="flex items-center space-x-4">
+        <select 
+          id="businessFilter" 
+          class="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">모든 사업</option>
+          <option value="클라우드 보급사업">클라우드 보급사업</option>
+        </select>
+        <select 
+          id="statusFilter" 
+          class="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">모든 상태</option>
+          <option value="송금 대기">송금 대기</option>
+          <option value="송금 완료">송금 완료</option>
+        </select>
+        <input 
+          id="searchInput"
+          type="text" 
+          placeholder="기업명 검색" 
+          class="px-3 py-2 border rounded max-w-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+        <button 
+          id="searchButton"
+          class="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          조회
+        </button>
+      </div>
+
+      <!-- 표 -->
+      <div class="bg-white border rounded shadow">
+        <div class="p-4">
+          <table class="min-w-full">
+            <thead>
+              <tr class="border-b">
+                <th class="px-4 py-2 text-left">선택</th>
+                <th class="px-4 py-2 text-left">기업명</th>
+                <th class="px-4 py-2 text-left">담당자</th>
+                <th class="px-4 py-2 text-left">참여 사업</th>
+                <th class="px-4 py-2 text-left">승인일</th>
+                <th class="px-4 py-2 text-left">금액</th>
+                <th class="px-4 py-2 text-left">계좌번호</th>
+                <th class="px-4 py-2 text-left">상태</th>
+              </tr>
+            </thead>
+            <tbody id="transferTableBody">
+              <!-- JavaScript로 채워질 부분 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 하단 버튼 -->
+      <div class="flex justify-end space-x-4">
+        <button 
+          id="transferButton"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          송금 처리
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 송금 처리 모달 -->
+  <div id="transferModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+      <h2 class="text-lg font-semibold mb-4">송금 처리</h2>
+      <p>다음 기업에 대한 송금을 처리하시겠습니까?</p>
+      <p id="transferCompanyName" class="font-semibold mt-2"></p>
+      
+      <div class="space-y-4 mt-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">캐시백 금액</label>
+          <div class="flex items-center">
+            <input
+              id="transferAmount"
+              type="text"
+              readonly
+              class="w-full px-3 py-2 border rounded bg-gray-50"
+            >
+            <span class="ml-2">원</span>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-1">계좌번호</label>
+          <input
+            id="transferAccount"
+            type="text"
+            readonly
+            class="w-full px-3 py-2 border rounded bg-gray-50"
+          >
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-1">송금일</label>
+          <input
+            id="transferDate"
+            type="date"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium mb-1">참고사항</label>
+          <textarea
+            id="transferNote"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            rows="2"
+            placeholder="참고사항을 입력하세요"
+          ></textarea>
+        </div>
+      </div>
+      
+      <div class="flex justify-end space-x-2 mt-6">
+        <button 
+          id="cancelTransferButton"
+          class="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          취소
+        </button>
+        <button 
+          id="confirmTransferButton"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          송금 완료
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 상태 관리
+    let transfers = [
+      {
+        id: 1,
+        companyName: "(주)클라우드테크",
+        contactPerson: "홍길동",
+        project: "클라우드 보급사업",
+        approvalDate: "2025-06-21",
+        amount: 500000,
+        accountNumber: "국민은행 123-45-6789-12",
+        status: "송금 대기"
+      },
+      {
+        id: 2,
+        companyName: "데이터시스템즈",
+        contactPerson: "김철수",
+        project: "클라우드 보급사업",
+        approvalDate: "2025-06-19",
+        amount: 800000,
+        accountNumber: "신한은행 987-65-4321-10",
+        status: "송금 대기"
+      },
+      {
+        id: 3,
+        companyName: "모바일솔루션",
+        contactPerson: "이영희",
+        project: "클라우드 보급사업",
+        approvalDate: "2025-06-15",
+        amount: 600000,
+        accountNumber: "우리은행 555-66-7777-88",
+        status: "송금 완료",
+        transferDate: "2025-06-18",
+        note: "캐시백 송금 완료"
+      }
+    ];
+    let selectedId = null;
+
+    // 현재 날짜 가져오기
+    function getCurrentDate() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // DOM 요소
+    const transferTableBody = document.getElementById('transferTableBody');
+    const businessFilter = document.getElementById('businessFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const transferButton = document.getElementById('transferButton');
+    
+    const transferModal = document.getElementById('transferModal');
+    const transferCompanyName = document.getElementById('transferCompanyName');
+    const transferAmount = document.getElementById('transferAmount');
+    const transferAccount = document.getElementById('transferAccount');
+    const transferDate = document.getElementById('transferDate');
+    const transferNote = document.getElementById('transferNote');
+    const cancelTransferButton = document.getElementById('cancelTransferButton');
+    const confirmTransferButton = document.getElementById('confirmTransferButton');
+
+    // 금액 포맷팅 함수
+    function formatAmount(amount) {
+      return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    // 송금 목록 렌더링
+    function renderTransfers() {
+      const filteredTransfers = transfers.filter(transfer => 
+        transfer.companyName.includes(searchInput.value) && 
+        (businessFilter.value === "" || transfer.project === businessFilter.value) &&
+        (statusFilter.value === "" || transfer.status === statusFilter.value)
+      );
+
+      transferTableBody.innerHTML = '';
+      
+      filteredTransfers.forEach(transfer => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b hover:bg-gray-50';
+        
+        // 상태에 따른 스타일 
+        let statusClass = 'bg-yellow-100 text-yellow-800';
+        if (transfer.status === '송금 완료') {
+          statusClass = 'bg-green-100 text-green-800';
+        }
+        
+        tr.innerHTML = `
+          <td class="px-4 py-2">
+            <input 
+              type="radio" 
+              name="select-transfer" 
+              value="${transfer.id}" 
+              ${selectedId === transfer.id ? 'checked' : ''}
+              ${transfer.status === '송금 완료' ? 'disabled' : ''}
+            >
+          </td>
+          <td class="px-4 py-2">${transfer.companyName}</td>
+          <td class="px-4 py-2">${transfer.contactPerson}</td>
+          <td class="px-4 py-2">${transfer.project}</td>
+          <td class="px-4 py-2">${transfer.approvalDate}</td>
+          <td class="px-4 py-2 text-right">${formatAmount(transfer.amount)}원</td>
+          <td class="px-4 py-2">${transfer.accountNumber}</td>
+          <td class="px-4 py-2">
+            <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">
+              ${transfer.status}
+            </span>
+          </td>
+        `;
+        
+        transferTableBody.appendChild(tr);
+      });
+
+      // 라디오 버튼 이벤트 리스너 추가
+      document.querySelectorAll('input[name="select-transfer"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          selectedId = parseInt(e.target.value);
+        });
+      });
+    }
+
+    // 초기 렌더링
+    renderTransfers();
+
+    // 이벤트 리스너
+    searchButton.addEventListener('click', () => {
+      renderTransfers();
+    });
+
+    transferButton.addEventListener('click', () => {
+      if (!selectedId) {
+        alert('송금 처리할 항목을 선택하세요.');
+        return;
+      }
+
+      const transfer = transfers.find(t => t.id === selectedId);
+      if (!transfer) return;
+      
+      if (transfer.status !== '송금 대기') {
+        alert('송금 대기 상태인 항목만 처리할 수 있습니다.');
+        return;
+      }
+
+      transferCompanyName.textContent = transfer.companyName;
+      transferAmount.value = formatAmount(transfer.amount);
+      transferAccount.value = transfer.accountNumber;
+      transferDate.value = getCurrentDate();
+      transferNote.value = "";
+      
+      transferModal.classList.remove('hidden');
+    });
+
+    cancelTransferButton.addEventListener('click', () => {
+      transferModal.classList.add('hidden');
+    });
+
+    confirmTransferButton.addEventListener('click', () => {
+      const date = transferDate.value;
+      const note = transferNote.value.trim();
+      
+      if (!date) {
+        alert('송금일을 입력하세요.');
+        return;
+      }
+      
+      // 상태 업데이트
+      transfers = transfers.map(t => 
+        t.id === selectedId ? {
+          ...t,
+          status: '송금 완료',
+          transferDate: date,
+          note: note || '캐시백 송금 완료'
+        } : t
+      );
+      
+      selectedId = null;
+      transferModal.classList.add('hidden');
+      renderTransfers();
+      
+      alert('송금 처리가 완료되었습니다.');
+    });
+  </script>
+</body>
+</html> 

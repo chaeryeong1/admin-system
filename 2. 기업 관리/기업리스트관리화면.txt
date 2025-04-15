@@ -1,0 +1,146 @@
+// 기업관리 > 기업 리스트 관리 화면 (사업관리와 동일한 구조)
+
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+
+let nextId = 2;
+
+export default function CompanyList() {
+  const [companies, setCompanies] = useState([
+    {
+      id: 1,
+      name: "주식회사 이엑스",
+      bizNo: "123-45-67890",
+      ceo: "홍길동",
+      regDate: new Date().toISOString().split("T")[0],
+      email: "ex@...",
+      phone: "010-1234-5678",
+    },
+  ]);
+  const [filter, setFilter] = useState("");
+  const [selectedId, setSelectedId] = useState(null);
+
+  const filtered = companies.filter((c) => c.name.includes(filter));
+
+  const deleteCompany = () => {
+    if (!selectedId) return alert("삭제할 항목을 선택하세요.");
+    if (confirm("정말 삭제하시겠습니까?")) {
+      setCompanies(companies.filter((c) => c.id !== selectedId));
+      setSelectedId(null);
+    }
+  };
+
+  const editCompany = () => {
+    const company = companies.find((c) => c.id === selectedId);
+    if (!company) return alert("수정할 항목을 선택하세요.");
+    const name = prompt("새 기업명:", company.name);
+    if (name) {
+      setCompanies(
+        companies.map((c) =>
+          c.id === selectedId ? { ...c, name } : c
+        )
+      );
+    }
+  };
+
+  const viewCompany = (company) => {
+    alert(`기업명: ${company.name}\n사업자등록번호: ${company.bizNo}\n대표자: ${company.ceo}\n이메일: ${company.email}\n연락처: ${company.phone}\n등록일: ${company.regDate}`);
+  };
+
+  return (
+    <div className="min-h-screen relative">
+      <header className="bg-white border-b px-6 py-3 text-sm font-semibold flex space-x-6">
+        <span className="text-gray-500">사업 관리</span>
+        <span className="text-blue-600">기업 관리</span>
+        <span className="text-gray-500">사업 안내</span>
+        <span className="text-gray-500">신청</span>
+        <span className="text-gray-500">선정 확인</span>
+        <span className="text-gray-500">계약</span>
+        <span className="text-gray-500">세금계산서 발행</span>
+        <span className="text-gray-500">계약금 수령</span>
+        <span className="text-gray-500">캐시백 송금</span>
+        <span className="text-gray-500">장비 납품</span>
+        <span className="text-gray-500">라이선스 발행</span>
+        <span className="text-gray-500">SW 납품</span>
+        <span className="text-gray-500">잔금 수령</span>
+      </header>
+
+      <div className="flex">
+        <aside className="w-60 bg-gray-50 p-4 text-sm border-r h-full">
+          <h2 className="text-base font-semibold mb-4">기업 관리</h2>
+          <ul className="space-y-2">
+            <li className="text-blue-600 font-semibold">ㆍ기업 리스트 관리</li>
+          </ul>
+        </aside>
+
+        <div className="flex-1 p-6 space-y-6">
+          <div className="text-xl font-bold border-b pb-2">기업 리스트 관리</div>
+
+          <div className="flex items-center space-x-4">
+            <Input
+              placeholder="기업명 검색"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="max-w-sm"
+            />
+            <Button variant="outline" onClick={() => {
+              const match = companies.find((c) => c.name.includes(filter));
+              if (match) viewCompany(match);
+              else alert("검색된 기업이 없습니다.");
+            }}>조회</Button>
+            <div className="flex-1 text-right space-x-2">
+              <Button className="bg-[#0F172A] text-white hover:bg-[#1E293B]" onClick={() => alert('엑셀 업로드 기능 준비 중입니다.')}>엑셀 추가</Button>
+              <Button variant="outline" onClick={() => alert('엑셀 다운로드 준비 중입니다.')}>엑셀 다운로드</Button>
+            </div>
+          </div>
+
+          <Card>
+            <CardContent className="p-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>선택</TableHead>
+                    <TableHead>기업명</TableHead>
+                    <TableHead>사업자등록번호</TableHead>
+                    <TableHead>대표자</TableHead>
+                    <TableHead>이메일</TableHead>
+                    <TableHead>연락처</TableHead>
+                    <TableHead>등록일</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((company) => (
+                    <TableRow key={company.id}>
+                      <TableCell>
+                        <input
+                          type="radio"
+                          name="select-company"
+                          checked={selectedId === company.id}
+                          onChange={() => setSelectedId(company.id)}
+                        />
+                      </TableCell>
+                      <TableCell>{company.name}</TableCell>
+                      <TableCell>{company.bizNo}</TableCell>
+                      <TableCell>{company.ceo}</TableCell>
+                      <TableCell>{company.email}</TableCell>
+                      <TableCell>{company.phone}</TableCell>
+                      <TableCell>{company.regDate}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end space-x-4">
+            <Button variant="secondary" onClick={editCompany}>수정</Button>
+            <Button variant="destructive" onClick={deleteCompany}>삭제</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

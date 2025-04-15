@@ -1,0 +1,23 @@
+import { Button } from "@/components/ui/button";
+
+export default function ProjectDeleteModal({ projectName, startDate, endDate, target, onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-[420px]">
+        <h2 className="text-lg font-semibold mb-4">⚠️ 사업 삭제 확인</h2>
+
+        <div className="text-sm text-gray-700 space-y-2 mb-6">
+          <p><strong>사업명: 클라우드 보급사업</strong> {projectName}</p>
+          <p><strong>진행 기간: 2025-01-01~2025-12-01</strong> {startDate}  {endDate}</p>
+          <p><strong>목표 업체 수:</strong> {target}50개</p>
+          <p className="pt-2 text-red-600">삭제 후에는 복구할 수 없습니다. 정말 삭제하시겠습니까?</p>
+        </div>
+
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" onClick={onCancel}>취소</Button>
+          <Button variant="destructive" onClick={onConfirm}>삭제</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
