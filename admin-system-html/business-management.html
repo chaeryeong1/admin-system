@@ -512,12 +512,25 @@
     }
     
     function openDeleteModal() {
-      if (!selectedProjectId) return;
+      console.log('사업 삭제 모달 열기', selectedProjectId);
+      if (!selectedProjectId) {
+        alert('삭제할 사업을 선택해주세요.');
+        return;
+      }
       
       const project = projects.find(p => p.id === selectedProjectId);
-      if (!project) return;
+      if (!project) {
+        alert('선택한 사업 정보를 찾을 수 없습니다.');
+        return;
+      }
       
-      deleteProjectName.textContent = project.name;
+      // 삭제할 사업 이름 표시
+      const deleteNameElement = document.getElementById('deleteProjectName');
+      if (deleteNameElement) {
+        deleteNameElement.textContent = project.name;
+      }
+      
+      // 모달 표시
       deleteModal.classList.remove('hidden');
     }
     
