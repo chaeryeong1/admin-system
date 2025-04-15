@@ -233,6 +233,8 @@
     function normalizeCompanyData(data) {
       if (!Array.isArray(data)) return [];
       
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
+      
       return data.map(company => {
         // API나 다른 소스에서 가져온 데이터 필드명 통일
         return {
@@ -242,7 +244,7 @@
           contactPerson: company.contactPerson || company.representative || company.contact_person || '',
           email: company.email || company.contact_email || company.email_address || '',
           contact: company.contact || company.contact_phone || company.phone || company.phoneNumber || '',
-          registrationDate: company.registrationDate || company.created_at || company.regDate || new Date().toISOString().split('T')[0]
+          registrationDate: company.registrationDate || company.created_at || company.regDate || today // 등록일 자동 설정
         };
       });
     }
