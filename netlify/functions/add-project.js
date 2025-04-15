@@ -19,25 +19,33 @@ exports.handler = async function(event, context) {
     // 새 ID 생성
     const newId = Date.now().toString();
     
-    // 메모리에만 저장 (실제로는 저장되지 않음)
-    console.log('새 프로젝트 추가 (메모리만):', { id: newId, ...projectData });
+    // 프로젝트 데이터에 ID 추가
+    const responseData = { 
+      id: newId, 
+      ...projectData,
+      createdAt: new Date().toISOString() 
+    };
     
     return {
       statusCode: 200,
       headers: { 
         'Content-Type': 'application/json', 
-        'Access-Control-Allow-Origin': '*' 
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'no-cache'  // 캐싱 방지
       },
       body: JSON.stringify({ 
         success: true, 
-        id: newId,
-        message: "항목이 추가되었습니다. (테스트 환경)" 
+        data: responseData,
+        message: "항목이 추가되었습니다." 
       })
     };
   } catch (error) {
-    console.error('Error:', error);
     return {
       statusCode: 500,
+      headers: { 
+        'Content-Type': 'application/json', 
+        'Access-Control-Allow-Origin': '*' 
+      },
       body: JSON.stringify({ 
         success: false, 
         error: '프로젝트 추가 중 오류가 발생했습니다.' 
