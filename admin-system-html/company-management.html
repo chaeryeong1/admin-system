@@ -331,7 +331,7 @@
       if (companyTableBody) {
         companyTableBody.innerHTML = `
           <tr>
-            <td colspan="7" class="text-center py-4">
+            <td colspan="8" class="text-center py-4">
               <div class="flex justify-center items-center">
                 <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-2"></div>
                 기업 정보를 불러오는 중...
@@ -377,32 +377,29 @@
             {
               id: 'sample1',
               name: '(주)샘플테크',
-              industry: 'IT 서비스',
-              contact_person: '홍길동',
+              business_number: '123-45-67890',
+              representative: '홍길동',
               contact_email: 'sample@example.com',
-              city: '서울',
-              address: '서울시 강남구 테헤란로 123',
-              description: '소프트웨어 개발 전문 기업'
+              contact_phone: '02-1234-5678',
+              created_at: '2023-01-15'
             },
             {
               id: 'sample2',
               name: '한국 제조 주식회사',
-              industry: '제조업',
-              contact_person: '김철수',
+              business_number: '234-56-78901',
+              representative: '김철수',
               contact_email: 'manufacturing@example.com',
-              city: '부산',
-              address: '부산시 해운대구 해운대로 456',
-              description: '전자제품 제조 및 수출'
+              contact_phone: '051-987-6543',
+              created_at: '2023-02-20'
             },
             {
               id: 'sample3',
               name: '클라우드서비스(주)',
-              industry: '클라우드 서비스',
-              contact_person: '이영희',
+              business_number: '345-67-89012',
+              representative: '이영희',
               contact_email: 'cloud@example.com',
-              city: '인천',
-              address: '인천시 송도동 123',
-              description: '클라우드 인프라 및 솔루션 제공'
+              contact_phone: '032-456-7890',
+              created_at: '2023-03-10'
             }
           ];
         }
@@ -415,7 +412,7 @@
         if (companyTableBody) {
           companyTableBody.innerHTML = `
             <tr>
-              <td colspan="7" class="text-center py-4 text-red-500">
+              <td colspan="8" class="text-center py-4 text-red-500">
                 데이터 로드 중 오류가 발생했습니다: ${error.message}
               </td>
             </tr>
@@ -467,7 +464,7 @@
       if (!companies || companies.length === 0) {
         companyTableBody.innerHTML = `
           <tr>
-            <td colspan="7" class="text-center py-4">
+            <td colspan="8" class="text-center py-4">
               등록된 기업 정보가 없습니다.
             </td>
           </tr>
@@ -489,10 +486,11 @@
                    value="${company.id}" onchange="updateDeleteButtonState()">
           </td>
           <td class="px-4 py-2 text-left">${company.name || '-'}</td>
-          <td class="px-4 py-2 text-left">${company.industry || '-'}</td>
-          <td class="px-4 py-2 text-left">${company.contact_person || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.business_number || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.representative || '-'}</td>
           <td class="px-4 py-2 text-left">${company.contact_email || '-'}</td>
-          <td class="px-4 py-2 text-left">${company.city || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.contact_phone || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.created_at || '-'}</td>
           <td class="px-4 py-2 text-left">
             <button onclick="openEditModal('${company.id}')" class="text-blue-500 hover:text-blue-700 mr-2">
               <i class="fas fa-edit"></i> 수정
@@ -684,37 +682,34 @@
         const sampleData = [
           {
             name: '(주)샘플테크',
-            industry: 'IT 서비스',
-            contact_person: '홍길동',
+            business_number: '123-45-67890',
+            representative: '홍길동',
             contact_email: 'hong@sample.com',
-            city: '서울',
-            address: '서울시 강남구 테헤란로 123',
-            description: '소프트웨어 개발 전문 기업'
+            contact_phone: '02-1234-5678',
+            created_at: '2023-01-15'
           },
           {
             name: '한국 제조 주식회사',
-            industry: '제조업',
-            contact_person: '김철수',
+            business_number: '234-56-78901',
+            representative: '김철수',
             contact_email: 'kim@manufacturing.kr',
-            city: '부산',
-            address: '부산시 해운대구 해운대로 456',
-            description: '전자제품 제조 및 수출'
+            contact_phone: '051-987-6543',
+            created_at: '2023-02-20'
           }
         ];
         
         // CSV 헤더와 내용 생성
-        const headers = ['기업명', '업종', '담당자', '이메일', '지역', '주소', '설명'];
+        const headers = ['기업명', '사업자등록번호', '대표자', '이메일', '연락처', '등록일'];
         let csvContent = headers.join(',') + '\n';
         
         sampleData.forEach(item => {
           csvContent += [
             `"${item.name || ''}"`,
-            `"${item.industry || ''}"`,
-            `"${item.contact_person || ''}"`,
+            `"${item.business_number || ''}"`,
+            `"${item.representative || ''}"`,
             `"${item.contact_email || ''}"`,
-            `"${item.city || ''}"`,
-            `"${item.address || ''}"`,
-            `"${item.description || ''}"`
+            `"${item.contact_phone || ''}"`,
+            `"${item.created_at || ''}"`,
           ].join(',') + '\n';
         });
         
