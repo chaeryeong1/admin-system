@@ -470,7 +470,20 @@
     
     // 모달 열기/닫기 함수들
     function openAddModal() {
-      addForm.reset();
+      console.log('사업 추가 모달 열기');
+      // 폼 초기화 (addForm이 존재할 경우에만)
+      if (window.addForm) {
+        addForm.reset();
+      }
+      // 필드 초기화
+      document.getElementById('addName').value = '';
+      document.getElementById('addBudget').value = '';
+      document.getElementById('addStartDate').value = '';
+      document.getElementById('addEndDate').value = '';
+      document.getElementById('addOrganizer').value = '';
+      document.getElementById('addNoticeUrl').value = '';
+      
+      // 모달 표시
       addModal.classList.remove('hidden');
     }
     
