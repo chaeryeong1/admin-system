@@ -412,21 +412,6 @@ async function deleteData(sheet, id) {
       throw new Error('삭제할 ID가 없습니다.');
     }
     
-    // 로딩 표시기 추가
-    const loadingId = 'loading-indicator-' + Date.now();
-    const loadingElem = document.createElement('div');
-    loadingElem.id = loadingId;
-    loadingElem.style.position = 'fixed';
-    loadingElem.style.top = '50%';
-    loadingElem.style.left = '50%';
-    loadingElem.style.transform = 'translate(-50%, -50%)';
-    loadingElem.style.background = 'rgba(0,0,0,0.7)';
-    loadingElem.style.color = 'white';
-    loadingElem.style.padding = '20px';
-    loadingElem.style.borderRadius = '10px';
-    loadingElem.style.zIndex = '9999';
-    loadingElem.textContent = '데이터를 삭제하는 중...';
-    document.body.appendChild(loadingElem);
     
     // CORS 우회를 위한 JSONP 방식 사용
     return new Promise((resolve, reject) => {
