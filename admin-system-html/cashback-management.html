@@ -131,36 +131,126 @@
     </div>
   </div>
 
-  <!-- 송금 요청 모달 -->
-  <div id="requestModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+  <!-- 기업 추가 모달 -->
+  <div id="addContractModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-lg p-6 w-96">
-      <h2 class="text-lg font-semibold mb-4">송금 요청</h2>
-      <p>다음 기업에 대한 캐시백 송금을 요청하시겠습니까?</p>
-      <p id="requestCompanyName" class="font-semibold mt-2"></p>
-      <div class="mt-4">
-        <label class="block text-sm font-medium mb-1">캐시백 금액</label>
-        <div class="flex items-center">
-          <input
-            id="cashbackAmount"
-            type="text"
-            readonly
-            class="w-full px-3 py-2 border rounded bg-gray-50"
+      <h2 class="text-lg font-semibold mb-4">기업 계약금 수령 등록</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">사업 선택 <span class="text-red-500">*</span></label>
+          <select
+            id="addProjectSelect"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
           >
-          <span class="ml-2">원</span>
+            <option value="">사업을 선택하세요</option>
+            <!-- JavaScript로 채워질 부분 -->
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">기업 선택 <span class="text-red-500">*</span></label>
+          <select
+            id="addCompanySelect"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          >
+            <option value="">기업을 선택하세요</option>
+            <!-- JavaScript로 채워질 부분 -->
+          </select>
+        </div>
+        <div id="addCompanyInfoContainer" class="bg-gray-50 p-3 rounded text-sm">
+          <p class="text-gray-500">기업을 선택하면 정보가 표시됩니다</p>
+          <!-- 기업 선택 시 JavaScript로 채워질 부분 -->
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">계약금 수령액 <span class="text-red-500">*</span></label>
+          <div class="flex items-center">
+            <input
+              id="addContractAmount"
+              type="text"
+              placeholder="금액을 입력하세요"
+              class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+            <span class="ml-2">원</span>
+          </div>
         </div>
       </div>
       <div class="flex justify-end space-x-2 mt-6">
         <button 
-          id="cancelRequestButton"
+          id="cancelAddContractButton"
           class="px-4 py-2 border rounded hover:bg-gray-100"
         >
           취소
         </button>
         <button 
-          id="confirmRequestButton"
+          id="confirmAddContractButton"
           class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
-          요청
+          저장
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 수령액 수정 모달 -->
+  <div id="editContractModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+      <h2 class="text-lg font-semibold mb-4">계약금 수령액 수정</h2>
+      <div id="editCompanyInfoContainer" class="bg-gray-50 p-3 rounded mb-4 text-sm">
+        <!-- JavaScript로 채워질 부분 -->
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">계약금 수령액 <span class="text-red-500">*</span></label>
+          <div class="flex items-center">
+            <input
+              id="editContractAmount"
+              type="text"
+              class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+            <span class="ml-2">원</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end space-x-2 mt-6">
+        <button 
+          id="cancelEditContractButton"
+          class="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          취소
+        </button>
+        <button 
+          id="confirmEditContractButton"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          저장
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 삭제 확인 모달 -->
+  <div id="deleteContractModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+      <h2 class="text-lg font-semibold mb-4">계약금 수령 기업 삭제</h2>
+      <p>선택한 기업의 계약금 수령 정보를 삭제하시겠습니까?</p>
+      <div id="deleteContractList" class="mt-4 mb-4 bg-gray-100 p-3 rounded text-sm max-h-40 overflow-y-auto">
+        <!-- 선택된 기업 목록이 표시될 영역 -->
+      </div>
+      <div class="flex justify-end space-x-2 mt-6">
+        <button 
+          id="cancelDeleteContractButton"
+          class="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          취소
+        </button>
+        <button 
+          id="confirmDeleteContractButton"
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          삭제
         </button>
       </div>
     </div>
