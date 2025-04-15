@@ -135,33 +135,22 @@ async function addData(sheet, data) {
   try {
     const actualSheet = getActualSheetName(sheet);
     
-    // 데이터 구조 확인 및 표준화
-    let items = Array.isArray(data) ? data : [data];
-    
-    // ID 생성 및 날짜 설정
-    items = items.map(item => {
-      if (!item.id) {
-        item.id = `new_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      }
-      
-      // 등록일이 없으면 현재 날짜로 설정
-      if (!item.registrationDate) {
-        item.registrationDate = new Date().toISOString().split('T')[0];
-      }
-      
-      return item;
-    });
+    // 데이터 검증
+    if (!data || typeof data !== 'object') {
+      throw new Error('추가할 데이터가 없거나 형식이 올바르지 않습니다.');
+    }
     
     // CORS 우회를 위한 JSONP 방식 사용
     const callbackName = 'googleScriptCallback_' + Math.floor(Math.random() * 1000000);
-    const apiUrl = `${API_URL}?action=addData&sheet=${encodeURIComponent(actualSheet)}&callback=${encodeURIComponent(callbackName)}`;
+    
+    // 데이터를 URL 파라미터로 변환
+    const dataParams = Object.entries(data).map(([key, value]) => {
+      return `data_${key}=${encodeURIComponent(value)}`;
+    }).join('&');
+    
+    const apiUrl = `${API_URL}?action=addData&sheet=${encodeURIComponent(actualSheet)}&${dataParams}&callback=${encodeURIComponent(callbackName)}`;
     
     console.log(`API 요청 URL: ${apiUrl}`);
-    console.log('API로 전송할 데이터:', items);
-    
-    // JSONP 스타일 요청 - POST 데이터를 URL 파라미터로 전달
-    const dataParam = encodeURIComponent(JSON.stringify(items));
-    const fullUrl = `${apiUrl}&data=${dataParam}`;
     
     return new Promise((resolve, reject) => {
       // 콜백 함수 정의
@@ -175,7 +164,7 @@ async function addData(sheet, data) {
       
       // 스크립트 태그 생성 및 추가
       const script = document.createElement('script');
-      script.src = fullUrl;
+      script.src = apiUrl;
       
       // 오류 처리
       script.onerror = (error) => {
@@ -185,13 +174,16 @@ async function addData(sheet, data) {
         
         // CORS 이슈로 인한 모의 응답 반환
         console.log('JSONP 방식 실패, 모의 응답 사용');
+        
+        // 임시 ID 생성
+        const tempId = Date.now().toString();
         resolve({
           success: true,
           data: {
-            inserted: items.length,
-            items: items
+            id: tempId,
+            ...data
           },
-          message: `${items.length}개 항목이 추가되었습니다. (로컬 저장)`
+          message: "항목이 추가되었습니다. (로컬 저장)"
         });
       };
       
@@ -203,13 +195,14 @@ async function addData(sheet, data) {
           document.head.removeChild(script);
           
           // 타임아웃시 모의 응답 반환
+          const tempId = Date.now().toString();
           resolve({
             success: true,
             data: {
-              inserted: items.length,
-              items: items
+              id: tempId,
+              ...data
             },
-            message: `${items.length}개 항목이 추가되었습니다. (로컬 저장, 타임아웃)`
+            message: "항목이 추가되었습니다. (로컬 저장, 타임아웃)"
           });
         }
       }, 5000);
