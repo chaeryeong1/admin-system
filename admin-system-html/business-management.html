@@ -645,6 +645,7 @@
       
       // 새 프로젝트 정보
       const newProject = {
+        id: String(Date.now()),
         name,
         targetCompanies,
         startDate,
@@ -662,8 +663,16 @@
         console.log('추가 결과:', result);
         
         if (result && result.success) {
-          // 성공 시 데이터 갱신
-          await loadProjects();
+          // 성공 시 데이터 갱신 (로컬 스토리지 포함)
+          
+          // 새 항목 추가
+          projects.push(newProject);
+          
+          // 로컬 스토리지 업데이트
+          localStorage.setItem('projectsData', JSON.stringify(projects));
+          
+          // UI 갱신
+          renderProjects();
           closeAddModal();
           alert('사업 정보가 추가되었습니다.');
         } else {
@@ -678,12 +687,6 @@
           saveButton.textContent = '저장';
           saveButton.disabled = false;
         }
-        
-        // API 실패 시 로컬 데이터만 갱신 (테스트용)
-        newProject.id = String(Date.now());
-        projects.push(newProject);
-        renderProjects();
-        closeAddModal();
       }
     }
     
