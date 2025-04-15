@@ -601,6 +601,20 @@
       return !isNaN(date.getTime());
     }
     
+    // URL 형식 유효성 검사
+    function isValidUrl(url) {
+      if (!url) return true; // 빈 값은 허용
+      
+      try {
+        // URL 객체를 생성해서 유효성 검사
+        const urlObj = new URL(url);
+        // http 또는 https 프로토콜만 허용
+        return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+      } catch (e) {
+        return false;
+      }
+    }
+    
     // 모달 열기/닫기 함수들
     function openAddModal() {
       console.log('사업 추가 모달 열기');
@@ -752,6 +766,13 @@
         return;
       }
       
+      // URL 형식 검사
+      if (noticeUrl && !isValidUrl(noticeUrl)) {
+        alert('유효한 URL 형식이 아닙니다. http:// 또는 https://로 시작하는 URL을 입력해주세요.');
+        noticeUrlInput.focus();
+        return;
+      }
+      
       // 저장 중 표시
       const saveButton = document.getElementById('confirmAddButton');
       if (saveButton) {
@@ -836,6 +857,13 @@
       
       if (new Date(startDate) > new Date(endDate)) {
         alert('종료일은 시작일 이후여야 합니다.');
+        return;
+      }
+      
+      // URL 형식 검사
+      if (noticeUrl && !isValidUrl(noticeUrl)) {
+        alert('유효한 URL 형식이 아닙니다. http:// 또는 https://로 시작하는 URL을 입력해주세요.');
+        document.getElementById('editNoticeUrl').focus();
         return;
       }
       
