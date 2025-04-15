@@ -137,13 +137,14 @@ async function addData(sheet, data) {
     // 콜백 이름 생성
     const callbackName = 'addDataCallback_' + Math.floor(Math.random() * 1000000);
     
-    // API URL 생성
-    const apiUrl = `${API_URL}?action=addData&sheet=${encodeURIComponent(actualSheet)}&callback=${encodeURIComponent(callbackName)}`;
+    // API URL 생성 (데이터를 단일 파라미터로 전송)
+    const jsonData = encodeURIComponent(JSON.stringify(data));
+    const apiUrl = `${API_URL}?action=addData&sheet=${encodeURIComponent(actualSheet)}&jsonData=${jsonData}&callback=${encodeURIComponent(callbackName)}`;
     
-    // 데이터를 URL 파라미터로 변환 (GET 요청을 통한 JSONP)
-    const params = Object.entries(data).map(([key, value]) => 
-      `${encodeURIComponent(key)}=${encodeURIComponent(JSON.stringify(value))}`
-    ).join('&');
+    console.log('API 요청 URL (길이):', apiUrl.length);
+    if (apiUrl.length > 2000) {
+      console.warn('URL이 너무 깁니다. API 호출이 실패할 수 있습니다.');
+    }
     
     // JSONP 요청 생성
     return new Promise((resolve, reject) => {
@@ -157,7 +158,7 @@ async function addData(sheet, data) {
       
       // 스크립트 태그 생성 및 추가
       const script = document.createElement('script');
-      script.src = `${apiUrl}&${params}`;
+      script.src = apiUrl;
       
       // 오류 처리
       script.onerror = (error) => {
