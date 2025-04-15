@@ -728,34 +728,34 @@
         const sampleData = [
           {
             name: '(주)샘플테크',
-            business_number: '123-45-67890',
-            representative: '홍길동',
-            contact_email: 'hong@sample.com',
-            contact_phone: '02-1234-5678',
-            created_at: '2023-01-15'
+            businessNumber: '123-45-67890',
+            contactPerson: '홍길동',
+            email: 'hong@sample.com',
+            contact: '02-1234-5678',
+            registrationDate: '2023-01-15'
           },
           {
             name: '한국 제조 주식회사',
-            business_number: '234-56-78901',
-            representative: '김철수',
-            contact_email: 'kim@manufacturing.kr',
-            contact_phone: '051-987-6543',
-            created_at: '2023-02-20'
+            businessNumber: '234-56-78901',
+            contactPerson: '김철수',
+            email: 'kim@manufacturing.kr',
+            contact: '051-987-6543',
+            registrationDate: '2023-02-20'
           }
         ];
         
         // CSV 헤더와 내용 생성
-        const headers = ['기업명', '사업자등록번호', '대표자', '이메일', '연락처', '등록일'];
+        const headers = ['기업명', '사업자등록번호', '담당자', '이메일', '연락처', '등록일'];
         let csvContent = headers.join(',') + '\n';
         
         sampleData.forEach(item => {
           csvContent += [
             `"${item.name || ''}"`,
-            `"${item.business_number || ''}"`,
-            `"${item.representative || ''}"`,
-            `"${item.contact_email || ''}"`,
-            `"${item.contact_phone || ''}"`,
-            `"${item.created_at || ''}"`,
+            `"${item.businessNumber || ''}"`,
+            `"${item.contactPerson || ''}"`,
+            `"${item.email || ''}"`,
+            `"${item.contact || ''}"`,
+            `"${item.registrationDate || ''}"`,
           ].join(',') + '\n';
         });
         
