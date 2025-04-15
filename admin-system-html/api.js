@@ -4,8 +4,20 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbyVdRXxOVKWQ5wdJQZYKHIx
 // 데이터 가져오기
 async function fetchData(sheet = 'all') {
   try {
-    const response = await fetch(`${API_URL}?action=getData&sheet=${sheet}`);
+    // 시트 이름 맵핑: 내부 시트명을 실제 구글 시트명으로 변환
+    const sheetMapping = {
+      '사업정보': '사업정보',
+      '기업정보': '기업정보',
+      '계약금수령': '계약정보',
+      '송금정보': '송금정보',
+      'all': 'all'
+    };
+    
+    const actualSheet = sheetMapping[sheet] || sheet;
+    const response = await fetch(`${API_URL}?action=getData&sheet=${actualSheet}`);
     const data = await response.json();
+    
+    console.log(`${sheet} 데이터 로드 결과:`, data);
     return data;
   } catch (error) {
     console.error('데이터 가져오기 오류:', error);
