@@ -223,26 +223,21 @@
 
   <script src="api.js"></script>
   <script>
-    // DOM 요소
-    const companyTableBody = document.getElementById('companyTableBody');
-    const searchInput = document.getElementById('searchInput');
-    const searchButton = document.getElementById('searchButton');
-    const addButton = document.getElementById('addButton');
-    const deleteButton = document.getElementById('deleteButton');
-    const editButton = document.getElementById('editButton');
-    
-    // 모달 관련 요소
-    const addModal = document.getElementById('addModal');
-    const editModal = document.getElementById('editModal');
-    const deleteModal = document.getElementById('deleteModal');
-    
-    // 데이터 상태
+    // 전역 데이터 상태
     let companies = [];
     let selectedCompanyId = null;
+    
+    // DOM 요소 참조들은 DOMContentLoaded 이벤트 핸들러 내부에서 초기화할 것입니다.
     
     // 모달 열기 함수들
     function openAddModal() {
       console.log('기업 추가 모달 열기');
+      const addModal = document.getElementById('addModal');
+      if (!addModal) {
+        console.error('addModal 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
       addModal.classList.remove('hidden');
       
       // 파일 입력 초기화
@@ -255,6 +250,12 @@
     
     function closeAddModal() {
       console.log('기업 추가 모달 닫기');
+      const addModal = document.getElementById('addModal');
+      if (!addModal) {
+        console.error('addModal 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
       addModal.classList.add('hidden');
     }
     
@@ -265,6 +266,12 @@
       const company = companies.find(c => c.id == companyId);
       if (!company) {
         alert('수정할 기업 정보를 찾을 수 없습니다.');
+        return;
+      }
+      
+      const editModal = document.getElementById('editModal');
+      if (!editModal) {
+        console.error('editModal 요소를 찾을 수 없습니다.');
         return;
       }
       
@@ -280,12 +287,24 @@
     
     function closeEditModal() {
       console.log('기업 수정 모달 닫기');
+      const editModal = document.getElementById('editModal');
+      if (!editModal) {
+        console.error('editModal 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
       editModal.classList.add('hidden');
       selectedCompanyId = null;
     }
     
     function openDeleteModal(companyId) {
       console.log('기업 삭제 모달 열기, ID:', companyId);
+      
+      const deleteModal = document.getElementById('deleteModal');
+      if (!deleteModal) {
+        console.error('deleteModal 요소를 찾을 수 없습니다.');
+        return;
+      }
       
       // 삭제 확인 메시지 설정
       let confirmMessage = '';
@@ -315,18 +334,30 @@
       }
       
       // 메시지 설정 및 모달 열기
-      document.getElementById('deleteModalContent').textContent = confirmMessage;
+      const deleteModalContent = document.getElementById('deleteModalContent');
+      if (deleteModalContent) {
+        deleteModalContent.textContent = confirmMessage;
+      }
+      
       deleteModal.classList.remove('hidden');
     }
     
     function closeDeleteModal() {
       console.log('기업 삭제 모달 닫기');
+      const deleteModal = document.getElementById('deleteModal');
+      if (!deleteModal) {
+        console.error('deleteModal 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
       deleteModal.classList.add('hidden');
     }
     
     // 기업 정보 로드
     async function loadCompanies() {
       console.log('기업 정보 로드 시작');
+      
+      const companyTableBody = document.getElementById('companyTableBody');
       
       // 테이블 로딩 상태 표시
       if (companyTableBody) {
@@ -340,6 +371,9 @@
             </td>
           </tr>
         `;
+      } else {
+        console.error('companyTableBody 요소를 찾을 수 없습니다.');
+        return;
       }
       
       try {
@@ -427,7 +461,10 @@
       console.log('전체 선택 토글');
       
       const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-      if (!selectAllCheckbox) return;
+      if (!selectAllCheckbox) {
+        console.error('selectAllCheckbox 요소를 찾을 수 없습니다.');
+        return;
+      }
       
       const isChecked = selectAllCheckbox.checked;
       document.querySelectorAll('.company-checkbox').forEach(checkbox => {
@@ -440,7 +477,11 @@
     
     // 삭제 버튼 상태 업데이트
     function updateDeleteButtonState() {
-      if (!deleteButton) return;
+      const deleteButton = document.getElementById('deleteButton');
+      if (!deleteButton) {
+        console.error('deleteButton 요소를 찾을 수 없습니다.');
+        return;
+      }
       
       const anyChecked = document.querySelector('.company-checkbox:checked') !== null;
       
@@ -457,6 +498,7 @@
     function renderCompaniesTable() {
       console.log('기업 테이블 렌더링');
       
+      const companyTableBody = document.getElementById('companyTableBody');
       if (!companyTableBody) {
         console.error('companyTableBody 요소를 찾을 수 없습니다.');
         return;
@@ -735,25 +777,19 @@
     document.addEventListener('DOMContentLoaded', function() {
       console.log('기업 관리 페이지 초기화');
       
-      // 먼저 DOM 요소 초기화
-      const companyTableBody = document.getElementById('companyTableBody');
-      
-      if (!companyTableBody) {
-        console.error('companyTableBody 요소를 찾을 수 없습니다. 페이지 로드를 건너뜁니다.');
-        return;
-      }
-      
       // 데이터 로드
       loadCompanies();
       
       // 이벤트 리스너 설정
       // 버튼 이벤트
+      const addButton = document.getElementById('addButton');
       if (addButton) {
         addButton.addEventListener('click', openAddModal);
       } else {
         console.warn('addButton 요소를 찾을 수 없습니다.');
       }
       
+      const deleteButton = document.getElementById('deleteButton');
       if (deleteButton) {
         deleteButton.addEventListener('click', () => openDeleteModal(null));
       } else {
