@@ -728,12 +728,11 @@
         // FormData 준비
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('sheet', '기업정보');
         
         console.log('엑셀 파일 업로드 중:', file.name);
         
-        // API 호출 시도
-        const result = await uploadFile(formData);
+        // API 호출 시도 - 시트 이름을 직접 매개변수로 전달
+        const result = await uploadFile(formData, '기업정보');
         console.log('파일 업로드 결과:', result);
         
         if (result && result.success) {
