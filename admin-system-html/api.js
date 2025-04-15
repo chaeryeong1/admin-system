@@ -515,51 +515,52 @@ async function downloadExcelFile(sheet) {
 }
 
 /**
- * 파일을 업로드하는 함수
- * @param {FormData} formData - 업로드할 파일 및 정보가 담긴 FormData 객체
+ * 파일 업로드 함수
+ * @param {FormData} formData - 업로드할 파일 데이터
+ * @param {string} sheet - 업로드할 시트 이름
  * @returns {Promise<Object>} - 업로드 결과
  */
-async function uploadFile(formData) {
+async function uploadFile(formData, sheet) {
   try {
-    console.log('파일 업로드 시도');
+    console.log(`${sheet} 파일 업로드 시작`);
     
-    // 파일 정보 출력
+    // 파일 정보 로깅
     const file = formData.get('file');
-    const sheetName = formData.get('sheet');
+    if (!file) {
+      throw new Error('업로드할 파일이 없습니다');
+    }
     
-    console.log(`파일 정보: ${file.name} (${file.size} bytes)`);
-    console.log(`대상 시트: ${sheetName}`);
+    console.log(`파일 업로드: ${file.name}, 크기: ${file.size} 바이트`);
     
-    // 실제 API 엔드포인트
-    const url = `${API_URL}?action=uploadFile&sheet=${encodeURIComponent(getActualSheetName(sheetName))}`;
-    console.log(`API 요청 URL: ${url}`);
+    // formData에 시트 이름 추가
+    formData.append('sheet', getActualSheetName(sheet));
+    formData.append('action', 'uploadFile');
     
-    // formData를 그대로 전송
-    const response = await fetch(url, {
+    // API 요청 실행
+    const response = await fetch(API_URL, {
       method: 'POST',
-      body: formData,
-      // CORS 문제 완화를 위한 설정
-      mode: 'cors',
-      credentials: 'omit'
+      body: formData
     });
     
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`서버 응답 오류 (${response.status}): ${errorText || '알 수 없는 오류'}`);
+      throw new Error(`서버 응답 오류: ${response.status} ${response.statusText}`);
     }
     
     const result = await response.json();
-    console.log('실제 API 응답:', result);
+    console.log('파일 업로드 결과:', result);
     
-    return result;
+    return {
+      success: true,
+      fileName: file.name,
+      fileSize: file.size,
+      recordsProcessed: result.recordsProcessed || 0,
+      message: `${file.name} 파일이 성공적으로 업로드되었습니다. ${result.recordsProcessed || 0}개 레코드가 처리되었습니다.`
+    };
   } catch (error) {
     console.error('파일 업로드 오류:', error);
-    
-    // 명확한 오류 메시지 반환
     return {
       success: false,
-      error: `서버 연결 오류: ${error.message}. API 서버가 실행 중인지 확인하고, CORS 설정이 올바른지 확인하세요.`,
-      data: null
+      error: `파일 업로드 실패: ${error.message}. API 서버가 실행 중인지 확인하고, CORS 설정이 올바른지 확인하세요.`
     };
   }
 }
