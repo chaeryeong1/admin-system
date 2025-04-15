@@ -485,10 +485,10 @@
       if (!project) return;
       
       document.getElementById('editName').value = project.name || '';
-      document.getElementById('editBudget').value = project.budget || '';
+      document.getElementById('editBudget').value = project.targetCompanies || '';
       document.getElementById('editStartDate').value = project.startDate || '';
       document.getElementById('editEndDate').value = project.endDate || '';
-      document.getElementById('editOrganizer').value = project.manager || '';
+      document.getElementById('editOrganizer').value = project.organizer || '';
       document.getElementById('editNoticeUrl').value = project.noticeUrl || '';
       
       editModal.classList.remove('hidden');
@@ -517,16 +517,20 @@
       event.preventDefault();
       
       const name = document.getElementById('addName').value.trim();
-      const budget = parseInt(document.getElementById('addBudget').value.replace(/,/g, '')) || 0;
+      const targetCompanies = parseInt(document.getElementById('addBudget').value) || 0;
       const startDate = document.getElementById('addStartDate').value;
       const endDate = document.getElementById('addEndDate').value;
-      const manager = document.getElementById('addOrganizer').value.trim();
-      const department = document.getElementById('addDepartment').value.trim();
-      const status = document.getElementById('addStatus').value;
+      const organizer = document.getElementById('addOrganizer').value.trim();
+      const noticeUrl = document.getElementById('addNoticeUrl').value.trim();
       
       // 유효성 검사
       if (!name) {
         alert('사업명을 입력해주세요.');
+        return;
+      }
+      
+      if (targetCompanies <= 0) {
+        alert('목표 업체 수는 1 이상이어야 합니다.');
         return;
       }
       
@@ -548,12 +552,11 @@
       // 새 프로젝트 정보
       const newProject = {
         name,
-        budget,
+        targetCompanies,
         startDate,
         endDate,
-        manager,
-        department,
-        status
+        organizer,
+        noticeUrl
       };
       
       try {
@@ -587,16 +590,20 @@
       if (!selectedProjectId) return;
       
       const name = document.getElementById('editName').value.trim();
-      const budget = parseInt(document.getElementById('editBudget').value.replace(/,/g, '')) || 0;
+      const targetCompanies = parseInt(document.getElementById('editBudget').value) || 0;
       const startDate = document.getElementById('editStartDate').value;
       const endDate = document.getElementById('editEndDate').value;
-      const manager = document.getElementById('editOrganizer').value.trim();
-      const department = document.getElementById('editDepartment').value.trim();
-      const status = document.getElementById('editStatus').value;
+      const organizer = document.getElementById('editOrganizer').value.trim();
+      const noticeUrl = document.getElementById('editNoticeUrl').value.trim();
       
       // 유효성 검사
       if (!name) {
         alert('사업명을 입력해주세요.');
+        return;
+      }
+      
+      if (targetCompanies <= 0) {
+        alert('목표 업체 수는 1 이상이어야 합니다.');
         return;
       }
       
@@ -619,12 +626,11 @@
       const updatedProject = {
         id: selectedProjectId,
         name,
-        budget,
+        targetCompanies,
         startDate,
         endDate,
-        manager,
-        department,
-        status
+        organizer,
+        noticeUrl
       };
       
       try {
