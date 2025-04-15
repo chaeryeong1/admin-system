@@ -125,35 +125,20 @@
     <div class="bg-white rounded-lg shadow-lg p-6 w-96">
       <h2 class="text-lg font-semibold mb-4">기업 정보 추가</h2>
       <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">파일 업로드 <span class="text-red-500">*</span></label>
-          <input
-            id="addExcelFile"
-            type="file"
-            accept=".xlsx, .xls, .csv"
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          >
-          <p class="text-xs text-gray-500 mt-1">엑셀(.xlsx, .xls) 또는 CSV(.csv) 파일만 업로드 가능합니다</p>
+        <div class="flex justify-center">
+          <button id="confirmAddButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onclick="addCompanies()">등록</button>
+          <button class="bg-gray-300 hover:bg-gray-400 text-black font-bold py-2 px-4 rounded ml-2" onclick="closeAddModal()">취소</button>
         </div>
-        <div>
-          <a href="#" id="downloadSampleButton" class="text-blue-600 hover:underline text-sm">샘플 다운로드</a>
-          <p class="text-xs text-gray-500 mt-1">양식에 맞춰 작성 후 업로드해주세요</p>
+        <div class="mt-4">
+          <input type="file" id="companyFileInput" accept=".xlsx, .xls, .csv" class="hidden" />
+          <label for="companyFileInput" class="cursor-pointer bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+            파일 선택
+          </label>
+          <span id="selectedFileName" class="ml-2">선택된 파일 없음</span>
         </div>
-        <div class="flex justify-end space-x-2 mt-6">
-          <button 
-            id="addCancelButton"
-            type="button"
-            class="px-4 py-2 border rounded hover:bg-gray-100"
-          >
-            취소
-          </button>
-          <button 
-            id="confirmAddButton"
-            type="button"
-            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            저장
+        <div class="mt-2">
+          <button onclick="downloadSample()" class="text-blue-500 hover:text-blue-700">
+            샘플 다운로드
           </button>
         </div>
       </div>
@@ -257,71 +242,51 @@
     
     // 회사 데이터 로드
     async function loadCompanies() {
+      console.log('기업 데이터 로드 시작');
+      document.querySelector('#companiesTableBody').innerHTML = '<tr><td colspan="8" class="text-center py-4">로딩 중...</td></tr>';
+      
       try {
-        console.log('기업 데이터 로드 시작');
-        
-        // 로딩 표시
-        companyTableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-2 text-center">데이터를 불러오는 중...</td></tr>';
-        
-        // API에서 데이터 가져오기
-        const result = await fetchData('기업정보');
-        console.log('API 응답:', result);
-        
-        // API 호출 성공 시
-        if (result && result.success && result.data && Array.isArray(result.data)) {
-          companies = result.data;
-          console.log('서버에서 로드된 기업 수:', companies.length);
-          
-          // 로컬 스토리지에도 최신 데이터 저장 (오프라인 모드를 위한 백업)
-          localStorage.setItem('companiesData', JSON.stringify(companies));
-        } 
-        // API 호출 실패 시, 로컬 스토리지 데이터 사용 시도
-        else {
-          console.warn('API 호출 실패, 로컬 데이터 확인 중...');
-          
-          const savedData = localStorage.getItem('companiesData');
-          
-          if (savedData) {
-            try {
-              const parsedData = JSON.parse(savedData);
-              if (parsedData && Array.isArray(parsedData) && parsedData.length > 0) {
-                console.log('로컬 스토리지에서 데이터 로드:', parsedData.length + '개 항목');
-                companies = parsedData;
-              } else {
-                throw new Error('저장된 데이터 없음');
-              }
-            } catch (e) {
-              console.error('로컬 스토리지 데이터 파싱 오류:', e);
-              localStorage.removeItem('companiesData');
-              useDefaultData();
-            }
-          } else {
-            console.log('로컬 스토리지에 데이터 없음, 기본 데이터 사용');
-            useDefaultData();
-          }
-        }
-        
-        // 데이터를 화면에 표시
-        renderCompanies();
-      } catch (error) {
-        console.error('데이터 로드 오류:', error);
-        
-        // 오류 발생 시 로컬 데이터 사용 시도
+        // 로컬 스토리지에서 데이터 확인
         const savedData = localStorage.getItem('companiesData');
         if (savedData) {
           try {
-            companies = JSON.parse(savedData);
-            renderCompanies();
-            console.log('오류 발생으로 로컬 데이터 사용');
+            const parsedData = JSON.parse(savedData);
+            if (Array.isArray(parsedData) && parsedData.length > 0) {
+              console.log(`로컬 스토리지에서 ${parsedData.length}개 기업 데이터 로드됨`);
+              companies = parsedData;
+              renderCompaniesTable();
+              return;
+            }
           } catch (e) {
-            companyTableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-2 text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
+            console.error('로컬 스토리지 데이터 파싱 오류:', e);
           }
-        } else {
-          // 로컬 데이터도 없는 경우 기본 데이터 사용
-          console.log('로컬 데이터 없음, 기본 데이터 사용');
-          useDefaultData();
-          renderCompanies();
         }
+        
+        // API 호출
+        const result = await fetchData('기업정보');
+        console.log('API 응답:', result);
+        
+        if (result && result.success && Array.isArray(result.data)) {
+          companies = result.data;
+          console.log(`API에서 ${companies.length}개 기업 데이터 로드됨`);
+          
+          // 로컬 스토리지에 저장
+          localStorage.setItem('companiesData', JSON.stringify(companies));
+          
+          // 테이블 렌더링
+          renderCompaniesTable();
+        } else {
+          console.warn('API에서 올바른 데이터를 받지 못함, 기본 데이터 사용');
+          useDefaultData();
+          renderCompaniesTable();
+        }
+      } catch (error) {
+        console.error('데이터 로드 오류:', error);
+        document.querySelector('#companiesTableBody').innerHTML = '<tr><td colspan="8" class="text-center py-4 text-red-500">데이터 로드 중 오류가 발생했습니다.</td></tr>';
+        
+        // 오류 발생 시 기본 데이터 사용
+        useDefaultData();
+        renderCompaniesTable();
       }
     }
     
@@ -724,54 +689,84 @@
     
     // 회사 삭제 처리
     async function deleteCompanies() {
-      if (selectedCompanyIds.length === 0) {
+      console.log('기업 데이터 삭제 시작');
+      const checkbox = document.getElementById('selectAllCompanies');
+      
+      // 선택된 회사 ID 배열
+      const selectedIds = [];
+      
+      // 모든 체크박스를 선택한 경우
+      if (checkbox && checkbox.checked) {
+        companies.forEach(company => {
+          selectedIds.push(company.id);
+        });
+      } 
+      // 선택된 회사가 있는 경우
+      else if (selectedCompanyId) {
+        selectedIds.push(selectedCompanyId);
+      }
+      
+      if (selectedIds.length === 0) {
         alert('삭제할 기업을 선택해주세요.');
         return;
       }
       
-      // 삭제 중 표시
-      const deleteButton = document.getElementById('confirmDeleteButton');
+      // 삭제 중 버튼 상태 변경
+      const deleteButton = document.querySelector('#confirmDeleteButton');
       if (deleteButton) {
         deleteButton.textContent = '삭제 중...';
         deleteButton.disabled = true;
       }
       
       try {
-        // 각 기업을 순차적으로 삭제
-        for (const companyId of selectedCompanyIds) {
-          console.log(`기업 ID 삭제 시도: ${companyId}`);
-          const result = await deleteData('기업정보', companyId);
-          
-          if (!result || !result.success) {
-            // API 호출 실패 시, 로컬 데이터 직접 삭제
-            console.warn(`API를 통한 ID ${companyId} 삭제 실패. 로컬에서 삭제 시도.`);
-            const companyIndex = companies.findIndex(c => String(c.id) === String(companyId));
+        let success = true;
+        let apiError = null;
+        
+        // 각 ID에 대해 삭제 요청 수행
+        for (const id of selectedIds) {
+          try {
+            const result = await deleteData('기업정보', id);
             
-            if (companyIndex !== -1) {
-              companies.splice(companyIndex, 1);
-              localStorage.setItem('companiesData', JSON.stringify(companies));
-              console.log(`기업 ID ${companyId} 로컬에서 삭제됨.`);
-            } else {
-              const company = companies.find(c => String(c.id) === String(companyId));
-              const companyName = company ? company.name : companyId;
-              throw new Error(`${companyName} 삭제 실패: ${result?.error || '알 수 없는 오류'}`);
+            if (!result || !result.success) {
+              success = false;
+              apiError = result?.error || '알 수 없는 오류';
+              break;
             }
+          } catch (error) {
+            console.error(`ID ${id} 삭제 중 오류:`, error);
+            success = false;
+            apiError = error.message;
+            break;
           }
         }
         
-        // 성공 시 로컬 캐시 삭제하고 새로 데이터 로드
-        const total = selectedCompanyIds.length;
-        selectedCompanyIds = [];
-        closeDeleteModal();
+        // 로컬 데이터 업데이트 (API 성공 여부와 상관없이)
+        companies = companies.filter(company => !selectedIds.includes(company.id));
+        localStorage.setItem('companiesData', JSON.stringify(companies));
         
-        // 서버에서 새로운 데이터 로드
-        await loadCompanies();
-        alert(`${total}개 기업 정보가 삭제되었습니다.`);
+        if (success) {
+          alert('선택한 기업 정보가 성공적으로 삭제되었습니다.');
+        } else {
+          console.warn('API 삭제 오류, 로컬 데이터만 업데이트됨:', apiError);
+          alert('API 오류가 발생했으나, 화면에서는 삭제되었습니다: ' + apiError);
+        }
+        
+        // 모달 닫기 및 테이블 업데이트
+        closeDeleteModal();
+        renderCompaniesTable();
+        
+        // 전체 선택 체크박스 초기화
+        if (checkbox) {
+          checkbox.checked = false;
+        }
+        
+        // 선택된 ID 초기화
+        selectedCompanyId = null;
       } catch (error) {
-        console.error('API 오류:', error);
-        alert('기업 정보 삭제 중 오류가 발생했습니다: ' + error.message);
+        console.error('삭제 처리 중 오류:', error);
+        alert('삭제 처리 중 오류가 발생했습니다: ' + error.message);
       } finally {
-        // 버튼 복원
+        // 버튼 상태 복원
         if (deleteButton) {
           deleteButton.textContent = '삭제';
           deleteButton.disabled = false;
