@@ -523,9 +523,6 @@ async function uploadFile(formData) {
   try {
     console.log('파일 업로드 시도');
     
-    // CORS 이슈로 인해 API 직접 호출 대신 모의 응답 사용
-    console.log('CORS 이슈로 인해 API 직접 호출 대신 모의 응답 사용');
-    
     // 파일 정보 출력
     const file = formData.get('file');
     const sheetName = formData.get('sheet');
@@ -533,152 +530,35 @@ async function uploadFile(formData) {
     console.log(`파일 정보: ${file.name} (${file.size} bytes)`);
     console.log(`대상 시트: ${sheetName}`);
     
-    // 로컬에서 CSV 파일 내용 분석 시도
-    if (file.name.endsWith('.csv')) {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          try {
-            const content = event.target.result;
-            // BOM 제거
-            const csvText = content.charCodeAt(0) === 0xFEFF ? content.slice(1) : content;
-            const lines = csvText.split(/\r\n|\n/).filter(line => line.trim());
-            
-            if (lines.length > 0) {
-              console.log(`CSV 파일 파싱 중: ${lines.length}개 라인 발견`);
-              
-              // 헤더 및 데이터 파싱
-              const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
-              console.log('CSV 헤더:', headers);
-              
-              const records = [];
-              
-              for (let i = 1; i < lines.length; i++) {
-                const line = lines[i];
-                if (!line.trim()) continue;
-                
-                // CSV 행 파싱 (복잡한 CSV 파싱은 간소화함)
-                const values = line.split(',').map(v => v.replace(/^"|"$/g, '').trim());
-                console.log(`행 ${i} 데이터:`, values);
-                
-                // 구글 시트 구조에 맞는 레코드 생성
-                const record = { id: `upload_${Date.now()}_${i}` };
-                
-                // 헤더 기반으로 필드 매핑
-                headers.forEach((header, index) => {
-                  if (index < values.length) {
-                    const headerKey = header.toLowerCase();
-                    if (headerKey.includes('기업명') || headerKey.includes('회사명') || headerKey.includes('name')) {
-                      record.name = values[index];
-                    } else if (headerKey.includes('사업자') || headerKey.includes('등록번호') || headerKey.includes('business')) {
-                      record.businessNumber = values[index];
-                    } else if (headerKey.includes('담당자') || headerKey.includes('person') || headerKey.includes('대표')) {
-                      record.contactPerson = values[index];
-                    } else if (headerKey.includes('연락처') || headerKey.includes('전화') || headerKey.includes('phone') || headerKey === 'contact') {
-                      record.contact = values[index];
-                    } else if (headerKey.includes('이메일') || headerKey.includes('email') || headerKey.includes('메일')) {
-                      record.email = values[index];
-                    }
-                  }
-                });
-                
-                // 필수 필드 검증 (name은 필수)
-                if (record.name) {
-                  // 등록일은 자동으로 현재 날짜 설정
-                  record.registrationDate = new Date().toISOString().split('T')[0];
-                  records.push(record);
-                }
-              }
-              
-              console.log(`파싱된 레코드: ${records.length}개`, records);
-              
-              // 성공 응답 - 구글 시트 구조에 맞는 형태로 반환
-              const mockResult = {
-                success: true,
-                data: {
-                  records: records,
-                  processed: records.length
-                },
-                message: `${records.length}개 데이터가 성공적으로 처리되었습니다.`
-              };
-              
-              console.log('업로드 결과(시뮬레이션):', mockResult);
-              setTimeout(() => resolve(mockResult), 500);
-            } else {
-              // 빈 파일
-              const errorResult = {
-                success: false,
-                error: '파일에 데이터가 없습니다.',
-                data: null
-              };
-              console.log('업로드 실패(시뮬레이션):', errorResult);
-              setTimeout(() => resolve(errorResult), 500);
-            }
-          } catch (error) {
-            console.error('CSV 파싱 오류:', error);
-            const errorResult = {
-              success: false,
-              error: '파일 파싱 중 오류가 발생했습니다: ' + error.message,
-              data: null
-            };
-            console.log('업로드 실패(시뮬레이션):', errorResult);
-            setTimeout(() => resolve(errorResult), 500);
-          }
-        };
-        
-        reader.onerror = function(error) {
-          console.error('파일 읽기 오류:', error);
-          const errorResult = {
-            success: false,
-            error: '파일을 읽는 중 오류가 발생했습니다.',
-            data: null
-          };
-          console.log('업로드 실패(시뮬레이션):', errorResult);
-          setTimeout(() => resolve(errorResult), 500);
-        };
-        
-        reader.readAsText(file);
-      });
+    // 실제 API 엔드포인트
+    const url = `${API_URL}?action=uploadFile&sheet=${encodeURIComponent(getActualSheetName(sheetName))}`;
+    console.log(`API 요청 URL: ${url}`);
+    
+    // formData를 그대로 전송
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+      // CORS 문제 완화를 위한 설정
+      mode: 'cors',
+      credentials: 'omit'
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`서버 응답 오류 (${response.status}): ${errorText || '알 수 없는 오류'}`);
     }
     
-    // 엑셀 파일 처리 (실제 API 연동이 필요함)
-    console.log('엑셀 파일 처리 - API 연동 필요');
+    const result = await response.json();
+    console.log('실제 API 응답:', result);
     
-    // 모의 응답 생성 - 구글 시트 구조에 맞게 변경
-    const mockRecords = [
-      {
-        id: `excel_${Date.now()}_1`,
-        name: '엑셀 테스트 기업',
-        businessNumber: '123-45-67890',
-        contactPerson: '홍길동',
-        contact: '010-1234-5678',
-        email: 'test@example.com',
-        registrationDate: new Date().toISOString().split('T')[0]
-      }
-    ];
-    
-    const mockResult = {
-      success: true,
-      data: {
-        records: mockRecords,
-        processed: mockRecords.length
-      },
-      message: '파일이 성공적으로 업로드되었습니다.'
-    };
-    
-    console.log('업로드 결과(시뮬레이션):', mockResult);
-    
-    // 실제 API 호출 대신 모의 응답 반환
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve(mockResult);
-      }, 1000);
-    });
+    return result;
   } catch (error) {
     console.error('파일 업로드 오류:', error);
+    
+    // 명확한 오류 메시지 반환
     return {
       success: false,
-      error: error.message,
+      error: `서버 연결 오류: ${error.message}. API 서버가 실행 중인지 확인하고, CORS 설정이 올바른지 확인하세요.`,
       data: null
     };
   }
