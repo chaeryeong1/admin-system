@@ -678,23 +678,30 @@
             console.log('구글 시트에서 기업 데이터 가져오기 성공');
             companies = result.data;
             
-            // 데이터를 CSV 형식으로 변환
-            let csvContent = "기업명,사업자등록번호,대표자,담당자,연락처,이메일,주소\n";
+            // UTF-8 BOM 추가
+            let csvContent = "\uFEFF"; // UTF-8 BOM
+            csvContent += "기업명,사업자등록번호,대표자,담당자,연락처,이메일,주소\n";
             
             companies.forEach(company => {
-              // CSV 형식에 맞게 데이터 처리 (쉼표 포함된 데이터는 따옴표로 감싸기)
-              const name = `"${company.name || ''}"`; 
-              const businessNumber = `"${company.businessNumber || ''}"`;
-              const representative = `"${company.representative || ''}"`;
-              const manager = `"${company.manager || ''}"`;
-              const phone = `"${company.phone || ''}"`;
-              const email = `"${company.email || ''}"`;
-              const address = `"${company.address || ''}"`;
+              // 데이터 정제 - 쉼표나 줄바꿈 있으면 따옴표로 감싸기
+              const escapeCsv = (text) => {
+                if (!text) return '""';
+                text = String(text).replace(/"/g, '""'); // 따옴표는 두 개로 이스케이프
+                return `"${text}"`; 
+              };
+              
+              const name = escapeCsv(company.name); 
+              const businessNumber = escapeCsv(company.businessNumber);
+              const representative = escapeCsv(company.representative);
+              const manager = escapeCsv(company.manager);
+              const phone = escapeCsv(company.phone);
+              const email = escapeCsv(company.email);
+              const address = escapeCsv(company.address);
               
               csvContent += `${name},${businessNumber},${representative},${manager},${phone},${email},${address}\n`;
             });
             
-            // CSV 파일 생성 및 다운로드
+            // CSV 파일 생성 및 다운로드 - 인코딩 명시
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
