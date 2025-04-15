@@ -61,7 +61,7 @@
             id="excelButton"
             class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
           >
-            기업 리스트 내려받기
+            기업리스트 다운로드
           </button>
         </div>
       </div>
@@ -134,7 +134,7 @@
           <p class="text-sm text-gray-500">* 등록일은 시스템에서 자동으로 생성되므로 입력하지 않아도 됩니다.</p>
           
           <button id="downloadSampleButton" class="mt-3 text-blue-500 hover:text-blue-700 text-sm underline">
-            기업 리스트 내려받기
+            기업리스트 다운로드
           </button>
         </div>
       </div>
@@ -235,7 +235,7 @@
           id: company.id || `id_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
           name: company.name || company.companyName || company.company_name || '',
           businessNumber: company.businessNumber || company.business_number || company.businessNo || '',
-          representative: company.representative || company.대표자 || '',
+          representative: company.representative || company.대표자 || company.CEO || company.ceo || '',
           phone: company.phone || company.phoneNumber || company.contact || company.전화번호 || '',
           email: company.email || company.이메일 || company.emailAddress || company.email_address || '',
           registrationDate: company.registrationDate || company.created_at || company.regDate || today // 등록일 자동 설정
@@ -636,7 +636,6 @@
     const excelButton = document.getElementById('excelButton');
     if (excelButton) {
       excelButton.addEventListener('click', downloadCompanyList);
-      excelButton.textContent = '다운로드';
     } else {
       console.warn('excelButton 요소를 찾을 수 없습니다.');
     }
@@ -664,8 +663,8 @@
             // CSV 문자셋 설정을 위한 BOM 추가
             const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
             
-            // CSV 데이터 생성
-            let csvContent = "기업명,사업자등록번호,대표자,전화번호,이메일,주소\n";
+            // CSV 데이터 생성 (필요한 5개 필드만 포함)
+            let csvContent = "기업명,사업자등록번호,대표자명,전화번호,이메일\n";
             
             companies.forEach(company => {
               // 데이터 정제 - 쉼표나 줄바꿈 있으면 따옴표로 감싸기
@@ -684,14 +683,13 @@
               const representative = escapeCsv(company.representative);
               const phone = escapeCsv(company.phone);
               const email = escapeCsv(company.email);
-              const address = escapeCsv(company.address || '');
               
               // 데이터 확인을 위한 로깅
               console.log('CSV 데이터 행:', {
                 name, businessNumber, representative, phone, email
               });
               
-              csvContent += `${name},${businessNumber},${representative},${phone},${email},${address}\n`;
+              csvContent += `${name},${businessNumber},${representative},${phone},${email}\n`;
             });
             
             // Blob에 BOM 먼저 추가
@@ -699,13 +697,13 @@
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.setAttribute('href', url);
-            link.setAttribute('download', '기업 리스트.csv');
+            link.setAttribute('download', '기업리스트.csv');
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             
-            alert('기업 목록이 다운로드되었습니다.');
+            alert('기업 리스트가 다운로드되었습니다.');
           } else {
             throw new Error('데이터를 가져올 수 없습니다.');
           }
