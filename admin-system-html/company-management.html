@@ -644,6 +644,375 @@
       // 페이지 로드 시 데이터 로드
       loadCompanies();
     });
+
+    // 현재 데이터 CSV 다운로드
+    async function downloadCurrentData() {
+      console.log('현재 기업 데이터 CSV 다운로드 시작');
+      
+      if (!companies || companies.length === 0) {
+        alert('다운로드할 기업 데이터가 없습니다.');
+        return;
+      }
+      
+      try {
+        // CSV 헤더 생성
+        const headers = ['기업명', '업종', '담당자', '이메일', '지역', '주소', '설명'];
+        let csvContent = headers.join(',') + '\n';
+        
+        // 데이터 행 추가
+        companies.forEach(company => {
+          const row = [
+            `"${(company.name || '').replace(/"/g, '""')}"`,
+            `"${(company.industry || '').replace(/"/g, '""')}"`,
+            `"${(company.contact_person || '').replace(/"/g, '""')}"`,
+            `"${(company.contact_email || '').replace(/"/g, '""')}"`,
+            `"${(company.city || '').replace(/"/g, '""')}"`,
+            `"${(company.address || '').replace(/"/g, '""')}"`,
+            `"${(company.description || '').replace(/"/g, '""')}"`
+          ];
+          csvContent += row.join(',') + '\n';
+        });
+        
+        // 파일 생성 및 다운로드
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', `기업정보_${new Date().toISOString().slice(0,10)}.csv`);
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log('CSV 다운로드 완료');
+      } catch (error) {
+        console.error('CSV 다운로드 오류:', error);
+        alert('데이터 다운로드 중 오류가 발생했습니다.');
+      }
+    }
+
+    // CSV 파일 처리
+    async function processCSVFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        
+        reader.onload = function(event) {
+          try {
+            const csvContent = event.target.result;
+            const lines = csvContent.split('\n');
+            
+            // 헤더 확인 (첫 줄)
+            const headers = lines[0].split(',').map(header => 
+              header.trim().replace(/^"|"$/g, '')
+            );
+            
+            // 필수 헤더 확인
+            const requiredHeaders = ['기업명'];
+            const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+            
+            if (missingHeaders.length > 0) {
+              return reject(`필수 헤더가 없습니다: ${missingHeaders.join(', ')}`);
+            }
+            
+            // 헤더 인덱스 매핑
+            const headerMap = {
+              '기업명': 'name',
+              '업종': 'industry',
+              '담당자': 'contact_person',
+              '이메일': 'contact_email',
+              '지역': 'city',
+              '주소': 'address',
+              '설명': 'description'
+            };
+            
+            const indexMap = {};
+            headers.forEach((header, index) => {
+              const fieldName = headerMap[header];
+              if (fieldName) indexMap[index] = fieldName;
+            });
+            
+            // 데이터 파싱
+            const companies = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+              const line = lines[i].trim();
+              if (!line) continue;
+              
+              // 쉼표로 분리 (따옴표 내부의 쉼표는 무시)
+              const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
+              
+              // 객체 생성
+              const company = { id: 'local_' + Date.now() + '_' + i };
+              
+              values.forEach((value, index) => {
+                const field = indexMap[index];
+                if (field) {
+                  company[field] = value.replace(/^"|"$/g, '');
+                }
+              });
+              
+              // 기업명은 필수값
+              if (company.name) {
+                companies.push(company);
+              }
+            }
+            
+            resolve(companies);
+          } catch (error) {
+            console.error('CSV 파싱 오류:', error);
+            reject('CSV 파일 처리 중 오류가 발생했습니다.');
+          }
+        };
+        
+        reader.onerror = function() {
+          reject('파일을 읽는 중 오류가 발생했습니다.');
+        };
+        
+        reader.readAsText(file, 'UTF-8');
+      });
+    }
+
+    // 기업 추가 (파일 업로드 처리)
+    async function addCompanies() {
+      console.log('기업 추가 시작');
+      const fileInput = document.getElementById('companyFileInput');
+      
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        alert('업로드할 파일을 선택해주세요.');
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      const fileExt = file.name.split('.').pop().toLowerCase();
+      
+      // 파일 형식 확인
+      if (!['csv', 'xlsx', 'xls'].includes(fileExt)) {
+        alert('엑셀(.xlsx, .xls) 또는 CSV(.csv) 파일만 업로드 가능합니다.');
+        return;
+      }
+      
+      // 버튼 상태 변경
+      const addButton = document.querySelector('#confirmAddButton');
+      if (addButton) {
+        addButton.textContent = '처리 중...';
+        addButton.disabled = true;
+      }
+      
+      try {
+        let newCompanies = [];
+        
+        if (fileExt === 'csv') {
+          // CSV 파일 처리
+          newCompanies = await processCSVFile(file);
+        } else {
+          // 엑셀 파일은 API를 통해 처리
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('sheet', '기업정보');
+          
+          const result = await uploadFile(formData);
+          console.log('파일 업로드 결과:', result);
+          
+          if (result && result.success && Array.isArray(result.data)) {
+            newCompanies = result.data;
+          } else {
+            throw new Error(result?.error || '파일 업로드 실패');
+          }
+        }
+        
+        console.log(`${newCompanies.length}개 기업 데이터 추가 준비 완료`);
+        
+        // 새 기업 데이터 추가
+        if (newCompanies.length > 0) {
+          // ID 할당 (임시)
+          newCompanies.forEach((company, index) => {
+            if (!company.id) {
+              company.id = `new_${Date.now()}_${index}`;
+            }
+          });
+          
+          // 기존 데이터와 병합
+          companies = [...companies, ...newCompanies];
+          
+          // 로컬 스토리지에 저장
+          localStorage.setItem('companiesData', JSON.stringify(companies));
+          
+          // API를 통한 데이터 저장 시도
+          try {
+            const result = await addData('기업정보', newCompanies);
+            console.log('API 저장 결과:', result);
+            
+            if (result && result.success) {
+              console.log('API를 통해 기업 정보 저장 성공');
+            } else {
+              console.warn('API 저장 실패, 로컬에만 저장됨:', result?.error);
+            }
+          } catch (apiError) {
+            console.error('API 저장 중 오류:', apiError);
+          }
+          
+          // 테이블 갱신
+          renderCompaniesTable();
+          alert(`${newCompanies.length}개 기업 정보가 추가되었습니다.`);
+          
+          // 파일 입력 초기화
+          fileInput.value = '';
+          document.getElementById('selectedFileName').textContent = '선택된 파일 없음';
+          
+          // 모달 닫기
+          closeAddModal();
+        } else {
+          alert('추가할 기업 정보가 없습니다. 파일을 확인해주세요.');
+        }
+      } catch (error) {
+        console.error('기업 추가 중 오류:', error);
+        alert('기업 정보 추가 중 오류가 발생했습니다: ' + error.message);
+      } finally {
+        // 버튼 상태 복원
+        if (addButton) {
+          addButton.textContent = '등록';
+          addButton.disabled = false;
+        }
+      }
+    }
+
+    // 샘플 파일 다운로드
+    function downloadSample() {
+      console.log('샘플 파일 다운로드 시작');
+      
+      try {
+        // 샘플 데이터 생성
+        const sampleData = [
+          {
+            name: '(주)샘플기업1',
+            industry: 'IT 서비스',
+            contact_person: '홍길동',
+            contact_email: 'sample1@example.com',
+            city: '서울',
+            address: '서울 강남구 테헤란로 123',
+            description: '샘플 회사 설명입니다.'
+          },
+          {
+            name: '샘플기업2 주식회사',
+            industry: '제조업',
+            contact_person: '김철수',
+            contact_email: 'sample2@example.com',
+            city: '부산',
+            address: '부산 해운대구 해운대로 456',
+            description: '제조업 전문 기업입니다.'
+          }
+        ];
+        
+        // CSV 헤더 생성
+        const headers = ['기업명', '업종', '담당자', '이메일', '지역', '주소', '설명'];
+        let csvContent = headers.join(',') + '\n';
+        
+        // 데이터 행 추가
+        sampleData.forEach(company => {
+          const row = [
+            `"${company.name}"`,
+            `"${company.industry}"`,
+            `"${company.contact_person}"`,
+            `"${company.contact_email}"`,
+            `"${company.city}"`,
+            `"${company.address}"`,
+            `"${company.description}"`
+          ];
+          csvContent += row.join(',') + '\n';
+        });
+        
+        // 파일 생성 및 다운로드
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', '기업정보_샘플.csv');
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log('샘플 파일 다운로드 완료');
+      } catch (error) {
+        console.error('샘플 파일 다운로드 오류:', error);
+        alert('샘플 파일 다운로드 중 오류가 발생했습니다: ' + error.message);
+      }
+    }
+
+    // 모달 열기 함수들
+    function openAddModal() {
+      console.log('기업 추가 모달 열기');
+      document.getElementById('addModal').classList.remove('hidden');
+      
+      // 파일 입력 초기화
+      const fileInput = document.getElementById('companyFileInput');
+      if (fileInput) fileInput.value = '';
+      
+      const fileNameDisplay = document.getElementById('selectedFileName');
+      if (fileNameDisplay) fileNameDisplay.textContent = '선택된 파일 없음';
+    }
+
+    function openEditModal(companyId) {
+      console.log(`기업 ID ${companyId} 수정 모달 열기`);
+      const company = companies.find(c => c.id == companyId);
+      
+      if (!company) {
+        alert('수정할 기업을 찾을 수 없습니다.');
+        return;
+      }
+      
+      // 모달 데이터 채우기
+      document.getElementById('editCompanyId').value = company.id;
+      document.getElementById('editCompanyName').value = company.name || '';
+      document.getElementById('editIndustry').value = company.industry || '';
+      document.getElementById('editContactPerson').value = company.contact_person || '';
+      document.getElementById('editContactEmail').value = company.contact_email || '';
+      document.getElementById('editCity').value = company.city || '';
+      document.getElementById('editAddress').value = company.address || '';
+      document.getElementById('editDescription').value = company.description || '';
+      
+      // 모달 표시
+      document.getElementById('editModal').classList.remove('hidden');
+    }
+
+    function openDeleteModal(companyId) {
+      console.log(`기업 삭제 모달 열기`);
+      
+      // 전체 선택 체크박스를 확인
+      const selectAllCheckbox = document.getElementById('selectAllCompanies');
+      const isSelectAll = selectAllCheckbox && selectAllCheckbox.checked;
+      
+      // 모달 내용 갱신
+      const modalContent = document.getElementById('deleteModalContent');
+      
+      if (isSelectAll) {
+        // 전체 삭제
+        modalContent.textContent = `모든 기업 정보(${companies.length}개)를 삭제하시겠습니까?`;
+        selectedCompanyId = null; // 전체 선택이므로 개별 ID 초기화
+      } else if (companyId) {
+        // 개별 삭제
+        const company = companies.find(c => c.id == companyId);
+        
+        if (!company) {
+          alert('삭제할 기업을 찾을 수 없습니다.');
+          return;
+        }
+        
+        modalContent.textContent = `"${company.name}" 기업 정보를 삭제하시겠습니까?`;
+        selectedCompanyId = companyId;
+      } else {
+        // 선택된 항목 없음
+        alert('삭제할 기업을 선택해주세요.');
+        return;
+      }
+      
+      // 모달 표시
+      document.getElementById('deleteModal').classList.remove('hidden');
+    }
   </script>
 </body>
 </html> 
