@@ -84,15 +84,18 @@
           <table class="min-w-full">
             <thead>
               <tr class="border-b">
-                <th class="px-4 py-2 text-left">선택</th>
+                <th class="px-4 py-2 text-left">
+                  <input 
+                    type="checkbox" 
+                    id="selectAllCheckbox"
+                    class="cursor-pointer"
+                  >
+                </th>
                 <th class="px-4 py-2 text-left">기업명</th>
-                <th class="px-4 py-2 text-left">담당자</th>
-                <th class="px-4 py-2 text-left">참여 사업</th>
-                <th class="px-4 py-2 text-left">계약일</th>
-                <th class="px-4 py-2 text-left">계약금액</th>
-                <th class="px-4 py-2 text-left">캐시백</th>
-                <th class="px-4 py-2 text-left">캐시백 상태</th>
-                <th class="px-4 py-2 text-left">주문서</th>
+                <th class="px-4 py-2 text-left">사업자등록번호</th>
+                <th class="px-4 py-2 text-left">대표자</th>
+                <th class="px-4 py-2 text-left">계약금수령액</th>
+                <th class="px-4 py-2 text-left">처리일</th>
               </tr>
             </thead>
             <tbody id="cashbackTableBody">
@@ -105,11 +108,24 @@
       <!-- 하단 버튼 -->
       <div class="flex justify-end space-x-4">
         <button 
-          id="requestButton"
-          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 opacity-50 cursor-not-allowed"
+          id="addContractButton"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          기업 추가
+        </button>
+        <button 
+          id="editContractButton"
+          class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 opacity-50 cursor-not-allowed"
           disabled
         >
-          송금 요청
+          수령액 수정
+        </button>
+        <button 
+          id="deleteContractButton"
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 opacity-50 cursor-not-allowed"
+          disabled
+        >
+          삭제
         </button>
       </div>
     </div>
