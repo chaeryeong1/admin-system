@@ -1,1 +1,113 @@
- 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 시스템 - 사업 안내</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <!-- 상단 대메뉴 -->
+  <header class="bg-white border-b px-6 py-3 text-sm font-semibold flex space-x-6">
+    <a href="business-management.html" class="text-gray-500">사업 관리</a>
+    <a href="company-management.html" class="text-gray-500">기업 관리</a>
+    <a href="business-notification.html" class="text-blue-600">사업 안내</a>
+    <a href="cashback-management.html" class="text-gray-500">캐시백 송금</a>
+  </header>
+
+  <div class="flex">
+    <!-- 좌측 소메뉴 -->
+    <aside class="w-60 bg-gray-50 p-4 text-sm border-r h-screen">
+      <h2 class="text-base font-semibold mb-4">사업 안내</h2>
+      <ul class="space-y-2">
+        <li class="text-blue-600 font-semibold">ㆍ안내 대상 선별</li>
+      </ul>
+    </aside>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="flex-1 p-6 space-y-6">
+      <div class="text-xl font-bold border-b pb-2">안내 대상 선별</div>
+      
+      <!-- 사업 선택 및 버튼 -->
+      <div class="flex items-center space-x-4">
+        <select 
+          id="businessSelector" 
+          class="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">사업 선택</option>
+          <!-- JavaScript로 채워질 부분 -->
+        </select>
+        
+        <button 
+          id="selectTargetButton"
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled
+        >
+          안내 대상 선별
+        </button>
+        
+        <div class="flex-1 text-right space-x-2">
+          <button 
+            id="downloadButton"
+            class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+          >
+            기업리스트 다운로드
+          </button>
+        </div>
+      </div>
+      
+      <!-- 안내 대상 기업 목록 테이블 -->
+      <div class="bg-white border rounded shadow">
+        <div class="p-4">
+          <table class="min-w-full">
+            <thead>
+              <tr class="border-b">
+                <th class="px-4 py-2 text-left">
+                  <input 
+                    type="checkbox" 
+                    id="selectAllCheckbox"
+                    class="cursor-pointer"
+                  >
+                </th>
+                <th class="px-4 py-2 text-left">기업명</th>
+                <th class="px-4 py-2 text-left">사업자등록번호</th>
+                <th class="px-4 py-2 text-left">대표자</th>
+                <th class="px-4 py-2 text-left">전화번호</th>
+                <th class="px-4 py-2 text-left">이메일</th>
+                <th class="px-4 py-2 text-left">상태</th>
+                <th class="px-4 py-2 text-left">관리</th>
+              </tr>
+            </thead>
+            <tbody id="targetCompanyTableBody">
+              <!-- JavaScript로 채워질 부분 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 하단 버튼 -->
+      <div class="flex justify-end space-x-4">
+        <button 
+          id="removeButton"
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 opacity-50 cursor-not-allowed"
+          disabled
+        >
+          제외
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 모달 영역은 이어서 추가됩니다 -->
+</body>
+</html> 
