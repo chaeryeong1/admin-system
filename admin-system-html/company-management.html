@@ -475,21 +475,77 @@
         const result = await fetchData('기업정보');
         console.log('API 호출 결과:', result);
         
-        if (result && result.success && Array.isArray(result.data)) {
-          console.log('API에서 기업 정보 로드:', result.data.length, '개 항목');
-          companies = normalizeCompanyData(result.data);
+        // 테스트 데이터 생성 - 실제 데이터가 없을 때 사용
+        const testData = [
+          {
+            id: 'test1',
+            name: '테스트기업 주식회사',
+            businessNumber: '123-45-67890',
+            contactPerson: '홍길동',
+            contact: '010-1234-5678',
+            email: 'test@example.com',
+            registrationDate: new Date().toISOString().split('T')[0]
+          },
+          {
+            id: 'test2',
+            name: '샘플테크놀로지',
+            businessNumber: '234-56-78901',
+            contactPerson: '김철수',
+            contact: '010-2345-6789',
+            email: 'sample@example.com',
+            registrationDate: new Date().toISOString().split('T')[0]
+          },
+          {
+            id: 'test3',
+            name: '한국소프트웨어',
+            businessNumber: '345-67-89012',
+            contactPerson: '이영희',
+            contact: '010-3456-7890',
+            email: 'korea@example.com',
+            registrationDate: new Date().toISOString().split('T')[0]
+          }
+        ];
+        
+        if (result && result.success) {
+          if (Array.isArray(result.data) && result.data.length > 0) {
+            // API 데이터가 있는 경우
+            console.log('API에서 기업 정보 로드:', result.data.length, '개 항목');
+            companies = normalizeCompanyData(result.data);
+          } else {
+            // API 데이터가 없는 경우 테스트 데이터 사용
+            console.log('API 데이터가 없어 테스트 데이터 사용');
+            const useTestData = confirm('서버에 기업 데이터가 없습니다. 테스트 데이터를 표시할까요?');
+            
+            if (useTestData) {
+              companies = testData;
+            } else {
+              companies = [];
+            }
+          }
         } else {
           console.warn('API 호출 실패 또는 데이터 형식 오류:', result?.error);
-          companies = [];
           
-          companyTableBody.innerHTML = `
-            <tr>
-              <td colspan="8" class="text-center py-4 text-red-500">
-                데이터를 불러올 수 없습니다. 관리자에게 문의하세요.
-              </td>
-            </tr>
-          `;
-          return;
+          // API 호출 실패시 테스트 데이터 제안
+          const useTestData = confirm('서버 연결에 문제가 있습니다. 테스트 데이터를 표시할까요?');
+          
+          if (useTestData) {
+            companies = testData;
+          } else {
+            companies = [];
+            
+            companyTableBody.innerHTML = `
+              <tr>
+                <td colspan="8" class="text-center py-8">
+                  <div class="text-red-500 mb-4">
+                    <i class="fas fa-exclamation-triangle text-2xl"></i>
+                  </div>
+                  <div class="text-lg font-bold mb-2">데이터를 불러올 수 없습니다</div>
+                  <div class="text-sm text-gray-600">관리자에게 문의하세요</div>
+                </td>
+              </tr>
+            `;
+            return;
+          }
         }
         
         // 테이블 렌더링
@@ -497,14 +553,46 @@
       } catch (error) {
         console.error('기업 정보 로드 오류:', error);
         
-        if (companyTableBody) {
-          companyTableBody.innerHTML = `
-            <tr>
-              <td colspan="8" class="text-center py-4 text-red-500">
-                데이터 로드 중 오류가 발생했습니다: ${error.message}
-              </td>
-            </tr>
-          `;
+        // 오류 발생시 테스트 데이터 제안
+        const useTestData = confirm('데이터 로드 중 오류가 발생했습니다. 테스트 데이터를 표시할까요?');
+        
+        if (useTestData) {
+          companies = [
+            {
+              id: 'test1',
+              name: '테스트기업 주식회사',
+              businessNumber: '123-45-67890',
+              contactPerson: '홍길동',
+              contact: '010-1234-5678',
+              email: 'test@example.com',
+              registrationDate: new Date().toISOString().split('T')[0]
+            },
+            {
+              id: 'test2',
+              name: '샘플테크놀로지',
+              businessNumber: '234-56-78901',
+              contactPerson: '김철수',
+              contact: '010-2345-6789',
+              email: 'sample@example.com',
+              registrationDate: new Date().toISOString().split('T')[0]
+            }
+          ];
+          renderCompaniesTable();
+        } else {
+          if (companyTableBody) {
+            companyTableBody.innerHTML = `
+              <tr>
+                <td colspan="8" class="text-center py-8">
+                  <div class="text-red-500 mb-4">
+                    <i class="fas fa-exclamation-triangle text-2xl"></i>
+                  </div>
+                  <div class="text-lg font-bold mb-2">데이터 로드 중 오류 발생</div>
+                  <div class="text-sm text-red-600 mb-2">${error.message}</div>
+                  <div class="text-sm text-gray-600">관리자에게 문의하세요</div>
+                </td>
+              </tr>
+            `;
+          }
         }
       }
     }
@@ -560,8 +648,17 @@
       if (!companies || companies.length === 0) {
         companyTableBody.innerHTML = `
           <tr>
-            <td colspan="8" class="text-center py-4">
-              등록된 기업 정보가 없습니다.
+            <td colspan="8" class="text-center py-8">
+              <div class="text-gray-400 mb-4">
+                <i class="fas fa-info-circle text-2xl"></i>
+              </div>
+              <div class="text-lg font-bold mb-2">등록된 기업 정보가 없습니다</div>
+              <div class="text-sm text-gray-600 mb-4">상단의 '기업 추가' 버튼을 클릭하여 기업을 등록해주세요</div>
+              <div>
+                <button onclick="openAddModal()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                  기업 추가하기
+                </button>
+              </div>
             </td>
           </tr>
         `;
