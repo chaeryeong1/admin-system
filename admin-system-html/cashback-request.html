@@ -70,9 +70,10 @@
               <tr class="border-b">
                 <th class="px-4 py-2 text-left">선택</th>
                 <th class="px-4 py-2 text-left cursor-pointer" data-sort="companyName">기업명 <span class="sort-icon"></span></th>
-                <th class="px-4 py-2 text-left cursor-pointer" data-sort="bankInfo">계좌정보 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="contactPerson">담당자 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="requestDate">신청일 <span class="sort-icon"></span></th>
                 <th class="px-4 py-2 text-left cursor-pointer" data-sort="amount">금액 <span class="sort-icon"></span></th>
-                <th class="px-4 py-2 text-left cursor-pointer" data-sort="requestDate">요청일 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="bankInfo">계좌정보 <span class="sort-icon"></span></th>
                 <th class="px-4 py-2 text-left cursor-pointer" data-sort="status">상태 <span class="sort-icon"></span></th>
                 <th class="px-4 py-2 text-left">작업</th>
               </tr>
@@ -166,9 +167,9 @@
     };
 
     async function loadRequests() {
-      console.log('요청 데이터 로딩 시작');
+      console.log('송금 요청 데이터 로딩 시작');
       document.getElementById('requestTableBody').innerHTML = 
-        '<tr><td colspan="7" class="px-4 py-2 text-center">데이터를 불러오는 중입니다...</td></tr>';
+        '<tr><td colspan="8" class="px-4 py-2 text-center">데이터를 불러오는 중입니다...</td></tr>';
       
       try {
         // API를 통해 데이터 가져오기
@@ -177,34 +178,39 @@
         
         if (result && result.data && Array.isArray(result.data) && result.data.length > 0) {
           requests = result.data;
-          console.log(`${requests.length}개의 송금 요청 로드됨`);
+          console.log(`${requests.length}개의 송금 요청 데이터 로드됨`);
         } else {
           console.log('유효한 데이터가 없어 샘플 데이터를 사용합니다.');
           // 샘플 데이터
           requests = [
             {
               id: "1",
-              companyName: "(주)클라우드솔루션",
-              bankInfo: "신한은행 123-456-789 (주)클라우드솔루션",
-              amount: 5000000,
+              companyName: "(주)테크솔루션",
+              contactPerson: "김철수",
               requestDate: "2025-02-15",
-              status: "요청완료"
-            },
-            {
-              id: "2",
-              companyName: "디지털테크(주)",
-              bankInfo: "국민은행 987-654-321 디지털테크(주)",
-              amount: 7500000,
-              requestDate: "2025-02-10",
+              amount: 5000000,
+              bankInfo: "우리은행 123-456-789 (주)테크솔루션",
               status: "검토중"
             },
             {
+              id: "2",
+              companyName: "클라우드시스템(주)",
+              contactPerson: "이영희",
+              requestDate: "2025-02-10",
+              amount: 7500000,
+              bankInfo: "국민은행 987-654-321 클라우드시스템(주)",
+              status: "반려됨",
+              rejectReason: "신청서 내용 불충분"
+            },
+            {
               id: "3",
-              companyName: "스마트비즈니스(주)",
-              bankInfo: "우리은행 555-555-555 스마트비즈니스",
-              amount: 12000000,
+              companyName: "스마트테크놀로지(주)",
+              contactPerson: "박지민",
               requestDate: "2025-02-05",
-              status: "승인완료"
+              amount: 12000000,
+              bankInfo: "신한은행 555-555-555 스마트테크놀로지",
+              status: "승인됨",
+              approvalDate: "2025-02-08"
             }
           ];
         }
@@ -212,7 +218,7 @@
       } catch (error) {
         console.error('송금 요청 데이터 로드 중 오류 발생:', error);
         document.getElementById('requestTableBody').innerHTML = 
-          '<tr><td colspan="7" class="px-4 py-2 text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
+          '<tr><td colspan="8" class="px-4 py-2 text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
       }
     }
 
@@ -221,7 +227,8 @@
       const statusFilter = document.getElementById('statusFilter').value;
       
       let filteredRequests = requests.filter(request => {
-        const matchSearch = request.companyName.toLowerCase().includes(searchTerm);
+        const matchSearch = request.companyName.toLowerCase().includes(searchTerm) || 
+                           (request.contactPerson && request.contactPerson.toLowerCase().includes(searchTerm));
         const matchStatus = !statusFilter || request.status === statusFilter;
         return matchSearch && matchStatus;
       });
@@ -233,7 +240,12 @@
           let bValue = b[currentSort.field];
           
           // 날짜인 경우 특별 처리
-          if (currentSort.field === 'requestDate') {
+          if (currentSort.field === 'requestDate' || currentSort.field === 'approvalDate') {
+            // 빈 값은 가장 나중에 정렬
+            if (!aValue && !bValue) return 0;
+            if (!aValue) return currentSort.direction === 'asc' ? 1 : -1;
+            if (!bValue) return currentSort.direction === 'asc' ? -1 : 1;
+            
             const dateA = new Date(aValue);
             const dateB = new Date(bValue);
             return currentSort.direction === 'asc' ? dateA - dateB : dateB - dateA;
@@ -274,7 +286,7 @@
       requestTableBody.innerHTML = '';
       
       if (filteredRequests.length === 0) {
-        requestTableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
+        requestTableBody.innerHTML = '<tr><td colspan="8" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
         return;
       }
 
@@ -292,13 +304,17 @@
             >
           </td>
           <td class="px-4 py-2">${request.companyName}</td>
-          <td class="px-4 py-2">${request.bankInfo}</td>
+          <td class="px-4 py-2">${request.contactPerson || '-'}</td>
+          <td class="px-4 py-2">${request.requestDate || '-'}</td>
           <td class="px-4 py-2">${formatNumber(request.amount)}원</td>
-          <td class="px-4 py-2">${request.requestDate}</td>
+          <td class="px-4 py-2">${request.bankInfo || '-'}</td>
           <td class="px-4 py-2"><span class="${getStatusClass(request.status)}">${request.status}</span></td>
           <td class="px-4 py-2">
-            <button class="bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1 text-sm edit-button" data-id="${request.id}">수정</button>
-            <button class="bg-red-500 hover:bg-red-600 text-white rounded px-3 py-1 text-sm delete-button" data-id="${request.id}">삭제</button>
+            ${request.status === '검토중' ? `
+              <button class="bg-green-500 hover:bg-green-600 text-white rounded px-3 py-1 text-sm mr-1 approve-button" data-id="${request.id}">승인</button>
+              <button class="bg-red-500 hover:bg-red-600 text-white rounded px-3 py-1 text-sm reject-button" data-id="${request.id}">반려</button>
+            ` : ''}
+            <button class="bg-gray-500 hover:bg-gray-600 text-white rounded px-3 py-1 text-sm view-button" data-id="${request.id}">상세</button>
           </td>
         `;
         requestTableBody.appendChild(tr);
@@ -311,17 +327,24 @@
         });
       });
 
-      document.querySelectorAll('.edit-button').forEach(button => {
+      document.querySelectorAll('.approve-button').forEach(button => {
         button.addEventListener('click', (e) => {
           const requestId = e.target.getAttribute('data-id');
-          openEditModal(requestId);
+          openApproveModal(requestId);
         });
       });
 
-      document.querySelectorAll('.delete-button').forEach(button => {
+      document.querySelectorAll('.reject-button').forEach(button => {
         button.addEventListener('click', (e) => {
           const requestId = e.target.getAttribute('data-id');
-          openDeleteModal(requestId);
+          openRejectModal(requestId);
+        });
+      });
+
+      document.querySelectorAll('.view-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+          const requestId = e.target.getAttribute('data-id');
+          openViewModal(requestId);
         });
       });
       
@@ -340,10 +363,9 @@
       if (!status) return '';
       
       switch(status) {
-        case '승인완료': return 'text-green-600 font-medium';
+        case '승인됨': return 'text-green-600 font-medium';
         case '검토중': return 'text-blue-600 font-medium';
-        case '요청완료': return 'text-yellow-600 font-medium';
-        case '반려': return 'text-red-600 font-medium';
+        case '반려됨': return 'text-red-600 font-medium';
         default: return '';
       }
     }
@@ -430,108 +452,143 @@
       renderRequests();
     }
 
-    // 송금 요청 모달 열기
-    function openRequestModal() {
-      clearForm();
-      document.getElementById('addEditModalTitle').textContent = '송금 요청 추가';
-      document.getElementById('addEditModal').classList.remove('hidden');
-      document.getElementById('addEditForm').setAttribute('data-mode', 'add');
-    }
-
-    // 송금 요청 수정 모달 열기
-    function openEditModal(requestId) {
+    // 승인 모달 열기
+    function openApproveModal(requestId) {
       const request = requests.find(r => r.id === requestId);
       if (!request) {
-        alert('송금 요청 정보를 찾을 수 없습니다.');
+        alert('요청 정보를 찾을 수 없습니다.');
         return;
       }
       
-      document.getElementById('companyName').value = request.companyName;
-      document.getElementById('bankInfo').value = request.bankInfo;
-      document.getElementById('amount').value = request.amount;
-      document.getElementById('requestDate').value = request.requestDate;
-      document.getElementById('status').value = request.status;
-      
-      document.getElementById('addEditModalTitle').textContent = '송금 요청 수정';
-      document.getElementById('addEditModal').classList.remove('hidden');
-      document.getElementById('addEditForm').setAttribute('data-mode', 'edit');
-      document.getElementById('addEditForm').setAttribute('data-id', requestId);
+      document.getElementById('approveCompanyName').textContent = request.companyName;
+      document.getElementById('approveAmount').textContent = formatNumber(request.amount) + '원';
+      document.getElementById('approveDate').valueAsDate = new Date();
+      document.getElementById('approveModal').classList.remove('hidden');
+      document.getElementById('approveForm').setAttribute('data-id', requestId);
     }
 
-    // 송금 요청 삭제 모달 열기
-    function openDeleteModal(requestId = null) {
-      // 선택된 라디오 버튼이 없고 requestId도 없는 경우 확인
-      if (!requestId && !selectedRequestId) {
-        alert('삭제할 송금 요청을 선택해주세요.');
-        return;
-      }
-      
-      // requestId가 제공되지 않은 경우 selectedRequestId 사용
-      const idToDelete = requestId || selectedRequestId;
-      
-      // 해당 ID의 요청이 존재하는지 확인
-      const request = requests.find(r => r.id === idToDelete);
+    // 반려 모달 열기
+    function openRejectModal(requestId) {
+      const request = requests.find(r => r.id === requestId);
       if (!request) {
-        alert('선택한 송금 요청을 찾을 수 없습니다.');
+        alert('요청 정보를 찾을 수 없습니다.');
         return;
       }
       
-      document.getElementById('requestCompanyToDelete').textContent = request.companyName;
-      document.getElementById('deleteModal').classList.remove('hidden');
-      document.getElementById('deleteForm').setAttribute('data-id', idToDelete);
+      document.getElementById('rejectCompanyName').textContent = request.companyName;
+      document.getElementById('rejectReason').value = '';
+      document.getElementById('rejectModal').classList.remove('hidden');
+      document.getElementById('rejectForm').setAttribute('data-id', requestId);
+    }
+
+    // 상세 보기 모달 열기
+    function openViewModal(requestId) {
+      const request = requests.find(r => r.id === requestId);
+      if (!request) {
+        alert('요청 정보를 찾을 수 없습니다.');
+        return;
+      }
+      
+      document.getElementById('viewCompanyName').textContent = request.companyName;
+      document.getElementById('viewContactPerson').textContent = request.contactPerson || '-';
+      document.getElementById('viewRequestDate').textContent = request.requestDate || '-';
+      document.getElementById('viewAmount').textContent = formatNumber(request.amount) + '원';
+      document.getElementById('viewBankInfo').textContent = request.bankInfo || '-';
+      document.getElementById('viewStatus').textContent = request.status;
+      document.getElementById('viewStatus').className = getStatusClass(request.status);
+      
+      // 상태별 추가 정보
+      const additionalInfoContainer = document.getElementById('viewAdditionalInfo');
+      additionalInfoContainer.innerHTML = '';
+      
+      if (request.status === '승인됨' && request.approvalDate) {
+        additionalInfoContainer.innerHTML = `
+          <div class="mb-4">
+            <h3 class="text-sm font-medium text-gray-600">승인일</h3>
+            <p>${request.approvalDate}</p>
+          </div>
+        `;
+      } else if (request.status === '반려됨' && request.rejectReason) {
+        additionalInfoContainer.innerHTML = `
+          <div class="mb-4">
+            <h3 class="text-sm font-medium text-gray-600">반려 사유</h3>
+            <p>${request.rejectReason}</p>
+          </div>
+        `;
+      }
+      
+      document.getElementById('viewModal').classList.remove('hidden');
     }
 
     // 모달 닫기
-    function closeModals() {
-      document.getElementById('addEditModal').classList.add('hidden');
-      document.getElementById('deleteModal').classList.add('hidden');
+    function closeModal() {
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.add('hidden');
+      });
     }
 
-    // 폼 초기화
-    function clearForm() {
-      document.getElementById('companyName').value = '';
-      document.getElementById('bankInfo').value = '';
-      document.getElementById('amount').value = '';
-      document.getElementById('requestDate').value = new Date().toISOString().split('T')[0];
-      document.getElementById('status').value = '요청완료';
-    }
-
-    // 폼 제출 처리
-    async function handleFormSubmit(e) {
+    // 승인 처리
+    async function handleApproveSubmit(e) {
       e.preventDefault();
       
-      const form = document.getElementById('addEditForm');
-      const mode = form.getAttribute('data-mode');
-      const confirmButton = document.getElementById('confirmButton');
+      const form = document.getElementById('approveForm');
+      const requestId = form.getAttribute('data-id');
+      const approvalDate = document.getElementById('approveDate').value;
+      const confirmButton = document.getElementById('approveConfirmButton');
       
-      // 이중 제출 방지
-      if (confirmButton.disabled) return;
+      if (!requestId || !approvalDate) return;
       
-      // 필드 값 가져오기
-      const companyName = document.getElementById('companyName').value.trim();
-      const bankInfo = document.getElementById('bankInfo').value.trim();
-      const amount = Number(document.getElementById('amount').value.replace(/,/g, ''));
-      const requestDate = document.getElementById('requestDate').value;
-      const status = document.getElementById('status').value;
-      
-      // 유효성 검사
-      if (!companyName) {
-        alert('기업명을 입력해주세요.');
-        return;
+      try {
+        confirmButton.disabled = true;
+        confirmButton.textContent = '처리 중...';
+        
+        const request = requests.find(r => r.id === requestId);
+        if (!request) {
+          throw new Error('요청 정보를 찾을 수 없습니다.');
+        }
+        
+        // API 호출로 승인 처리
+        const updatedData = {
+          ...request,
+          status: '승인됨',
+          approvalDate: approvalDate
+        };
+        
+        const result = await updateData('송금요청', updatedData);
+        
+        if (result.success) {
+          // 로컬 배열 업데이트
+          const index = requests.findIndex(r => r.id === requestId);
+          if (index !== -1) {
+            requests[index] = updatedData;
+          }
+          
+          closeModal();
+          renderRequests();
+          alert('승인 처리가 완료되었습니다.');
+        } else {
+          throw new Error(result.error || '알 수 없는 오류');
+        }
+      } catch (error) {
+        console.error('승인 처리 중 오류:', error);
+        alert('승인 처리 중 오류가 발생했습니다: ' + error.message);
+      } finally {
+        confirmButton.disabled = false;
+        confirmButton.textContent = '승인';
       }
+    }
+
+    // 반려 처리
+    async function handleRejectSubmit(e) {
+      e.preventDefault();
       
-      if (!bankInfo) {
-        alert('계좌 정보를 입력해주세요.');
-        return;
-      }
+      const form = document.getElementById('rejectForm');
+      const requestId = form.getAttribute('data-id');
+      const rejectReason = document.getElementById('rejectReason').value.trim();
+      const confirmButton = document.getElementById('rejectConfirmButton');
       
-      if (isNaN(amount) || amount <= 0) {
-        alert('유효한 금액을 입력해주세요.');
-        return;
-      }
-      
-      if (!requestDate) {
-        alert('요청일을 입력해주세요.');
+      if (!requestId || !rejectReason) {
+        alert('반려 사유를 입력해주세요.');
         return;
       }
       
@@ -539,107 +596,39 @@
         confirmButton.disabled = true;
         confirmButton.textContent = '처리 중...';
         
-        if (mode === 'add') {
-          // 새 요청 추가
-          const newRequest = {
-            companyName,
-            bankInfo,
-            amount,
-            requestDate,
-            status
-          };
-          
-          // API 호출로 요청 추가
-          const result = await addData('송금요청', newRequest);
-          
-          if (result.success) {
-            // 로컬 배열에 추가
-            newRequest.id = result.data.id;
-            requests.push(newRequest);
-            
-            closeModals();
-            currentPage = 1; // 첫 페이지로 리셋
-            renderRequests();
-            alert('송금 요청이 성공적으로 추가되었습니다.');
-          } else {
-            throw new Error(result.error || '알 수 없는 오류');
-          }
-        } else if (mode === 'edit') {
-          // 기존 요청 수정
-          const requestId = form.getAttribute('data-id');
-          const updatedRequest = {
-            id: requestId,
-            companyName,
-            bankInfo,
-            amount,
-            requestDate,
-            status
-          };
-          
-          // API 호출로 요청 수정
-          const result = await updateData('송금요청', updatedRequest);
-          
-          if (result.success) {
-            // 로컬 배열 업데이트
-            const index = requests.findIndex(r => r.id === requestId);
-            if (index !== -1) {
-              requests[index] = updatedRequest;
-            }
-            
-            closeModals();
-            renderRequests();
-            alert('송금 요청이 성공적으로 수정되었습니다.');
-          } else {
-            throw new Error(result.error || '알 수 없는 오류');
-          }
+        const request = requests.find(r => r.id === requestId);
+        if (!request) {
+          throw new Error('요청 정보를 찾을 수 없습니다.');
         }
-      } catch (error) {
-        console.error('송금 요청 저장 중 오류:', error);
-        alert('송금 요청 저장 중 오류가 발생했습니다: ' + error.message);
-      } finally {
-        confirmButton.disabled = false;
-        confirmButton.textContent = '저장';
-      }
-    }
-
-    // 요청 삭제 처리
-    async function handleDeleteSubmit(e) {
-      e.preventDefault();
-      
-      const form = document.getElementById('deleteForm');
-      const requestId = form.getAttribute('data-id');
-      const confirmButton = document.getElementById('deleteConfirmButton');
-      
-      if (!requestId) return;
-      
-      try {
-        confirmButton.disabled = true;
-        confirmButton.textContent = '삭제 중...';
         
-        // API 호출로 요청 삭제
-        const result = await deleteData('송금요청', requestId);
+        // API 호출로 반려 처리
+        const updatedData = {
+          ...request,
+          status: '반려됨',
+          rejectReason: rejectReason
+        };
+        
+        const result = await updateData('송금요청', updatedData);
         
         if (result.success) {
-          // 로컬 배열에서 제거
-          requests = requests.filter(r => r.id !== requestId);
-          
-          // 선택된 요청 초기화
-          if (selectedRequestId === requestId) {
-            selectedRequestId = null;
+          // 로컬 배열 업데이트
+          const index = requests.findIndex(r => r.id === requestId);
+          if (index !== -1) {
+            requests[index] = updatedData;
           }
           
-          closeModals();
+          closeModal();
           renderRequests();
-          alert('송금 요청이 성공적으로 삭제되었습니다.');
+          alert('반려 처리가 완료되었습니다.');
         } else {
           throw new Error(result.error || '알 수 없는 오류');
         }
       } catch (error) {
-        console.error('송금 요청 삭제 중 오류:', error);
-        alert('송금 요청 삭제 중 오류가 발생했습니다: ' + error.message);
+        console.error('반려 처리 중 오류:', error);
+        alert('반려 처리 중 오류가 발생했습니다: ' + error.message);
       } finally {
         confirmButton.disabled = false;
-        confirmButton.textContent = '삭제';
+        confirmButton.textContent = '반려';
       }
     }
 
@@ -672,33 +661,13 @@
         }
       });
       
-      document.getElementById('addButton').addEventListener('click', openRequestModal);
+      document.getElementById('approveForm').addEventListener('submit', handleApproveSubmit);
+      document.getElementById('rejectForm').addEventListener('submit', handleRejectSubmit);
       
-      document.getElementById('deleteButton').addEventListener('click', () => {
-        openDeleteModal();
-      });
-      
-      document.getElementById('addEditForm').addEventListener('submit', handleFormSubmit);
-      document.getElementById('deleteForm').addEventListener('submit', handleDeleteSubmit);
-      
-      // 모달 닫기 버튼들
+      // 모달 닫기 버튼
       document.querySelectorAll('.modal-close').forEach(button => {
-        button.addEventListener('click', closeModals);
+        button.addEventListener('click', closeModal);
       });
-      
-      // 금액 입력 필드에 숫자 포맷팅
-      const amountInput = document.getElementById('amount');
-      if (amountInput) {
-        amountInput.addEventListener('input', (e) => {
-          // 숫자만 추출하여 포맷팅
-          const value = e.target.value.replace(/[^\d]/g, '');
-          if (value) {
-            e.target.value = new Intl.NumberFormat('ko-KR').format(parseInt(value));
-          } else {
-            e.target.value = '';
-          }
-        });
-      }
     });
   </script>
 </body>
