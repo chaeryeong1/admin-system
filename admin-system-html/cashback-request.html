@@ -70,12 +70,11 @@
               <tr class="border-b">
                 <th class="px-4 py-2 text-left">선택</th>
                 <th class="px-4 py-2 text-left cursor-pointer" data-sort="companyName">기업명 <span class="sort-icon"></span></th>
-                <th class="px-4 py-2 text-left cursor-pointer" data-sort="contactPerson">담당자 <span class="sort-icon"></span></th>
-                <th class="px-4 py-2 text-left cursor-pointer" data-sort="project">참여 사업 <span class="sort-icon"></span></th>
-                <th class="px-4 py-2 text-left cursor-pointer" data-sort="requestDate">요청일 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="bankInfo">계좌정보 <span class="sort-icon"></span></th>
                 <th class="px-4 py-2 text-left cursor-pointer" data-sort="amount">금액 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="requestDate">요청일 <span class="sort-icon"></span></th>
                 <th class="px-4 py-2 text-left cursor-pointer" data-sort="status">상태 <span class="sort-icon"></span></th>
-                <th class="px-4 py-2 text-left cursor-pointer" data-sort="waitingDays">승인 대기일 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left">작업</th>
               </tr>
             </thead>
             <tbody id="requestTableBody">
@@ -152,29 +151,8 @@
 
   <script>
     // 상태 관리
-    let requests = [
-      {
-        id: 1,
-        companyName: "(주)클라우드테크",
-        contactPerson: "홍길동",
-        project: "클라우드 보급사업",
-        requestDate: "2025-06-20",
-        amount: 500000,
-        status: "요청중",
-        waitingDays: 3
-      },
-      {
-        id: 2,
-        companyName: "데이터시스템즈",
-        contactPerson: "김철수",
-        project: "클라우드 보급사업",
-        requestDate: "2025-06-18",
-        amount: 800000,
-        status: "요청중",
-        waitingDays: 5
-      }
-    ];
-    let selectedId = null;
+    let requests = [];
+    let selectedRequestId = null;
     
     // 페이지네이션 상태
     let currentPage = 1;
@@ -187,29 +165,66 @@
       direction: 'asc' // 'asc' 또는 'desc'
     };
 
-    // DOM 요소
-    const requestTableBody = document.getElementById('requestTableBody');
-    const businessFilter = document.getElementById('businessFilter');
-    const searchInput = document.getElementById('searchInput');
-    const searchButton = document.getElementById('searchButton');
-    const cancelButton = document.getElementById('cancelButton');
-    
-    const cancelModal = document.getElementById('cancelModal');
-    const cancelCompanyName = document.getElementById('cancelCompanyName');
-    const cancelModalNoButton = document.getElementById('cancelModalNoButton');
-    const confirmCancelButton = document.getElementById('confirmCancelButton');
-
-    // 금액 포맷팅 함수
-    function formatAmount(amount) {
-      return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    async function loadRequests() {
+      console.log('요청 데이터 로딩 시작');
+      document.getElementById('requestTableBody').innerHTML = 
+        '<tr><td colspan="7" class="px-4 py-2 text-center">데이터를 불러오는 중입니다...</td></tr>';
+      
+      try {
+        // API를 통해 데이터 가져오기
+        const result = await fetchData('송금요청');
+        console.log('API 결과:', result);
+        
+        if (result && result.data && Array.isArray(result.data) && result.data.length > 0) {
+          requests = result.data;
+          console.log(`${requests.length}개의 송금 요청 로드됨`);
+        } else {
+          console.log('유효한 데이터가 없어 샘플 데이터를 사용합니다.');
+          // 샘플 데이터
+          requests = [
+            {
+              id: "1",
+              companyName: "(주)클라우드솔루션",
+              bankInfo: "신한은행 123-456-789 (주)클라우드솔루션",
+              amount: 5000000,
+              requestDate: "2025-02-15",
+              status: "요청완료"
+            },
+            {
+              id: "2",
+              companyName: "디지털테크(주)",
+              bankInfo: "국민은행 987-654-321 디지털테크(주)",
+              amount: 7500000,
+              requestDate: "2025-02-10",
+              status: "검토중"
+            },
+            {
+              id: "3",
+              companyName: "스마트비즈니스(주)",
+              bankInfo: "우리은행 555-555-555 스마트비즈니스",
+              amount: 12000000,
+              requestDate: "2025-02-05",
+              status: "승인완료"
+            }
+          ];
+        }
+        renderRequests();
+      } catch (error) {
+        console.error('송금 요청 데이터 로드 중 오류 발생:', error);
+        document.getElementById('requestTableBody').innerHTML = 
+          '<tr><td colspan="7" class="px-4 py-2 text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
+      }
     }
 
-    // 요청 목록 렌더링
     function renderRequests() {
-      const filteredRequests = requests.filter(request => 
-        request.companyName.includes(searchInput.value) && 
-        (businessFilter.value === "" || request.project === businessFilter.value)
-      );
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const statusFilter = document.getElementById('statusFilter').value;
+      
+      let filteredRequests = requests.filter(request => {
+        const matchSearch = request.companyName.toLowerCase().includes(searchTerm);
+        const matchStatus = !statusFilter || request.status === statusFilter;
+        return matchSearch && matchStatus;
+      });
       
       // 정렬 적용
       if (currentSort.field) {
@@ -217,8 +232,17 @@
           let aValue = a[currentSort.field];
           let bValue = b[currentSort.field];
           
-          // 숫자인 경우
-          if (typeof aValue === 'number' && typeof bValue === 'number') {
+          // 날짜인 경우 특별 처리
+          if (currentSort.field === 'requestDate') {
+            const dateA = new Date(aValue);
+            const dateB = new Date(bValue);
+            return currentSort.direction === 'asc' ? dateA - dateB : dateB - dateA;
+          }
+          
+          // 금액인 경우 숫자로 처리
+          if (currentSort.field === 'amount') {
+            aValue = Number(aValue);
+            bValue = Number(bValue);
             return currentSort.direction === 'asc' ? aValue - bValue : bValue - aValue;
           }
           
@@ -246,54 +270,82 @@
       // 페이지네이션 버튼 업데이트
       updatePaginationButtons();
 
+      const requestTableBody = document.getElementById('requestTableBody');
       requestTableBody.innerHTML = '';
       
       if (filteredRequests.length === 0) {
-        requestTableBody.innerHTML = '<tr><td colspan="8" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
+        requestTableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
         return;
       }
-      
+
       paginatedRequests.forEach(request => {
         const tr = document.createElement('tr');
         tr.className = 'border-b hover:bg-gray-50';
-        
-        // 상태에 따른 스타일 
-        let statusClass = 'bg-yellow-100 text-yellow-800';
-        
         tr.innerHTML = `
           <td class="px-4 py-2">
             <input 
               type="radio" 
               name="select-request" 
               value="${request.id}" 
-              ${selectedId === request.id ? 'checked' : ''}
+              class="request-select"
+              ${selectedRequestId === request.id ? 'checked' : ''}
             >
           </td>
           <td class="px-4 py-2">${request.companyName}</td>
-          <td class="px-4 py-2">${request.contactPerson}</td>
-          <td class="px-4 py-2">${request.project}</td>
+          <td class="px-4 py-2">${request.bankInfo}</td>
+          <td class="px-4 py-2">${formatNumber(request.amount)}원</td>
           <td class="px-4 py-2">${request.requestDate}</td>
-          <td class="px-4 py-2 text-right">${formatAmount(request.amount)}원</td>
+          <td class="px-4 py-2"><span class="${getStatusClass(request.status)}">${request.status}</span></td>
           <td class="px-4 py-2">
-            <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">
-              ${request.status}
-            </span>
+            <button class="bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1 text-sm edit-button" data-id="${request.id}">수정</button>
+            <button class="bg-red-500 hover:bg-red-600 text-white rounded px-3 py-1 text-sm delete-button" data-id="${request.id}">삭제</button>
           </td>
-          <td class="px-4 py-2">${request.waitingDays}일</td>
         `;
-        
         requestTableBody.appendChild(tr);
       });
 
-      // 라디오 버튼 이벤트 리스너 추가
-      document.querySelectorAll('input[name="select-request"]').forEach(radio => {
+      // 이벤트 리스너 추가
+      document.querySelectorAll('.request-select').forEach(radio => {
         radio.addEventListener('change', (e) => {
-          selectedId = parseInt(e.target.value);
+          selectedRequestId = e.target.value;
+        });
+      });
+
+      document.querySelectorAll('.edit-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+          const requestId = e.target.getAttribute('data-id');
+          openEditModal(requestId);
+        });
+      });
+
+      document.querySelectorAll('.delete-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+          const requestId = e.target.getAttribute('data-id');
+          openDeleteModal(requestId);
         });
       });
       
       // 정렬 아이콘 업데이트
       updateSortIcons();
+    }
+    
+    // 숫자 포맷팅
+    function formatNumber(num) {
+      if (num === undefined || num === null) return '';
+      return new Intl.NumberFormat('ko-KR').format(num);
+    }
+    
+    // 상태에 따른 클래스 반환
+    function getStatusClass(status) {
+      if (!status) return '';
+      
+      switch(status) {
+        case '승인완료': return 'text-green-600 font-medium';
+        case '검토중': return 'text-blue-600 font-medium';
+        case '요청완료': return 'text-yellow-600 font-medium';
+        case '반려': return 'text-red-600 font-medium';
+        default: return '';
+      }
     }
     
     // 페이지네이션 버튼 업데이트
@@ -378,47 +430,275 @@
       renderRequests();
     }
 
-    // 초기 렌더링
-    renderRequests();
+    // 송금 요청 모달 열기
+    function openRequestModal() {
+      clearForm();
+      document.getElementById('addEditModalTitle').textContent = '송금 요청 추가';
+      document.getElementById('addEditModal').classList.remove('hidden');
+      document.getElementById('addEditForm').setAttribute('data-mode', 'add');
+    }
 
-    // 이벤트 리스너
-    searchButton.addEventListener('click', () => {
-      currentPage = 1; // 검색 시 1페이지로 리셋
-      renderRequests();
-    });
-    
-    // 정렬 이벤트 리스너 추가
-    document.querySelectorAll('th[data-sort]').forEach(th => {
-      th.addEventListener('click', () => {
-        const field = th.getAttribute('data-sort');
-        handleSort(field);
-      });
-    });
-
-    cancelButton.addEventListener('click', () => {
-      if (!selectedId) {
-        alert('취소할 송금 요청을 선택하세요.');
+    // 송금 요청 수정 모달 열기
+    function openEditModal(requestId) {
+      const request = requests.find(r => r.id === requestId);
+      if (!request) {
+        alert('송금 요청 정보를 찾을 수 없습니다.');
         return;
       }
-
-      const request = requests.find(r => r.id === selectedId);
-      if (!request) return;
-
-      cancelCompanyName.textContent = request.companyName;
-      cancelModal.classList.remove('hidden');
-    });
-
-    cancelModalNoButton.addEventListener('click', () => {
-      cancelModal.classList.add('hidden');
-    });
-
-    confirmCancelButton.addEventListener('click', () => {
-      requests = requests.filter(r => r.id !== selectedId);
-      selectedId = null;
-      cancelModal.classList.add('hidden');
-      renderRequests();
       
-      alert('송금 요청이 취소되었습니다.');
+      document.getElementById('companyName').value = request.companyName;
+      document.getElementById('bankInfo').value = request.bankInfo;
+      document.getElementById('amount').value = request.amount;
+      document.getElementById('requestDate').value = request.requestDate;
+      document.getElementById('status').value = request.status;
+      
+      document.getElementById('addEditModalTitle').textContent = '송금 요청 수정';
+      document.getElementById('addEditModal').classList.remove('hidden');
+      document.getElementById('addEditForm').setAttribute('data-mode', 'edit');
+      document.getElementById('addEditForm').setAttribute('data-id', requestId);
+    }
+
+    // 송금 요청 삭제 모달 열기
+    function openDeleteModal(requestId = null) {
+      // 선택된 라디오 버튼이 없고 requestId도 없는 경우 확인
+      if (!requestId && !selectedRequestId) {
+        alert('삭제할 송금 요청을 선택해주세요.');
+        return;
+      }
+      
+      // requestId가 제공되지 않은 경우 selectedRequestId 사용
+      const idToDelete = requestId || selectedRequestId;
+      
+      // 해당 ID의 요청이 존재하는지 확인
+      const request = requests.find(r => r.id === idToDelete);
+      if (!request) {
+        alert('선택한 송금 요청을 찾을 수 없습니다.');
+        return;
+      }
+      
+      document.getElementById('requestCompanyToDelete').textContent = request.companyName;
+      document.getElementById('deleteModal').classList.remove('hidden');
+      document.getElementById('deleteForm').setAttribute('data-id', idToDelete);
+    }
+
+    // 모달 닫기
+    function closeModals() {
+      document.getElementById('addEditModal').classList.add('hidden');
+      document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    // 폼 초기화
+    function clearForm() {
+      document.getElementById('companyName').value = '';
+      document.getElementById('bankInfo').value = '';
+      document.getElementById('amount').value = '';
+      document.getElementById('requestDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('status').value = '요청완료';
+    }
+
+    // 폼 제출 처리
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      
+      const form = document.getElementById('addEditForm');
+      const mode = form.getAttribute('data-mode');
+      const confirmButton = document.getElementById('confirmButton');
+      
+      // 이중 제출 방지
+      if (confirmButton.disabled) return;
+      
+      // 필드 값 가져오기
+      const companyName = document.getElementById('companyName').value.trim();
+      const bankInfo = document.getElementById('bankInfo').value.trim();
+      const amount = Number(document.getElementById('amount').value.replace(/,/g, ''));
+      const requestDate = document.getElementById('requestDate').value;
+      const status = document.getElementById('status').value;
+      
+      // 유효성 검사
+      if (!companyName) {
+        alert('기업명을 입력해주세요.');
+        return;
+      }
+      
+      if (!bankInfo) {
+        alert('계좌 정보를 입력해주세요.');
+        return;
+      }
+      
+      if (isNaN(amount) || amount <= 0) {
+        alert('유효한 금액을 입력해주세요.');
+        return;
+      }
+      
+      if (!requestDate) {
+        alert('요청일을 입력해주세요.');
+        return;
+      }
+      
+      try {
+        confirmButton.disabled = true;
+        confirmButton.textContent = '처리 중...';
+        
+        if (mode === 'add') {
+          // 새 요청 추가
+          const newRequest = {
+            companyName,
+            bankInfo,
+            amount,
+            requestDate,
+            status
+          };
+          
+          // API 호출로 요청 추가
+          const result = await addData('송금요청', newRequest);
+          
+          if (result.success) {
+            // 로컬 배열에 추가
+            newRequest.id = result.data.id;
+            requests.push(newRequest);
+            
+            closeModals();
+            currentPage = 1; // 첫 페이지로 리셋
+            renderRequests();
+            alert('송금 요청이 성공적으로 추가되었습니다.');
+          } else {
+            throw new Error(result.error || '알 수 없는 오류');
+          }
+        } else if (mode === 'edit') {
+          // 기존 요청 수정
+          const requestId = form.getAttribute('data-id');
+          const updatedRequest = {
+            id: requestId,
+            companyName,
+            bankInfo,
+            amount,
+            requestDate,
+            status
+          };
+          
+          // API 호출로 요청 수정
+          const result = await updateData('송금요청', updatedRequest);
+          
+          if (result.success) {
+            // 로컬 배열 업데이트
+            const index = requests.findIndex(r => r.id === requestId);
+            if (index !== -1) {
+              requests[index] = updatedRequest;
+            }
+            
+            closeModals();
+            renderRequests();
+            alert('송금 요청이 성공적으로 수정되었습니다.');
+          } else {
+            throw new Error(result.error || '알 수 없는 오류');
+          }
+        }
+      } catch (error) {
+        console.error('송금 요청 저장 중 오류:', error);
+        alert('송금 요청 저장 중 오류가 발생했습니다: ' + error.message);
+      } finally {
+        confirmButton.disabled = false;
+        confirmButton.textContent = '저장';
+      }
+    }
+
+    // 요청 삭제 처리
+    async function handleDeleteSubmit(e) {
+      e.preventDefault();
+      
+      const form = document.getElementById('deleteForm');
+      const requestId = form.getAttribute('data-id');
+      const confirmButton = document.getElementById('deleteConfirmButton');
+      
+      if (!requestId) return;
+      
+      try {
+        confirmButton.disabled = true;
+        confirmButton.textContent = '삭제 중...';
+        
+        // API 호출로 요청 삭제
+        const result = await deleteData('송금요청', requestId);
+        
+        if (result.success) {
+          // 로컬 배열에서 제거
+          requests = requests.filter(r => r.id !== requestId);
+          
+          // 선택된 요청 초기화
+          if (selectedRequestId === requestId) {
+            selectedRequestId = null;
+          }
+          
+          closeModals();
+          renderRequests();
+          alert('송금 요청이 성공적으로 삭제되었습니다.');
+        } else {
+          throw new Error(result.error || '알 수 없는 오류');
+        }
+      } catch (error) {
+        console.error('송금 요청 삭제 중 오류:', error);
+        alert('송금 요청 삭제 중 오류가 발생했습니다: ' + error.message);
+      } finally {
+        confirmButton.disabled = false;
+        confirmButton.textContent = '삭제';
+      }
+    }
+
+    // 이벤트 리스너
+    window.addEventListener('load', () => {
+      loadRequests();
+      
+      // 정렬 이벤트 리스너 추가
+      document.querySelectorAll('th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          const field = th.getAttribute('data-sort');
+          handleSort(field);
+        });
+      });
+      
+      document.getElementById('searchButton').addEventListener('click', () => {
+        currentPage = 1; // 검색 시 1페이지로 리셋
+        renderRequests();
+      });
+      
+      document.getElementById('statusFilter').addEventListener('change', () => {
+        currentPage = 1; // 필터링 시 1페이지로 리셋
+        renderRequests();
+      });
+      
+      document.getElementById('searchInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          currentPage = 1;
+          renderRequests();
+        }
+      });
+      
+      document.getElementById('addButton').addEventListener('click', openRequestModal);
+      
+      document.getElementById('deleteButton').addEventListener('click', () => {
+        openDeleteModal();
+      });
+      
+      document.getElementById('addEditForm').addEventListener('submit', handleFormSubmit);
+      document.getElementById('deleteForm').addEventListener('submit', handleDeleteSubmit);
+      
+      // 모달 닫기 버튼들
+      document.querySelectorAll('.modal-close').forEach(button => {
+        button.addEventListener('click', closeModals);
+      });
+      
+      // 금액 입력 필드에 숫자 포맷팅
+      const amountInput = document.getElementById('amount');
+      if (amountInput) {
+        amountInput.addEventListener('input', (e) => {
+          // 숫자만 추출하여 포맷팅
+          const value = e.target.value.replace(/[^\d]/g, '');
+          if (value) {
+            e.target.value = new Intl.NumberFormat('ko-KR').format(parseInt(value));
+          } else {
+            e.target.value = '';
+          }
+        });
+      }
     });
   </script>
 </body>
