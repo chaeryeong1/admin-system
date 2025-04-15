@@ -980,6 +980,8 @@
           ].join(',') + '\n';
         });
         
+        console.log('생성된 샘플 CSV 내용:', csvContent);
+        
         // Blob 생성 및 다운로드
         const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
@@ -991,10 +993,10 @@
         document.body.removeChild(link);
         
         console.log('샘플 CSV 다운로드 완료');
-        alert('샘플 파일이 다운로드되었습니다.');
+        alert('샘플 파일이 다운로드되었습니다. CSV 형식으로 저장되었는지 확인해주세요.');
       } catch (error) {
         console.error('샘플 CSV 생성 오류:', error);
-        alert('샘플 파일 다운로드 중 오류가 발생했습니다.');
+        alert('샘플 파일 다운로드 중 오류가 발생했습니다: ' + error.message);
       }
     }
     
