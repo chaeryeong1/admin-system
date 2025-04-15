@@ -563,6 +563,15 @@ async function uploadFile(formData, sheet) {
     };
   } catch (error) {
     console.error('파일 업로드 중 오류 발생:', error);
+    
+    // CORS 오류 감지
+    if (error.message.includes('NetworkError') || error.message.includes('CORS')) {
+      return { 
+        success: false, 
+        error: `CORS 정책 오류: API 서버가 크로스 도메인 요청을 허용하지 않습니다. 서버 관리자에게 CORS 설정을 확인해주세요.`
+      };
+    }
+    
     return { 
       success: false, 
       error: `파일 업로드 실패: ${error.message}` 
