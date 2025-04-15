@@ -246,23 +246,17 @@
     
     // 모달 닫기 함수들
     function closeAddModal() {
-      console.log('기업 추가 모달 닫기');
-      
-      // 모달 숨기기
+      console.log('새 기업 추가 모달 닫기');
       document.getElementById('addCompanyModal').classList.add('hidden');
     }
     
     function closeEditModal() {
-      console.log('기업 수정 모달 닫기');
-      
-      // 모달 숨기기
+      console.log('기업 정보 수정 모달 닫기');
       document.getElementById('editCompanyModal').classList.add('hidden');
     }
     
     function closeDeleteModal() {
       console.log('기업 삭제 모달 닫기');
-      
-      // 모달 숨기기
       document.getElementById('deleteModal').classList.add('hidden');
     }
     
@@ -270,9 +264,17 @@
     async function loadCompanies() {
       console.log('기업 정보 로드 시작');
       
-      // 로딩 메시지 표시
-      const tableBody = document.getElementById('companiesTableBody');
-      tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4">데이터를 불러오는 중입니다...</td></tr>`;
+      // 테이블 로딩 상태 표시
+      document.getElementById('companiesTableBody').innerHTML = `
+        <tr id="loadingRow">
+          <td colspan="9" class="px-4 py-3 text-center">
+            <div class="flex justify-center items-center">
+              <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-2"></div>
+              기업 정보를 불러오는 중...
+            </div>
+          </td>
+        </tr>
+      `;
       
       try {
         // 로컬 스토리지 확인
@@ -282,61 +284,65 @@
           try {
             const parsedData = JSON.parse(savedData);
             if (Array.isArray(parsedData) && parsedData.length > 0) {
-              console.log(`로컬 스토리지에서 ${parsedData.length}개 기업 정보 로드됨`);
+              console.log('로컬 스토리지에서 기업 정보 로드, 항목 수:', parsedData.length);
               companies = parsedData;
               renderCompaniesTable();
               return;
             }
-          } catch (parseError) {
-            console.warn('로컬 스토리지 데이터 파싱 오류:', parseError);
+          } catch (e) {
+            console.warn('로컬 스토리지 데이터 파싱 오류:', e);
           }
         }
         
         // API에서 데이터 가져오기
         const result = await fetchData('기업정보');
-        console.log('API 응답:', result);
+        console.log('API 호출 결과:', result);
         
+        // API 응답 확인
         if (result && result.success && Array.isArray(result.data)) {
+          console.log('API에서 기업 정보 로드, 항목 수:', result.data.length);
           companies = result.data;
-          console.log(`API에서 ${companies.length}개 기업 정보 로드됨`);
           
-          // 로컬 스토리지에 저장
+          // 로컬 스토리지 업데이트
           localStorage.setItem('companiesData', JSON.stringify(companies));
         } else {
-          // 샘플 데이터 사용
-          console.warn('API 데이터 로드 실패, 샘플 데이터 사용');
+          // API 에러 시 샘플 데이터 사용
+          console.warn('API 호출 실패, 샘플 데이터 사용:', result?.error);
           companies = [
             {
-              id: 'sample_1',
-              name: '샘플 기업 1',
-              industry: 'IT 서비스',
+              id: 'sample1',
+              name: '샘플기업 주식회사',
+              industry: 'IT/소프트웨어',
               contact_person: '홍길동',
-              contact_email: 'sample1@example.com',
+              contact_email: 'sample@example.com',
               city: '서울',
               address: '서울시 강남구 테헤란로 123',
-              description: '샘플 회사 설명입니다.'
+              description: '샘플 기업 설명'
             },
             {
-              id: 'sample_2',
-              name: '샘플 기업 2',
+              id: 'sample2',
+              name: '테스트 코퍼레이션',
               industry: '제조업',
               contact_person: '김철수',
-              contact_email: 'sample2@example.com',
+              contact_email: 'test@example.com',
               city: '부산',
-              address: '부산시 해운대구 해운대로 456',
-              description: '제조업 전문 기업입니다.'
+              address: '부산시 해운대구 마린시티 456',
+              description: ''
             }
           ];
-          
-          // 로컬 스토리지에 샘플 데이터 저장
-          localStorage.setItem('companiesData', JSON.stringify(companies));
         }
         
         // 테이블 렌더링
         renderCompaniesTable();
       } catch (error) {
         console.error('기업 정보 로드 오류:', error);
-        tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-red-600">데이터 로드 중 오류가 발생했습니다.</td></tr>`;
+        document.getElementById('companiesTableBody').innerHTML = `
+          <tr>
+            <td colspan="9" class="px-4 py-3 text-center text-red-500">
+              데이터 로드 중 오류가 발생했습니다: ${error.message}
+            </td>
+          </tr>
+        `;
       }
     }
     
@@ -346,7 +352,7 @@
       const tableBody = document.getElementById('companiesTableBody');
       
       if (!companies || companies.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4">등록된 기업 정보가 없습니다.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="9" class="text-center py-4">등록된 기업 정보가 없습니다.</td></tr>`;
         return;
       }
       
@@ -1011,28 +1017,33 @@
 
     // 모달 열기 함수들
     function openAddModal() {
-      console.log('기업 추가 모달 열기');
+      console.log('새 기업 추가 모달 열기');
       
-      // 모달 내 폼 초기화
-      document.getElementById('addCompanyForm').reset();
+      // 입력 필드 초기화
+      document.getElementById('addCompanyName').value = '';
+      document.getElementById('addIndustry').value = '';
+      document.getElementById('addContactPerson').value = '';
+      document.getElementById('addContactEmail').value = '';
+      document.getElementById('addCity').value = '';
+      document.getElementById('addAddress').value = '';
+      document.getElementById('addDescription').value = '';
       
-      // 모달 표시
+      // 모달 열기
       document.getElementById('addCompanyModal').classList.remove('hidden');
     }
 
     function openEditModal(companyId) {
-      console.log('기업 수정 모달 열기, ID:', companyId);
+      console.log('기업 정보 수정 모달 열기, ID:', companyId);
       
-      // 수정할 기업 찾기
+      // 회사 정보 불러오기
       const company = companies.find(c => c.id == companyId);
       
       if (!company) {
-        console.error(`ID ${companyId}에 해당하는 기업을 찾을 수 없습니다.`);
-        alert('수정할 기업 정보를 찾을 수 없습니다.');
+        alert('회사 정보를 찾을 수 없습니다.');
         return;
       }
       
-      // 폼 필드에 현재 값 설정
+      // 폼 필드에 데이터 채우기
       document.getElementById('editCompanyId').value = company.id;
       document.getElementById('editCompanyName').value = company.name || '';
       document.getElementById('editIndustry').value = company.industry || '';
@@ -1042,70 +1053,132 @@
       document.getElementById('editAddress').value = company.address || '';
       document.getElementById('editDescription').value = company.description || '';
       
-      // 모달 표시
+      // 모달 열기
       document.getElementById('editCompanyModal').classList.remove('hidden');
     }
 
-    function openDeleteModal(companyId = null) {
+    function openDeleteModal(companyId) {
       console.log('기업 삭제 모달 열기, ID:', companyId);
       
-      // 특정 ID가 전달된 경우 해당 기업 선택
+      // 선택된 기업 ID 설정
+      selectedCompanyId = companyId;
+      
+      // 확인 메시지 설정
+      let confirmMessage = '';
+      
       if (companyId) {
-        selectedCompanyId = companyId;
-      }
-      
-      // 삭제 대상 확인
-      const company = selectedCompanyId ? companies.find(c => c.id == selectedCompanyId) : null;
-      const checkedBoxes = document.querySelectorAll('.company-checkbox:checked');
-      const selectAllCheckbox = document.getElementById('selectAllCompanies');
-      
-      // 모달 내용 업데이트
-      const modalTitle = document.getElementById('deleteModalTitle');
-      const modalContent = document.getElementById('deleteModalContent');
-      
-      if (selectAllCheckbox && selectAllCheckbox.checked) {
-        // 전체 선택
-        modalTitle.textContent = '모든 기업 정보 삭제';
-        modalContent.textContent = `${companies.length}개의 모든 기업 정보를 삭제하시겠습니까?`;
-      } else if (company) {
-        // 단일 기업 선택
-        modalTitle.textContent = '기업 정보 삭제';
-        modalContent.textContent = `'${company.name}'을(를) 삭제하시겠습니까?`;
-      } else if (checkedBoxes.length > 0) {
-        // 다중 선택
-        modalTitle.textContent = '선택한 기업 정보 삭제';
-        modalContent.textContent = `${checkedBoxes.length}개의 선택된 기업 정보를 삭제하시겠습니까?`;
+        // 단일 기업 선택 시
+        const company = companies.find(c => c.id == companyId);
+        
+        if (!company) {
+          alert('선택한 기업을 찾을 수 없습니다.');
+          return;
+        }
+        
+        confirmMessage = `"${company.name}" 기업 정보를 삭제하시겠습니까?`;
       } else {
-        // 선택된 항목 없음
-        alert('삭제할 기업을 선택해주세요.');
-        return;
+        // 다중 선택 시
+        const checkedCount = document.querySelectorAll('.company-checkbox:checked').length;
+        
+        if (checkedCount === 0) {
+          const selectAllCheckbox = document.getElementById('selectAllCompanies');
+          
+          if (selectAllCheckbox && selectAllCheckbox.checked) {
+            // 전체 선택
+            confirmMessage = `모든 기업 정보(${companies.length}개)를 삭제하시겠습니까?`;
+          } else {
+            alert('삭제할 기업을 선택해주세요.');
+            return;
+          }
+        } else {
+          // 일부 선택
+          confirmMessage = `선택한 ${checkedCount}개의 기업 정보를 삭제하시겠습니까?`;
+        }
       }
       
-      // 모달 표시
-      document.getElementById('deleteModal').classList.remove('hidden');
+      // 확인 메시지 표시
+      document.getElementById('deleteCompanyConfirmMessage').textContent = confirmMessage;
+      
+      // 모달 열기
+      document.getElementById('deleteCompanyModal').classList.remove('hidden');
     }
 
     // 전체 선택 토글
     function toggleSelectAll() {
+      console.log('전체 선택 토글');
+      
       const selectAllCheckbox = document.getElementById('selectAllCompanies');
       const isChecked = selectAllCheckbox.checked;
       
-      // 모든 체크박스 상태 업데이트
       document.querySelectorAll('.company-checkbox').forEach(checkbox => {
         checkbox.checked = isChecked;
       });
-      
-      // 단일 선택 모드 초기화
-      if (isChecked) {
-        selectedCompanyId = null;
-      }
     }
 
     // 페이지 초기화
-    window.addEventListener('DOMContentLoaded', () => {
-      // 기업 정보 로드
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('기업 관리 페이지 초기화');
+      
+      // 데이터 로드
       loadCompanies();
       
+      // 전체 선택 체크박스 이벤트 리스너
+      const selectAllCheckbox = document.getElementById('selectAllCompanies');
+      if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', toggleSelectAll);
+      }
+      
+      // 새 기업 추가 버튼
+      const addButton = document.getElementById('addCompanyButton');
+      if (addButton) {
+        addButton.addEventListener('click', openAddModal);
+      }
+      
+      // 다중 삭제 버튼
+      const deleteMultipleButton = document.getElementById('deleteMultipleButton');
+      if (deleteMultipleButton) {
+        deleteMultipleButton.addEventListener('click', () => openDeleteModal(null));
+      }
+      
+      // 모달 확인 버튼 이벤트 리스너
+      const confirmAddButton = document.getElementById('confirmAddButton');
+      if (confirmAddButton) {
+        confirmAddButton.addEventListener('click', addCompanies);
+      }
+      
+      const confirmEditButton = document.getElementById('confirmEditButton');
+      if (confirmEditButton) {
+        confirmEditButton.addEventListener('click', updateCompany);
+      }
+      
+      const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+      if (confirmDeleteButton) {
+        confirmDeleteButton.addEventListener('click', deleteCompany);
+      }
+      
+      // 모달 취소 버튼 이벤트 리스너
+      const closeAddModalBtn = document.getElementById('closeAddModal');
+      if (closeAddModalBtn) {
+        closeAddModalBtn.addEventListener('click', closeAddModal);
+      }
+      
+      const closeEditModalBtn = document.getElementById('closeEditModal');
+      if (closeEditModalBtn) {
+        closeEditModalBtn.addEventListener('click', closeEditModal);
+      }
+      
+      const closeDeleteModalBtn = document.getElementById('closeDeleteModal');
+      if (closeDeleteModalBtn) {
+        closeDeleteModalBtn.addEventListener('click', closeDeleteModal);
+      }
+      
+      // 엑셀 업로드 이벤트 리스너
+      const excelUploadForm = document.getElementById('excelUploadForm');
+      if (excelUploadForm) {
+        excelUploadForm.addEventListener('submit', uploadCompanies);
+      }
+      
+      // 샘플 다운로드 버튼
       // 이벤트 리스너 등록
       document.getElementById('selectAllCompanies').addEventListener('change', toggleSelectAll);
       
