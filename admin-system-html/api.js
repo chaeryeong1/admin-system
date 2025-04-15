@@ -520,27 +520,34 @@ async function downloadExcelFile(sheet) {
   try {
     console.log(`${sheet} 엑셀 파일 다운로드 시작`);
     
-    // 실제 API 엔드포인트 - CORS 우회를 위해 URL만 생성하고 새 창에서 열기
+    // 현재 환경에서는 실제 API를 통한 다운로드가 CORS 문제로 어려움
+    // 사용자에게 대안을 제시
+    const sheetMapping = {
+      '사업정보': '사업 목록',
+      '기업정보': '기업 목록',
+      '계약금수령': '계약 정보',
+      '송금정보': '송금 정보'
+    };
+    
+    const sheetDisplayName = sheetMapping[sheet] || sheet;
+    
+    // 사용자에게 알림
+    alert(`${sheetDisplayName}을(를) 다운로드하기 위해서는 구글 시트에 직접 접근하여 다운로드하셔야 합니다.\n\n현재 웹사이트에서는 CORS 정책으로 인해 직접 다운로드가 불가능합니다.`);
+    
+    // 실제 URL 생성 (실제 환경에서는 직접 접근 가능한 URL로 대체)
     const url = `${API_URL}?action=downloadExcel&sheet=${encodeURIComponent(getActualSheetName(sheet))}`;
-    console.log(`다운로드 URL: ${url}`);
-    
-    // 새 창에서 URL 열기 (CORS 우회)
-    const newWindow = window.open(url, '_blank');
-    
-    // 새 창이 차단되었는지 확인
-    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-      throw new Error('팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.');
-    }
+    console.log(`다운로드 URL (참고용): ${url}`);
     
     return {
       success: true,
-      message: '파일 다운로드가 시작되었습니다. 새 창을 확인하세요.'
+      message: '다운로드 안내가 표시되었습니다. 구글 시트에서 직접 다운로드해 주세요.',
+      url: url // 참고용 URL (실제 사용은 어려움)
     };
   } catch (error) {
     console.error('엑셀 다운로드 오류:', error);
     return { 
       success: false, 
-      error: `다운로드 오류: ${error.message}. API 서버가 실행 중인지 확인하고, CORS 설정이 올바른지 확인하세요.` 
+      error: `다운로드 오류: ${error.message}. 구글 시트에 직접 접속하여 다운로드해 주세요.`
     };
   }
 }
