@@ -16,21 +16,15 @@ function doGet(e) {
       return ContentService.createTextOutput(callback + "(" + JSON.stringify(result) + ")")
         .setMimeType(ContentService.MimeType.JAVASCRIPT);
     } else {
-      // CORS 헤더 추가
       return ContentService.createTextOutput(JSON.stringify(result))
-        .setMimeType(ContentService.MimeType.JSON)
-        .addHeader('Access-Control-Allow-Origin', '*')
-        .addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        .addHeader('Access-Control-Allow-Headers', 'Content-Type');
+        .setMimeType(ContentService.MimeType.JSON);
     }
   } catch (error) {
     Logger.log("오류 발생: " + error.toString());
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: error.toString()
-    }))
-    .setMimeType(ContentService.MimeType.JSON)
-    .addHeader('Access-Control-Allow-Origin', '*');
+    })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
@@ -38,28 +32,20 @@ function doPost(e) {
   try {
     var result = handleRequest(e || {});
     return ContentService.createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON)
-      .addHeader('Access-Control-Allow-Origin', '*')
-      .addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-      .addHeader('Access-Control-Allow-Headers', 'Content-Type');
+      .setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
     Logger.log("오류 발생: " + error.toString());
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: error.toString()
-    }))
-    .setMimeType(ContentService.MimeType.JSON)
-    .addHeader('Access-Control-Allow-Origin', '*');
+    })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
 // 앱스 스크립트 웹앱 배포 시 호출되는 함수
 function doOptions(e) {
   return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
-    .setMimeType(ContentService.MimeType.JSON)
-    .addHeader('Access-Control-Allow-Origin', '*')
-    .addHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-    .addHeader('Access-Control-Allow-Headers', 'Content-Type');
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function handleRequest(e) {
