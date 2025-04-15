@@ -160,17 +160,33 @@ function addData(sheetName, data) {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = spreadsheet.getSheetByName(sheetName);
   
+  Logger.log("====== 데이터 추가 시작: " + sheetName + " ======");
+  Logger.log("원본 데이터: " + JSON.stringify(data));
+  
   if (!sheet) {
-    Logger.log(sheetName + " 시트를 찾을 수 없습니다");
+    Logger.log("오류: 시트를 찾을 수 없음 - " + sheetName);
     return { success: false, error: "시트를 찾을 수 없습니다" };
   }
   
   try {
+    // 데이터 형식 검증
+    if (typeof data !== 'object' || data === null) {
+      Logger.log("오류: 데이터가 객체가 아님 - " + typeof data);
+      return { success: false, error: "유효하지 않은 데이터 형식입니다" };
+    }
+    
+    // 필수 항목 검증 (예시)
+    if (sheetName === '사업정보' && (!data.name || !data.targetCompanies)) {
+      Logger.log("오류: 필수 항목 누락 - name 또는 targetCompanies");
+      return { success: false, error: "사업명과 목표 업체 수는 필수 항목입니다" };
+    }
+    
     // 헤더 확인
     var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    Logger.log("기존 헤더: " + JSON.stringify(headers));
     
     // 헤더가 없으면 생성
-    if (headers.length === 0) {
+    if (headers.length === 0 || headers[0] === '') {
       // 데이터의 키를 기반으로 헤더 생성 (id는 항상 첫번째)
       headers = ['id'];
       for (var key in data) {
@@ -178,6 +194,7 @@ function addData(sheetName, data) {
           headers.push(key);
         }
       }
+      Logger.log("새 헤더 생성: " + JSON.stringify(headers));
       sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     }
     
@@ -187,35 +204,59 @@ function addData(sheetName, data) {
     
     if (lastRow > 1) {
       var idCol = headers.indexOf('id') + 1;
+      Logger.log("ID 열 인덱스: " + idCol);
+      
       if (idCol > 0) {
-        var lastId = sheet.getRange(lastRow, idCol).getValue();
+        var lastIdRange = sheet.getRange(lastRow, idCol);
+        var lastId = lastIdRange.getValue();
+        Logger.log("마지막 ID 값: " + lastId + " (타입: " + typeof lastId + ")");
+        
         if (!isNaN(lastId) && lastId > 0) {
           newId = Number(lastId) + 1;
         }
       }
     }
     
-    // 로그 출력
-    Logger.log("추가할 데이터: " + JSON.stringify(data));
-    Logger.log("헤더: " + JSON.stringify(headers));
+    Logger.log("새 ID: " + newId);
+    
+    // 데이터 형식 변환 (숫자 문자열을 숫자로 변환)
+    if (data.targetCompanies && typeof data.targetCompanies === 'string') {
+      data.targetCompanies = Number(data.targetCompanies);
+    }
     
     // 새 행 데이터 생성
     var newRow = [];
     for (var i = 0; i < headers.length; i++) {
-      if (headers[i] === 'id') {
-        newRow.push(newId);
-      } else if (data[headers[i]] !== undefined) {
-        newRow.push(data[headers[i]]);
-      } else {
-        newRow.push('');
+      var header = headers[i];
+      var value = '';
+      
+      if (header === 'id') {
+        value = newId;
+      } else if (data[header] !== undefined) {
+        value = data[header];
+        
+        // 데이터 형식 처리
+        if (value === null) {
+          value = '';
+        } else if (typeof value === 'object') {
+          value = JSON.stringify(value);
+        }
       }
+      
+      newRow.push(value);
     }
     
-    // 행 추가
-    Logger.log("추가할 행: " + JSON.stringify(newRow));
-    sheet.appendRow(newRow);
+    Logger.log("추가할 행 데이터: " + JSON.stringify(newRow));
     
-    return { 
+    // 행 추가
+    sheet.appendRow(newRow);
+    Logger.log("행 추가 완료");
+    
+    // 스프레드시트 저장 확인
+    SpreadsheetApp.flush();
+    Logger.log("스프레드시트 갱신 완료");
+    
+    var response = { 
       success: true,
       data: {
         ...data,
@@ -223,8 +264,12 @@ function addData(sheetName, data) {
       },
       message: "데이터가 성공적으로 추가되었습니다."
     };
+    
+    Logger.log("응답 데이터: " + JSON.stringify(response));
+    return response;
   } catch (error) {
-    Logger.log("데이터 추가 오류: " + error.toString());
+    Logger.log("심각한 오류 발생: " + error.toString());
+    Logger.log("오류 스택: " + (error.stack || "스택 정보 없음"));
     return { 
       success: false, 
       error: error.toString() 
