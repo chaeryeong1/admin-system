@@ -108,6 +108,376 @@
     </div>
   </div>
 
-  <!-- 모달 영역은 이어서 추가됩니다 -->
+  <!-- 선별 모달 -->
+  <div id="selectTargetModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+      <h2 class="text-xl font-bold mb-4">안내 대상 선별</h2>
+      
+      <div class="mb-4">
+        <div class="mb-4">
+          <p class="mb-2 text-gray-700"><span id="selectedBusinessName">선택된 사업</span>의 안내 대상 기업을 선별합니다.</p>
+          <label class="block mb-2 font-semibold">파일 업로드</label>
+          <div id="dragDropArea" class="border-2 border-dashed border-gray-300 rounded-lg p-8 mb-4 text-center hover:border-blue-500 transition-colors cursor-pointer">
+            <div class="mb-2">
+              <i class="fas fa-file-upload text-3xl text-gray-400"></i>
+            </div>
+            <p class="mb-2 text-gray-700">파일을 이곳에 끌어다 놓거나</p>
+            <label class="cursor-pointer inline-block bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+              파일 선택하기
+              <input type="file" id="targetFileInput" accept=".xlsx,.xls,.csv" class="hidden" />
+            </label>
+            <div id="selectedFileInfo" class="mt-4 text-sm text-gray-600">
+              <span id="selectedFileName">선택된 파일 없음</span>
+            </div>
+          </div>
+          
+          <p class="text-sm text-gray-500 mt-1">엑셀(.xlsx, .xls) 또는 CSV(.csv) 파일만 업로드 가능</p>
+          <p class="text-sm text-gray-500">* 선별된 기업 목록이 등록됩니다.</p>
+        </div>
+      </div>
+      
+      <div class="flex justify-end mt-4">
+        <button id="cancelSelectButton" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded mr-2">
+          취소
+        </button>
+        <button id="confirmSelectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded">
+          등록
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 제외 확인 모달 -->
+  <div id="removeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+      <h2 class="text-xl font-bold mb-4">안내 대상 제외</h2>
+      
+      <p id="removeModalContent" class="mb-4">선택한 기업을 안내 대상에서 제외하시겠습니까?</p>
+      
+      <div class="flex justify-end">
+        <button id="cancelRemoveButton" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded mr-2">
+          취소
+        </button>
+        <button id="confirmRemoveButton" class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded">
+          제외
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script>
+    // 전역 데이터 상태
+    let businesses = [];
+    let targetCompanies = [];
+    let selectedBusinessId = null;
+    let selectedCompanyIds = [];
+    
+    // API에서 가져온 데이터 필드명 변환
+    function normalizeBusinessData(data) {
+      if (!Array.isArray(data)) return [];
+      
+      return data.map(business => {
+        // 원본 데이터 로깅
+        console.log('원본 사업 데이터:', business);
+        
+        // API에서 가져온 데이터 필드명 통일
+        return {
+          id: business.id || `id_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+          name: business.name || business.businessName || business.project_name || '',
+          targetCompanies: business.targetCompanies || business.target_companies || [],
+          startDate: business.startDate || business.start_date || '',
+          endDate: business.endDate || business.end_date || '',
+          organizer: business.organizer || '',
+          noticeUrl: business.noticeUrl || business.notice_url || ''
+        };
+      });
+    }
+    
+    // 기업 데이터 정규화
+    function normalizeCompanyData(data) {
+      if (!Array.isArray(data)) return [];
+      
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
+      
+      return data.map(company => {
+        // 원본 데이터 로깅
+        console.log('원본 기업 데이터:', company);
+        
+        // API에서 가져온 데이터 필드명 통일
+        return {
+          id: company.id || `id_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+          name: company.name || company.companyName || company.company_name || '',
+          businessNumber: company.businessNumber || company.business_number || company.businessNo || '',
+          representative: company.representative || company.대표자 || company.CEO || company.ceo || '',
+          phone: company.phone || company.phoneNumber || company.contact || company.전화번호 || '',
+          email: company.email || company.이메일 || company.email || '',
+          status: company.status || '대기',
+          notificationDate: company.notificationDate || company.notification_date || ''
+        };
+      });
+    }
+    
+    // 사업 목록 로드
+    async function loadBusinesses() {
+      console.log('사업 목록 로드 시작');
+      
+      try {
+        // API에서 데이터 가져오기
+        const result = await fetchData('사업정보');
+        console.log('API 호출 결과:', result);
+        
+        if (result && result.success && Array.isArray(result.data)) {
+          // API에서 데이터를 성공적으로 가져온 경우
+          console.log('API에서 사업 정보 로드:', result.data.length, '개 항목');
+          businesses = normalizeBusinessData(result.data);
+          
+          // 사업 선택 드롭다운 채우기
+          populateBusinessSelector();
+        } else {
+          // API 오류 또는 데이터 없음
+          console.warn('API 호출 실패 또는 데이터 형식 오류:', result?.error);
+          businesses = [];
+          
+          // 빈 선택기 표시
+          populateBusinessSelector();
+        }
+      } catch (error) {
+        console.error('사업 정보 로드 오류:', error);
+        alert('사업 정보를 불러오는 중 오류가 발생했습니다: ' + error.message);
+        businesses = [];
+        
+        // 빈 선택기 표시
+        populateBusinessSelector();
+      }
+    }
+    
+    // 사업 선택 드롭다운 채우기
+    function populateBusinessSelector() {
+      const selector = document.getElementById('businessSelector');
+      if (!selector) {
+        console.error('businessSelector 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
+      // 기존 옵션 제거 (첫 번째 기본 옵션 제외)
+      while (selector.options.length > 1) {
+        selector.remove(1);
+      }
+      
+      // 새 옵션 추가
+      if (businesses && businesses.length > 0) {
+        businesses.forEach(business => {
+          const option = document.createElement('option');
+          option.value = business.id;
+          option.text = business.name;
+          selector.add(option);
+        });
+        
+        // 버튼 활성화
+        const selectTargetButton = document.getElementById('selectTargetButton');
+        if (selectTargetButton) {
+          selectTargetButton.disabled = false;
+        }
+      } else {
+        // 옵션이 없는 경우 버튼 비활성화
+        const selectTargetButton = document.getElementById('selectTargetButton');
+        if (selectTargetButton) {
+          selectTargetButton.disabled = true;
+        }
+        
+        // 안내 옵션 표시
+        const option = document.createElement('option');
+        option.value = '';
+        option.text = '등록된 사업이 없습니다';
+        selector.add(option);
+      }
+    }
+    
+    // 사업 선택 이벤트 핸들러
+    function onBusinessSelect() {
+      const selector = document.getElementById('businessSelector');
+      if (!selector) return;
+      
+      // 선택된 사업 ID 저장
+      selectedBusinessId = selector.value;
+      console.log('선택된 사업 ID:', selectedBusinessId);
+      
+      // 선택 상태에 따라 버튼 활성화/비활성화
+      const selectTargetButton = document.getElementById('selectTargetButton');
+      const downloadButton = document.getElementById('downloadButton');
+      
+      if (selectTargetButton) {
+        selectTargetButton.disabled = !selectedBusinessId;
+      }
+      
+      if (downloadButton) {
+        downloadButton.disabled = !selectedBusinessId;
+      }
+      
+      // 선택된 사업에 맞는 안내 대상 기업 로드
+      if (selectedBusinessId) {
+        loadTargetCompanies(selectedBusinessId);
+      } else {
+        targetCompanies = [];
+        renderTargetCompaniesTable();
+      }
+    }
+    
+    // 안내 대상 기업 로드
+    async function loadTargetCompanies(businessId) {
+      console.log('안내 대상 기업 로드 시작, 사업 ID:', businessId);
+      
+      const targetCompanyTableBody = document.getElementById('targetCompanyTableBody');
+      
+      // 테이블 로딩 상태 표시
+      if (targetCompanyTableBody) {
+        targetCompanyTableBody.innerHTML = `
+          <tr>
+            <td colspan="8" class="text-center py-4">
+              <div class="flex justify-center items-center">
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-2"></div>
+                안내 대상 기업 정보를 불러오는 중...
+              </div>
+            </td>
+          </tr>
+        `;
+      } else {
+        console.error('targetCompanyTableBody 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
+      try {
+        // API에서 데이터 가져오기 - 안내정보 시트에서 해당 사업 ID에 맞는 데이터 필터링
+        const result = await fetchData('안내정보');
+        console.log('API 호출 결과:', result);
+        
+        if (result && result.success && Array.isArray(result.data)) {
+          // API에서 데이터를 성공적으로 가져온 경우
+          console.log('API에서 안내 정보 로드:', result.data.length, '개 항목');
+          
+          // 해당 사업 ID에 맞는 안내 정보만 필터링
+          const filteredData = result.data.filter(item => item.businessId === businessId);
+          targetCompanies = normalizeCompanyData(filteredData);
+          
+          console.log('필터링된 안내 대상 기업:', targetCompanies.length, '개 항목');
+        } else {
+          // API 오류 또는 데이터 없음
+          console.warn('API 호출 실패 또는 데이터 형식 오류:', result?.error);
+          targetCompanies = [];
+        }
+        
+        // 테이블 렌더링
+        renderTargetCompaniesTable();
+      } catch (error) {
+        console.error('안내 대상 기업 로드 오류:', error);
+        
+        targetCompanies = [];
+        
+        if (targetCompanyTableBody) {
+          targetCompanyTableBody.innerHTML = `
+            <tr>
+              <td colspan="8" class="text-center py-8">
+                <div class="text-red-500 mb-4">
+                  <i class="fas fa-exclamation-triangle text-2xl"></i>
+                </div>
+                <div class="text-lg font-bold mb-2">데이터 로드 중 오류 발생</div>
+                <div class="text-sm text-red-600 mb-2">${error.message}</div>
+                <div class="text-sm text-gray-600">서버 연결에 문제가 있습니다</div>
+              </td>
+            </tr>
+          `;
+        }
+      }
+    }
+
+    // 안내 대상 기업 테이블 렌더링
+    function renderTargetCompaniesTable() {
+      console.log('안내 대상 기업 테이블 렌더링');
+      
+      const targetCompanyTableBody = document.getElementById('targetCompanyTableBody');
+      if (!targetCompanyTableBody) {
+        console.error('targetCompanyTableBody 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
+      if (!targetCompanies || targetCompanies.length === 0) {
+        targetCompanyTableBody.innerHTML = `
+          <tr>
+            <td colspan="8" class="text-center py-8">
+              <div class="text-gray-400 mb-4">
+                <i class="fas fa-info-circle text-2xl"></i>
+              </div>
+              <div class="text-lg font-bold mb-2">등록된 안내 대상 기업이 없습니다</div>
+              <div class="text-sm text-gray-600 mb-4">상단의 '안내 대상 선별' 버튼을 클릭하여 대상 기업을 추가하세요</div>
+              <div>
+                <button onclick="openSelectTargetModal()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" ${!selectedBusinessId ? 'disabled' : ''}>
+                  안내 대상 선별하기
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      // 테이블 초기화
+      targetCompanyTableBody.innerHTML = '';
+      
+      // 각 기업 데이터로 행 생성
+      targetCompanies.forEach(company => {
+        const row = document.createElement('tr');
+        row.className = 'border-b hover:bg-gray-100';
+        
+        // 상태에 따른 스타일 결정
+        let statusClass = '';
+        switch(company.status) {
+          case '완료':
+            statusClass = 'text-green-600';
+            break;
+          case '진행중':
+            statusClass = 'text-blue-600';
+            break;
+          case '대기':
+          default:
+            statusClass = 'text-gray-600';
+            break;
+        }
+        
+        row.innerHTML = `
+          <td class="px-4 py-2 text-left">
+            <input type="checkbox" class="company-checkbox cursor-pointer" 
+                   value="${company.id}" onchange="updateRemoveButtonState()">
+          </td>
+          <td class="px-4 py-2 text-left">${company.name || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.businessNumber || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.representative || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.phone || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.email || '-'}</td>
+          <td class="px-4 py-2 text-left ${statusClass}">${company.status || '대기'}</td>
+          <td class="px-4 py-2 text-left">
+            <div class="flex space-x-2">
+              <button onclick="openRemoveModal('${company.id}')" class="text-red-500 hover:text-red-700">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        
+        targetCompanyTableBody.appendChild(row);
+      });
+      
+      // 전체 선택 체크박스 초기화
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      if (selectAllCheckbox) {
+        selectAllCheckbox.checked = false;
+      }
+      
+      // 제거 버튼 상태 업데이트
+      updateRemoveButtonState();
+    }
+
+    // ... rest of the script ...
+  </script>
 </body>
 </html> 
