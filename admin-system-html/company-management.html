@@ -262,28 +262,30 @@
       console.log('기업 정보 로드 시작');
       
       // 로딩 메시지 표시
-      document.getElementById('companiesTableBody').innerHTML = 
-        '<tr><td colspan="8" class="text-center py-4">기업 정보를 불러오는 중입니다...</td></tr>';
+      const tableBody = document.getElementById('companiesTableBody');
+      tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4">데이터를 불러오는 중입니다...</td></tr>`;
       
       try {
-        // 로컬 스토리지에서 데이터 확인
+        // 로컬 스토리지 확인
         const savedData = localStorage.getItem('companiesData');
         
         if (savedData) {
           try {
-            companies = JSON.parse(savedData);
-            console.log(`로컬 스토리지에서 ${companies.length}개 기업 정보 로드됨`);
-            renderCompaniesTable();
-            return;
-          } catch (e) {
-            console.error('로컬 스토리지 데이터 파싱 오류:', e);
-            // 로컬 데이터 오류 시 API 호출 계속 진행
+            const parsedData = JSON.parse(savedData);
+            if (Array.isArray(parsedData) && parsedData.length > 0) {
+              console.log(`로컬 스토리지에서 ${parsedData.length}개 기업 정보 로드됨`);
+              companies = parsedData;
+              renderCompaniesTable();
+              return;
+            }
+          } catch (parseError) {
+            console.warn('로컬 스토리지 데이터 파싱 오류:', parseError);
           }
         }
         
-        // API에서 데이터 로드
+        // API에서 데이터 가져오기
         const result = await fetchData('기업정보');
-        console.log('API 결과:', result);
+        console.log('API 응답:', result);
         
         if (result && result.success && Array.isArray(result.data)) {
           companies = result.data;
@@ -292,206 +294,264 @@
           // 로컬 스토리지에 저장
           localStorage.setItem('companiesData', JSON.stringify(companies));
         } else {
-          // API 오류 시 기본 데이터 사용
-          console.warn('API 데이터 로드 실패, 기본 데이터 사용:', result?.error);
-          useDefaultData();
+          // 샘플 데이터 사용
+          console.warn('API 데이터 로드 실패, 샘플 데이터 사용');
+          companies = [
+            {
+              id: 'sample_1',
+              name: '샘플 기업 1',
+              industry: 'IT 서비스',
+              contact_person: '홍길동',
+              contact_email: 'sample1@example.com',
+              city: '서울',
+              address: '서울시 강남구 테헤란로 123',
+              description: '샘플 회사 설명입니다.'
+            },
+            {
+              id: 'sample_2',
+              name: '샘플 기업 2',
+              industry: '제조업',
+              contact_person: '김철수',
+              contact_email: 'sample2@example.com',
+              city: '부산',
+              address: '부산시 해운대구 해운대로 456',
+              description: '제조업 전문 기업입니다.'
+            }
+          ];
+          
+          // 로컬 스토리지에 샘플 데이터 저장
+          localStorage.setItem('companiesData', JSON.stringify(companies));
         }
         
         // 테이블 렌더링
         renderCompaniesTable();
       } catch (error) {
         console.error('기업 정보 로드 오류:', error);
-        document.getElementById('companiesTableBody').innerHTML = 
-          '<tr><td colspan="8" class="text-center py-4 text-red-500">기업 정보를 불러오는 중 오류가 발생했습니다.</td></tr>';
-        
-        // 오류 시 기본 데이터 사용
-        useDefaultData();
-        renderCompaniesTable();
+        tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-red-600">데이터 로드 중 오류가 발생했습니다.</td></tr>`;
       }
     }
     
-    // 기본 데이터 사용 (샘플 데이터)
-    function useDefaultData() {
-      console.log('기본 샘플 데이터 생성');
-      companies = [
-        { id: 'sample1', name: '샘플 기업 1', tel: '02-1234-5678', email: 'sample1@example.com', address: '서울시 강남구 테헤란로 123', memo: '샘플 메모 1', registerDate: new Date().toISOString().split('T')[0] },
-        { id: 'sample2', name: '샘플 기업 2', tel: '02-2345-6789', email: 'sample2@example.com', address: '서울시 서초구 강남대로 456', memo: '샘플 메모 2', registerDate: new Date().toISOString().split('T')[0] },
-        { id: 'sample3', name: '샘플 기업 3', tel: '02-3456-7890', email: 'sample3@example.com', address: '서울시 종로구 세종대로 789', memo: '샘플 메모 3', registerDate: new Date().toISOString().split('T')[0] }
-      ];
-      localStorage.setItem('companiesData', JSON.stringify(companies));
-    }
-
-    // 날짜 포맷팅
-    function formatDate(dateString) {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      return isNaN(date.getTime()) 
-        ? dateString 
-        : `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    }
-    
-    // 회사 목록 렌더링
+    // 기업 정보 테이블 렌더링
     function renderCompaniesTable() {
-      console.log('기업 정보 테이블 렌더링 시작');
-      const tableBody = document.querySelector('#companiesTableBody');
-      
-      if (!tableBody) {
-        console.error('테이블 본문 요소를 찾을 수 없습니다.');
-        return;
-      }
+      console.log('기업 테이블 렌더링 시작');
+      const tableBody = document.getElementById('companiesTableBody');
       
       if (!companies || companies.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4">등록된 기업이 없습니다.</td></tr>';
+        tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4">등록된 기업 정보가 없습니다.</td></tr>`;
         return;
       }
       
-      let tableContent = '';
+      // 테이블 초기화
+      tableBody.innerHTML = '';
       
-      companies.forEach((company, index) => {
-        tableContent += `
-          <tr class="hover:bg-gray-50">
-            <td class="border px-4 py-2 text-center">
-              <input type="checkbox" class="company-checkbox" data-id="${company.id}">
-            </td>
-            <td class="border px-4 py-2 text-center">${index + 1}</td>
-            <td class="border px-4 py-2">${company.name || '-'}</td>
-            <td class="border px-4 py-2">${company.businessNumber || '-'}</td>
-            <td class="border px-4 py-2">${company.representative || '-'}</td>
-            <td class="border px-4 py-2">${company.email || '-'}</td>
-            <td class="border px-4 py-2">${company.contact || '-'}</td>
-            <td class="border px-4 py-2 text-center">
-              <button 
-                onclick="openEditModal('${company.id}')" 
-                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-xs mr-1"
-              >
-                수정
-              </button>
-              <button 
-                onclick="openDeleteModal('${company.id}')" 
-                class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs"
-              >
-                삭제
-              </button>
-            </td>
-          </tr>
-        `;
+      // 각 기업마다 행 추가
+      companies.forEach(company => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-100 border-b';
+        
+        // 체크박스 셀
+        const checkboxCell = document.createElement('td');
+        checkboxCell.className = 'py-3 px-4 text-center';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'company-checkbox w-4 h-4 text-blue-600';
+        checkbox.setAttribute('data-id', company.id);
+        checkboxCell.appendChild(checkbox);
+        
+        // 기업명 셀
+        const nameCell = document.createElement('td');
+        nameCell.className = 'py-3 px-4';
+        nameCell.textContent = company.name || '-';
+        
+        // 업종 셀
+        const industryCell = document.createElement('td');
+        industryCell.className = 'py-3 px-4';
+        industryCell.textContent = company.industry || '-';
+        
+        // 담당자 셀
+        const contactPersonCell = document.createElement('td');
+        contactPersonCell.className = 'py-3 px-4';
+        contactPersonCell.textContent = company.contact_person || '-';
+        
+        // 이메일 셀
+        const emailCell = document.createElement('td');
+        emailCell.className = 'py-3 px-4';
+        emailCell.textContent = company.contact_email || '-';
+        
+        // 지역 셀
+        const cityCell = document.createElement('td');
+        cityCell.className = 'py-3 px-4';
+        cityCell.textContent = company.city || '-';
+        
+        // 액션 셀
+        const actionCell = document.createElement('td');
+        actionCell.className = 'py-3 px-4 text-center';
+        
+        // 수정 버튼
+        const editButton = document.createElement('button');
+        editButton.className = 'text-blue-500 hover:text-blue-700 mr-2';
+        editButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>`;
+        editButton.onclick = () => openEditModal(company.id);
+        
+        // 삭제 버튼
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'text-red-500 hover:text-red-700';
+        deleteButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>`;
+        deleteButton.onclick = () => openDeleteModal(company.id);
+        
+        // 액션 버튼 추가
+        actionCell.appendChild(editButton);
+        actionCell.appendChild(deleteButton);
+        
+        // 모든 셀을 행에 추가
+        row.appendChild(checkboxCell);
+        row.appendChild(nameCell);
+        row.appendChild(industryCell);
+        row.appendChild(contactPersonCell);
+        row.appendChild(emailCell);
+        row.appendChild(cityCell);
+        row.appendChild(actionCell);
+        
+        // 테이블에 행 추가
+        tableBody.appendChild(row);
       });
       
-      tableBody.innerHTML = tableContent;
-      
-      // 체크박스 이벤트 리스너 추가
-      document.querySelectorAll('.company-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-          const companyId = this.getAttribute('data-id');
-          
-          if (this.checked) {
-            // 기존 선택 초기화 (단일 선택 모드)
-            document.querySelectorAll('.company-checkbox').forEach(cb => {
-              if (cb !== this) cb.checked = false;
-            });
-            
-            // 선택된 기업 ID 설정
-            selectedCompanyId = companyId;
-          } else {
-            // 체크 해제되면 선택 초기화
-            selectedCompanyId = null;
-          }
-        });
-      });
-      
-      // 전체 선택 체크박스 이벤트 처리
+      // 전체 선택 체크박스 초기화
       const selectAllCheckbox = document.getElementById('selectAllCompanies');
       if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function() {
-          const isChecked = this.checked;
-          document.querySelectorAll('.company-checkbox').forEach(checkbox => {
-            checkbox.checked = isChecked;
-          });
-          
-          // 전체 선택 시 selectedCompanyId 초기화 (전체 선택 모드로 전환)
-          selectedCompanyId = null;
-        });
+        selectAllCheckbox.checked = false;
       }
       
-      console.log('기업 정보 테이블 렌더링 완료');
+      console.log('기업 테이블 렌더링 완료');
     }
     
-    // 삭제 모달 열기
-    function openDeleteModal(companyId = null) {
-      console.log('삭제 모달 열기, 기업 ID:', companyId);
+    // 기업 정보 수정
+    async function updateCompany() {
+      console.log('기업 정보 수정 시작');
       
-      // 특정 ID가 전달된 경우 해당 기업 선택
-      if (companyId) {
-        selectedCompanyId = companyId;
-        
-        // 체크박스 상태 업데이트
-        document.querySelectorAll('.company-checkbox').forEach(checkbox => {
-          const checkboxId = checkbox.getAttribute('data-id');
-          checkbox.checked = (checkboxId === companyId);
-        });
+      // 폼 데이터 가져오기
+      const companyId = document.getElementById('editCompanyId').value;
+      const companyName = document.getElementById('editCompanyName').value.trim();
+      const industry = document.getElementById('editIndustry').value.trim();
+      const contactPerson = document.getElementById('editContactPerson').value.trim();
+      const contactEmail = document.getElementById('editContactEmail').value.trim();
+      const city = document.getElementById('editCity').value.trim();
+      const address = document.getElementById('editAddress').value.trim();
+      const description = document.getElementById('editDescription').value.trim();
+      
+      // 필수 필드 검증
+      if (!companyName) {
+        alert('기업명은 필수 입력 항목입니다.');
+        return;
       }
+      
+      // 이메일 형식 검증
+      if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+        alert('유효한 이메일 주소를 입력해주세요.');
+        return;
+      }
+      
+      // 버튼 상태 변경
+      const updateButton = document.querySelector('#confirmEditButton');
+      if (updateButton) {
+        updateButton.textContent = '저장 중...';
+        updateButton.disabled = true;
+      }
+      
+      try {
+        // 업데이트할 데이터 준비
+        const updatedCompany = {
+          id: companyId,
+          name: companyName,
+          industry,
+          contact_person: contactPerson,
+          contact_email: contactEmail,
+          city,
+          address,
+          description
+        };
+        
+        console.log('업데이트할 기업 정보:', updatedCompany);
+        
+        // 로컬 데이터 업데이트
+        const companyIndex = companies.findIndex(c => c.id == companyId);
+        
+        if (companyIndex === -1) {
+          throw new Error('수정할 기업 정보를 찾을 수 없습니다.');
+        }
+        
+        companies[companyIndex] = updatedCompany;
+        
+        // 로컬 스토리지 업데이트
+        localStorage.setItem('companiesData', JSON.stringify(companies));
+        
+        // API를 통한 데이터 업데이트 시도
+        try {
+          const result = await updateData('기업정보', updatedCompany);
+          console.log('API 업데이트 결과:', result);
+          
+          if (result && result.success) {
+            console.log('API를 통해 기업 정보 업데이트 성공');
+          } else {
+            console.warn('API 업데이트 실패, 로컬에만 업데이트됨:', result?.error);
+          }
+        } catch (apiError) {
+          console.error('API 업데이트 중 오류:', apiError);
+        }
+        
+        // 테이블 갱신
+        renderCompaniesTable();
+        alert('기업 정보가 성공적으로 수정되었습니다.');
+        
+        // 모달 닫기
+        closeEditModal();
+      } catch (error) {
+        console.error('기업 정보 수정 오류:', error);
+        alert('기업 정보 수정 중 오류가 발생했습니다: ' + error.message);
+      } finally {
+        // 버튼 상태 복원
+        if (updateButton) {
+          updateButton.textContent = '저장';
+          updateButton.disabled = false;
+        }
+      }
+    }
+
+    // 기업 정보 삭제
+    async function deleteCompany() {
+      console.log('기업 정보 삭제 시작');
       
       // 전체 선택 체크박스 확인
       const selectAllCheckbox = document.getElementById('selectAllCompanies');
       const isSelectAll = selectAllCheckbox && selectAllCheckbox.checked;
       
-      // 모달 내용 업데이트
-      const modalContent = document.getElementById('deleteModalContent');
+      // 삭제할 ID 목록 구성
+      let idsToDelete = [];
       
       if (isSelectAll) {
-        // 전체 선택 모드
-        const totalCount = companies.length;
-        modalContent.textContent = `${totalCount}개의 모든 기업 정보를 삭제하시겠습니까?`;
+        // 모든 기업 ID
+        idsToDelete = companies.map(company => company.id);
       } else if (selectedCompanyId) {
-        // 단일 선택 모드
-        const company = companies.find(c => String(c.id) === String(selectedCompanyId));
-        
-        if (company) {
-          modalContent.textContent = `'${company.name}'을(를) 삭제하시겠습니까?`;
-        } else {
-          console.error(`선택된 ID ${selectedCompanyId}에 해당하는 기업을 찾을 수 없습니다.`);
-          alert('선택된 기업 정보를 찾을 수 없습니다.');
-          return;
-        }
+        // 단일 기업 ID
+        idsToDelete = [selectedCompanyId];
       } else {
-        // 선택된 기업이 없는 경우
-        modalContent.textContent = '삭제할 기업을 선택해주세요.';
+        // 체크된 기업들
+        const checkedBoxes = document.querySelectorAll('.company-checkbox:checked');
+        idsToDelete = Array.from(checkedBoxes).map(checkbox => checkbox.getAttribute('data-id'));
+      }
+      
+      // 삭제할 항목이 없으면 종료
+      if (idsToDelete.length === 0) {
         alert('삭제할 기업을 선택해주세요.');
+        closeDeleteModal();
         return;
       }
       
-      // 모달 표시
-      document.getElementById('deleteModal').classList.remove('hidden');
-    }
-    
-    // 기업 정보 삭제
-    async function deleteCompanies() {
-      console.log('기업 삭제 시작');
-      
-      // 선택된 기업 ID 배열
-      const selectedIds = [];
-      
-      // 전체 선택 확인
-      const selectAllCheckbox = document.getElementById('selectAllCompanies');
-      const isSelectAll = selectAllCheckbox && selectAllCheckbox.checked;
-      
-      // 모든 체크박스를 선택한 경우
-      if (isSelectAll) {
-        companies.forEach(company => {
-          selectedIds.push(company.id);
-        });
-      } 
-      // 선택된 기업이 있는 경우
-      else if (selectedCompanyId) {
-        selectedIds.push(selectedCompanyId);
-      }
-      
-      if (selectedIds.length === 0) {
-        alert('삭제할 기업을 선택해주세요.');
-        return;
-      }
-      
-      // 삭제 중 버튼 상태 변경
+      // 버튼 상태 변경
       const deleteButton = document.querySelector('#confirmDeleteButton');
       if (deleteButton) {
         deleteButton.textContent = '삭제 중...';
@@ -499,53 +559,52 @@
       }
       
       try {
-        let success = true;
-        let apiError = null;
+        console.log(`${idsToDelete.length}개 기업 정보 삭제 시작`);
         
-        // 각 ID에 대해 삭제 요청 수행
-        for (const id of selectedIds) {
+        // API를 통한 데이터 삭제 시도
+        const deleteResults = [];
+        
+        for (const id of idsToDelete) {
           try {
             const result = await deleteData('기업정보', id);
             console.log(`ID ${id} 삭제 결과:`, result);
             
-            if (!result || !result.success) {
-              success = false;
-              apiError = result?.error || '알 수 없는 오류';
-              break;
+            if (result && result.success) {
+              deleteResults.push({ id, success: true });
+            } else {
+              console.warn(`ID ${id} API 삭제 실패:`, result?.error);
+              deleteResults.push({ id, success: false, error: result?.error });
             }
-          } catch (error) {
-            console.error(`ID ${id} 삭제 중 오류:`, error);
-            success = false;
-            apiError = error.message;
-            break;
+          } catch (apiError) {
+            console.error(`ID ${id} 삭제 중 API 오류:`, apiError);
+            deleteResults.push({ id, success: false, error: apiError.message });
           }
         }
         
-        // 로컬 데이터 업데이트 (API 성공 여부와 상관없이)
-        companies = companies.filter(company => !selectedIds.includes(company.id));
+        // 로컬 데이터 업데이트 (성공, 실패 모두 로컬에서는 삭제)
+        companies = companies.filter(company => !idsToDelete.includes(company.id));
+        
+        // 로컬 스토리지 업데이트
         localStorage.setItem('companiesData', JSON.stringify(companies));
         
-        if (success) {
-          alert('선택한 기업 정보가 성공적으로 삭제되었습니다.');
-        } else {
-          console.warn('API 삭제 오류, 로컬 데이터만 업데이트됨:', apiError);
-          alert('API 오류가 발생했으나, 화면에서는 삭제되었습니다: ' + apiError);
-        }
-        
-        // 모달 닫기 및 테이블 업데이트
-        closeDeleteModal();
+        // 테이블 갱신
         renderCompaniesTable();
         
-        // 전체 선택 체크박스 초기화
-        if (selectAllCheckbox) {
-          selectAllCheckbox.checked = false;
+        // 성공 메시지
+        if (idsToDelete.length === 1) {
+          alert('선택한 기업 정보가 삭제되었습니다.');
+        } else {
+          alert(`${idsToDelete.length}개 기업 정보가 삭제되었습니다.`);
         }
         
-        // 선택된 ID 초기화
+        // 선택 초기화
         selectedCompanyId = null;
+        
+        // 모달 닫기
+        closeDeleteModal();
       } catch (error) {
-        console.error('삭제 처리 중 오류:', error);
-        alert('삭제 처리 중 오류가 발생했습니다: ' + error.message);
+        console.error('기업 정보 삭제 오류:', error);
+        alert('기업 정보 삭제 중 오류가 발생했습니다: ' + error.message);
       } finally {
         // 버튼 상태 복원
         if (deleteButton) {
@@ -554,7 +613,7 @@
         }
       }
     }
-    
+
     // 샘플 CSV 다운로드
     function downloadSample() {
       console.log('샘플 CSV 다운로드 시작');
@@ -619,7 +678,7 @@
         alert('샘플 다운로드 중 오류가 발생했습니다.');
       }
     }
-    
+
     // 파일 선택 시 파일명 표시
     document.addEventListener('DOMContentLoaded', function() {
       const fileInput = document.getElementById('companyFileInput');
