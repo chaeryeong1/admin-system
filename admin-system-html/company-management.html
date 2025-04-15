@@ -524,7 +524,15 @@
     
     // 모달 열기/닫기 함수들
     function openAddModal() {
-      addForm.reset();
+      console.log('기업 추가 모달 열기');
+      
+      // 파일 필드 초기화
+      const addExcelFile = document.getElementById('addExcelFile');
+      if (addExcelFile) {
+        addExcelFile.value = '';
+      }
+      
+      // 모달 표시
       addModal.classList.remove('hidden');
     }
     
@@ -562,10 +570,10 @@
       
       console.log('수정할 기업 정보:', company);
       
-      // 폼 필드에 데이터 설정
+      // 파일 필드 초기화
       const editExcelFile = document.getElementById('editExcelFile');
       if (editExcelFile) {
-        editExcelFile.value = ''; // 파일 필드 초기화
+        editExcelFile.value = '';
       }
       
       // 모달 표시
