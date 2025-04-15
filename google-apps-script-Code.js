@@ -62,47 +62,85 @@ function handleRequest(e) {
     
     var result = {};
     
+    // JSONP 요청에서 데이터 파라미터 처리
+    var data = {};
+    var hasDataParams = false;
+    
+    // URL 파라미터에서 data_* 접두사를 가진 파라미터 추출
+    for (var key in params) {
+      if (key.startsWith('data_')) {
+        var dataKey = key.substring(5); // 'data_' 접두사 제거
+        data[dataKey] = params[key];
+        hasDataParams = true;
+      }
+    }
+    
+    if (hasDataParams) {
+      Logger.log("URL 파라미터에서 추출된 데이터: " + JSON.stringify(data));
+    }
+    
     // 액션에 따라 처리
     switch(action) {
       case 'getData':
         result = getData(sheet);
         break;
       case 'addData':
-        // jsonData 파라미터에서 JSON 데이터 파싱
-        var jsonData = params.jsonData;
-        
-        if (!jsonData) {
-          Logger.log("오류: jsonData 파라미터가 없습니다");
-          return { success: false, error: "데이터가 없습니다" };
-        }
-        
-        try {
-          var postData = JSON.parse(decodeURIComponent(jsonData));
-          Logger.log('데이터 추가 요청 - 원본: ' + jsonData);
-          Logger.log('데이터 추가 요청 - 파싱됨: ' + JSON.stringify(postData));
-          result = addData(sheet, postData);
-        } catch (parseError) {
-          Logger.log("JSON 파싱 오류: " + parseError);
-          return { success: false, error: "데이터 형식이 잘못되었습니다: " + parseError.message };
+        if (hasDataParams) {
+          // URL 파라미터에서 추출한 데이터 사용
+          Logger.log('데이터 추가 요청 - URL 파라미터로부터: ' + JSON.stringify(data));
+          result = addData(sheet, data);
+        } else {
+          // jsonData 파라미터에서 JSON 데이터 파싱 (기존 방식)
+          var jsonData = params.jsonData;
+          
+          if (!jsonData) {
+            Logger.log("오류: jsonData 파라미터가 없습니다");
+            return { success: false, error: "데이터가 없습니다" };
+          }
+          
+          try {
+            var postData = JSON.parse(decodeURIComponent(jsonData));
+            Logger.log('데이터 추가 요청 - 원본: ' + jsonData);
+            Logger.log('데이터 추가 요청 - 파싱됨: ' + JSON.stringify(postData));
+            result = addData(sheet, postData);
+          } catch (parseError) {
+            Logger.log("JSON 파싱 오류: " + parseError);
+            return { success: false, error: "데이터 형식이 잘못되었습니다: " + parseError.message };
+          }
         }
         break;
       case 'updateData':
-        // jsonData 파라미터에서 JSON 데이터 파싱
-        var jsonData = params.jsonData;
+        var id = params.id;
         
-        if (!jsonData) {
-          Logger.log("오류: jsonData 파라미터가 없습니다");
-          return { success: false, error: "데이터가 없습니다" };
+        if (!id) {
+          Logger.log("오류: 업데이트할 ID가 없습니다");
+          return { success: false, error: "업데이트할 ID가 없습니다" };
         }
         
-        try {
-          var postData = JSON.parse(decodeURIComponent(jsonData));
-          Logger.log('데이터 업데이트 요청 - 원본: ' + jsonData);
-          Logger.log('데이터 업데이트 요청 - 파싱됨: ' + JSON.stringify(postData));
-          result = updateData(sheet, postData);
-        } catch (parseError) {
-          Logger.log("JSON 파싱 오류: " + parseError);
-          return { success: false, error: "데이터 형식이 잘못되었습니다: " + parseError.message };
+        if (hasDataParams) {
+          // URL 파라미터에서 추출한 데이터 사용 (ID 추가)
+          data.id = id;
+          Logger.log('데이터 업데이트 요청 - URL 파라미터로부터: ' + JSON.stringify(data));
+          result = updateData(sheet, data);
+        } else {
+          // jsonData 파라미터에서 JSON 데이터 파싱 (기존 방식)
+          var jsonData = params.jsonData;
+          
+          if (!jsonData) {
+            Logger.log("오류: jsonData 파라미터가 없습니다");
+            return { success: false, error: "데이터가 없습니다" };
+          }
+          
+          try {
+            var postData = JSON.parse(decodeURIComponent(jsonData));
+            postData.id = id; // ID 추가
+            Logger.log('데이터 업데이트 요청 - 원본: ' + jsonData);
+            Logger.log('데이터 업데이트 요청 - 파싱됨: ' + JSON.stringify(postData));
+            result = updateData(sheet, postData);
+          } catch (parseError) {
+            Logger.log("JSON 파싱 오류: " + parseError);
+            return { success: false, error: "데이터 형식이 잘못되었습니다: " + parseError.message };
+          }
         }
         break;
       case 'deleteData':
