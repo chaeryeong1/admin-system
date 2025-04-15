@@ -38,13 +38,6 @@
 
       <!-- 검색/필터링 -->
       <div class="flex items-center space-x-4">
-        <select 
-          id="businessFilter" 
-          class="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">모든 사업</option>
-          <option value="클라우드 보급사업">클라우드 보급사업</option>
-        </select>
         <input 
           id="searchInput"
           type="text" 
@@ -62,13 +55,13 @@
             id="addButton"
             class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            기업 추가
+            기업목록 추가
           </button>
           <button 
             id="excelButton"
             class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
           >
-            엑셀 다운로드
+            기업목록 내려받기
           </button>
         </div>
       </div>
@@ -105,13 +98,6 @@
       <!-- 하단 버튼 -->
       <div class="flex justify-end space-x-4">
         <button 
-          id="editButton"
-          class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 opacity-50 cursor-not-allowed"
-          disabled
-        >
-          수정
-        </button>
-        <button 
           id="deleteButton"
           class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 opacity-50 cursor-not-allowed"
           disabled
@@ -125,23 +111,30 @@
   <!-- 추가 모달 -->
   <div id="addModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
     <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
-      <h2 class="text-xl font-bold mb-4">기업 정보 추가</h2>
+      <h2 class="text-xl font-bold mb-4">기업 등록</h2>
       
       <div class="mb-4">
         <div class="mb-4">
-          <label class="block mb-2 font-semibold">엑셀 파일 업로드</label>
-          <div class="flex items-center">
-            <label class="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
-              파일 선택
+          <label class="block mb-2 font-semibold">파일 업로드</label>
+          <div id="dragDropArea" class="border-2 border-dashed border-gray-300 rounded-lg p-8 mb-4 text-center hover:border-blue-500 transition-colors cursor-pointer">
+            <div class="mb-2">
+              <i class="fas fa-file-upload text-3xl text-gray-400"></i>
+            </div>
+            <p class="mb-2 text-gray-700">파일을 이곳에 끌어다 놓거나</p>
+            <label class="cursor-pointer inline-block bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+              파일 선택하기
               <input type="file" id="companyFileInput" accept=".xlsx,.xls,.csv" class="hidden" />
             </label>
-            <span id="selectedFileName" class="ml-2 text-gray-600">선택된 파일 없음</span>
+            <div id="selectedFileInfo" class="mt-4 text-sm text-gray-600">
+              <span id="selectedFileName">선택된 파일 없음</span>
+            </div>
           </div>
+          
           <p class="text-sm text-gray-500 mt-1">엑셀(.xlsx, .xls) 또는 CSV(.csv) 파일만 업로드 가능</p>
           <p class="text-sm text-gray-500">* 등록일은 시스템에서 자동으로 생성되므로 입력하지 않아도 됩니다.</p>
           
           <button id="downloadSampleButton" class="mt-3 text-blue-500 hover:text-blue-700 text-sm underline">
-            기업리스트 다운로드
+            기업목록 내려받기
           </button>
         </div>
       </div>
@@ -151,7 +144,7 @@
           취소
         </button>
         <button id="confirmAddButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded">
-          추가
+          등록
         </button>
       </div>
     </div>
@@ -271,7 +264,7 @@
       const confirmAddButton = document.getElementById('confirmAddButton');
       if (confirmAddButton) {
         confirmAddButton.disabled = false;
-        confirmAddButton.textContent = '추가';
+        confirmAddButton.textContent = '등록';
         confirmAddButton.removeAttribute('data-processing');
       }
       
@@ -576,10 +569,10 @@
                 <i class="fas fa-info-circle text-2xl"></i>
               </div>
               <div class="text-lg font-bold mb-2">등록된 기업 정보가 없습니다</div>
-              <div class="text-sm text-gray-600 mb-4">상단의 '기업 추가' 버튼을 클릭하여 기업을 등록해주세요</div>
+              <div class="text-sm text-gray-600 mb-4">상단의 '기업목록 추가' 버튼을 클릭하여 기업을 등록해주세요</div>
               <div>
                 <button onclick="openAddModal()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                  기업 추가하기
+                  기업 등록하기
                 </button>
               </div>
             </td>
@@ -612,9 +605,6 @@
               <button onclick="openEditModal('${company.id}')" class="text-blue-500 hover:text-blue-700">
                 <i class="fas fa-edit"></i>
               </button>
-              <button onclick="openDeleteModal('${company.id}')" class="text-red-500 hover:text-red-700">
-                <i class="fas fa-trash"></i>
-              </button>
             </div>
           </td>
         `;
@@ -640,27 +630,6 @@
       console.warn('excelButton 요소를 찾을 수 없습니다.');
     }
     
-    // 파일 선택 시 파일명 표시
-    const fileInput = document.getElementById('companyFileInput');
-    const fileNameDisplay = document.getElementById('selectedFileName');
-    if (fileInput && fileNameDisplay) {
-      fileInput.addEventListener('change', function() {
-        if (fileInput.files.length > 0) {
-          fileNameDisplay.textContent = fileInput.files[0].name;
-        } else {
-          fileNameDisplay.textContent = '선택된 파일 없음';
-        }
-      });
-    } else {
-      console.warn('fileInput 또는 fileNameDisplay 요소를 찾을 수 없습니다.');
-    }
-    
-    // 기업리스트 다운로드 버튼
-    const downloadSampleButton = document.getElementById('downloadSampleButton');
-    if (downloadSampleButton) {
-      downloadSampleButton.addEventListener('click', downloadCompanyList);
-    }
-    
     // 구글 시트에서 기업 데이터를 가져와 다운로드하는 함수
     function downloadCompanyList() {
       console.log('구글 시트 기업 정보 다운로드');
@@ -678,16 +647,21 @@
             console.log('구글 시트에서 기업 데이터 가져오기 성공');
             companies = result.data;
             
-            // UTF-8 BOM 추가
-            let csvContent = "\uFEFF"; // UTF-8 BOM
-            csvContent += "기업명,사업자등록번호,대표자,담당자,연락처,이메일,주소\n";
+            // CSV 문자셋 설정을 위한 BOM 추가
+            const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
+            
+            // CSV 데이터 생성
+            let csvContent = "기업명,사업자등록번호,대표자,담당자,연락처,이메일,주소\n";
             
             companies.forEach(company => {
               // 데이터 정제 - 쉼표나 줄바꿈 있으면 따옴표로 감싸기
               const escapeCsv = (text) => {
-                if (!text) return '""';
+                if (!text) return '';
                 text = String(text).replace(/"/g, '""'); // 따옴표는 두 개로 이스케이프
-                return `"${text}"`; 
+                if (text.includes(',') || text.includes('\n') || text.includes('"')) {
+                  return `"${text}"`; 
+                }
+                return text;
               };
               
               const name = escapeCsv(company.name); 
@@ -701,8 +675,8 @@
               csvContent += `${name},${businessNumber},${representative},${manager},${phone},${email},${address}\n`;
             });
             
-            // CSV 파일 생성 및 다운로드 - 인코딩 명시
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            // Blob에 BOM 먼저 추가
+            const blob = new Blob([BOM, csvContent], { type: 'text/csv;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.setAttribute('href', url);
@@ -893,6 +867,93 @@
         selectAllCheckbox.addEventListener('change', toggleSelectAll);
       } else {
         console.warn('selectAllCheckbox 요소를 찾을 수 없습니다.');
+      }
+      
+      // 드래그 앤 드롭 영역 설정
+      const dragDropArea = document.getElementById('dragDropArea');
+      const fileInput = document.getElementById('companyFileInput');
+      const fileNameDisplay = document.getElementById('selectedFileName');
+      
+      if (dragDropArea && fileInput && fileNameDisplay) {
+        // 파일 선택 이벤트
+        fileInput.addEventListener('change', function() {
+          updateSelectedFileInfo(this.files);
+        });
+        
+        // 드래그 앤 드롭 이벤트
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+          dragDropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        
+        // 드래그 효과
+        ['dragenter', 'dragover'].forEach(eventName => {
+          dragDropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+          dragDropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+          dragDropArea.classList.add('border-blue-500');
+          dragDropArea.classList.add('bg-blue-50');
+        }
+        
+        function unhighlight() {
+          dragDropArea.classList.remove('border-blue-500');
+          dragDropArea.classList.remove('bg-blue-50');
+        }
+        
+        // 파일 드롭 처리
+        dragDropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+          const dt = e.dataTransfer;
+          const files = dt.files;
+          updateSelectedFileInfo(files);
+          
+          // 파일 입력 필드에 파일 설정
+          if (files.length > 0) {
+            fileInput.files = files;
+          }
+        }
+        
+        // 파일 정보 업데이트
+        function updateSelectedFileInfo(files) {
+          if (files.length > 0) {
+            const file = files[0];
+            fileNameDisplay.textContent = file.name;
+            
+            // 파일 형식 확인
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            if (!['xlsx', 'xls', 'csv'].includes(fileExtension)) {
+              fileNameDisplay.innerHTML = `<span class="text-red-500">${file.name} (지원되지 않는 파일 형식)</span>`;
+            } else {
+              fileNameDisplay.innerHTML = `<span class="text-green-500">${file.name} (${formatFileSize(file.size)})</span>`;
+            }
+          } else {
+            fileNameDisplay.textContent = '선택된 파일 없음';
+          }
+        }
+        
+        // 파일 크기 포맷팅
+        function formatFileSize(bytes) {
+          if (bytes === 0) return '0 Bytes';
+          const k = 1024;
+          const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+          const i = Math.floor(Math.log(bytes) / Math.log(k));
+          return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 클릭으로 파일 선택 가능하게
+        dragDropArea.addEventListener('click', function() {
+          fileInput.click();
+        });
       }
       
       console.log('이벤트 리스너 설정 완료');
