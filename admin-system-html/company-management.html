@@ -602,130 +602,119 @@
     }
     
     // 회사 추가 처리
-    async function addCompany(event) {
-      event.preventDefault();
+    async function addCompanies() {
+      const fileInput = document.getElementById('addExcelFile');
       
-      const name = document.getElementById('addName').value.trim();
-      const businessNumber = document.getElementById('addBusinessNumber').value.trim();
-      const address = document.getElementById('addAddress').value.trim();
-      const representative = document.getElementById('addRepresentative').value.trim();
-      const contact = document.getElementById('addContact').value.trim();
-      const email = document.getElementById('addEmail').value.trim();
-      
-      // 유효성 검사
-      if (!name) {
-        alert('회사명을 입력해주세요.');
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert('엑셀 파일을 선택해주세요.');
         return;
       }
       
-      if (!businessNumber) {
-        alert('사업자 번호를 입력해주세요.');
+      const file = fileInput.files[0];
+      
+      if (!file.name.match(/\.(xlsx|xls)$/i)) {
+        alert('엑셀 파일(.xlsx, .xls)만 업로드 가능합니다.');
         return;
       }
       
-      // 이메일 형식 검사
-      if (email && !isValidEmail(email)) {
-        alert('유효한 이메일 형식이 아닙니다.');
-        return;
+      // 저장 중 표시
+      const saveButton = document.getElementById('confirmAddButton');
+      if (saveButton) {
+        saveButton.textContent = '업로드 중...';
+        saveButton.disabled = true;
       }
-      
-      // 새 회사 정보
-      const newCompany = {
-        name,
-        businessNumber,
-        address,
-        representative,
-        contact,
-        email
-      };
       
       try {
-        // API 호출
-        const result = await addData('회사정보', newCompany);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('sheet', '회사정보');
+        formData.append('action', 'uploadExcel');
         
-        if (result.success) {
-          // 성공 시 데이터 갱신
-          await loadCompanies();
+        console.log('파일 업로드 시작:', file.name);
+        
+        // API 호출
+        const result = await uploadFile(formData);
+        
+        console.log('업로드 결과:', result);
+        
+        if (result && result.success) {
+          // 성공 시 로컬 캐시 삭제하고 새로 데이터 로드
+          localStorage.removeItem('companiesData');
           closeAddModal();
-          alert('회사 정보가 추가되었습니다.');
+          
+          // 서버에서 새로운 데이터 로드
+          await loadCompanies();
+          alert('기업 정보가 성공적으로 추가되었습니다.');
         } else {
-          throw new Error(result.error || '추가 실패');
+          throw new Error(result.error || '업로드 실패: 서버에서 오류가 발생했습니다.');
         }
       } catch (error) {
         console.error('API 오류:', error);
-        alert('회사 정보 추가 중 오류가 발생했습니다.');
+        alert('기업 정보 추가 중 오류가 발생했습니다: ' + error.message);
         
-        // API 실패 시 로컬 데이터만 갱신 (테스트용)
-        newCompany.id = String(Date.now());
-        companies.push(newCompany);
-        renderCompanies();
-        closeAddModal();
+        // 버튼 복원
+        if (saveButton) {
+          saveButton.textContent = '저장';
+          saveButton.disabled = false;
+        }
       }
     }
     
     // 회사 수정 처리
-    async function editCompany(event) {
-      event.preventDefault();
+    async function editCompanies() {
+      const fileInput = document.getElementById('editExcelFile');
       
-      if (selectedCompanyIds.length === 0) return;
-      
-      const name = document.getElementById('editName').value.trim();
-      const businessNumber = document.getElementById('editBusinessNumber').value.trim();
-      const address = document.getElementById('editAddress').value.trim();
-      const representative = document.getElementById('editRepresentative').value.trim();
-      const contact = document.getElementById('editContact').value.trim();
-      const email = document.getElementById('editEmail').value.trim();
-      
-      // 유효성 검사
-      if (!name) {
-        alert('회사명을 입력해주세요.');
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert('엑셀 파일을 선택해주세요.');
         return;
       }
       
-      if (!businessNumber) {
-        alert('사업자 번호를 입력해주세요.');
+      const file = fileInput.files[0];
+      
+      if (!file.name.match(/\.(xlsx|xls)$/i)) {
+        alert('엑셀 파일(.xlsx, .xls)만 업로드 가능합니다.');
         return;
       }
       
-      // 이메일 형식 검사
-      if (email && !isValidEmail(email)) {
-        alert('유효한 이메일 형식이 아닙니다.');
-        return;
+      // 저장 중 표시
+      const saveButton = document.getElementById('confirmEditButton');
+      if (saveButton) {
+        saveButton.textContent = '업로드 중...';
+        saveButton.disabled = true;
       }
-      
-      // 수정된 회사 정보
-      const updatedCompany = {
-        id: selectedCompanyIds[0],
-        name,
-        businessNumber,
-        address,
-        representative,
-        contact,
-        email
-      };
       
       try {
-        // API 호출
-        const result = await updateData('회사정보', updatedCompany);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('sheet', '회사정보');
+        formData.append('action', 'updateExcel');
         
-        if (result.success) {
-          // 성공 시 데이터 갱신
-          await loadCompanies();
+        console.log('파일 업로드 시작 (수정):', file.name);
+        
+        // API 호출
+        const result = await uploadFile(formData);
+        
+        console.log('업로드 결과 (수정):', result);
+        
+        if (result && result.success) {
+          // 성공 시 로컬 캐시 삭제하고 새로 데이터 로드
+          localStorage.removeItem('companiesData');
           closeEditModal();
-          alert('회사 정보가 수정되었습니다.');
+          
+          // 서버에서 새로운 데이터 로드
+          await loadCompanies();
+          alert('기업 정보가 성공적으로 수정되었습니다.');
         } else {
-          throw new Error(result.error || '수정 실패');
+          throw new Error(result.error || '업로드 실패: 서버에서 오류가 발생했습니다.');
         }
       } catch (error) {
         console.error('API 오류:', error);
-        alert('회사 정보 수정 중 오류가 발생했습니다.');
+        alert('기업 정보 수정 중 오류가 발생했습니다: ' + error.message);
         
-        // API 실패 시 로컬 데이터만 갱신 (테스트용)
-        const index = companies.findIndex(c => c.id === selectedCompanyIds[0]);
-        if (index !== -1) {
-          companies[index] = updatedCompany;
-          renderCompanies();
-          closeEditModal();
+        // 버튼 복원
+        if (saveButton) {
+          saveButton.textContent = '저장';
+          saveButton.disabled = false;
         }
       }
     }
@@ -787,17 +776,34 @@
     // 엑셀 다운로드
     async function downloadExcel() {
       try {
+        // 저장 중 표시
+        const excelButton = document.getElementById('excelButton');
+        if (excelButton) {
+          excelButton.textContent = '다운로드 중...';
+          excelButton.disabled = true;
+        }
+        
+        console.log('엑셀 파일 다운로드 시작');
         const result = await downloadExcelFile('회사정보');
         
-        if (!result.success) {
-          throw new Error(result.error || '다운로드 실패');
+        console.log('다운로드 결과:', result);
+        
+        if (!result || !result.success) {
+          throw new Error(result?.error || '다운로드 실패: 서버에서 오류가 발생했습니다.');
         }
         
         // 성공 메시지
         alert('엑셀 파일 다운로드가 완료되었습니다.');
       } catch (error) {
         console.error('API 오류:', error);
-        alert('엑셀 파일 다운로드 중 오류가 발생했습니다.');
+        alert('엑셀 파일 다운로드 중 오류가 발생했습니다: ' + error.message);
+      } finally {
+        // 버튼 복원
+        const excelButton = document.getElementById('excelButton');
+        if (excelButton) {
+          excelButton.textContent = '엑셀 다운로드';
+          excelButton.disabled = false;
+        }
       }
     }
     
@@ -838,84 +844,6 @@
       } catch (error) {
         console.error('API 오류:', error);
         alert('엑셀 파일 다운로드 중 오류가 발생했습니다.');
-      }
-    }
-    
-    // 기업 추가 (파일 업로드)
-    async function addCompanies() {
-      const fileInput = document.getElementById('addExcelFile');
-      
-      if (!fileInput.files || fileInput.files.length === 0) {
-        alert('엑셀 파일을 선택해주세요.');
-        return;
-      }
-      
-      const file = fileInput.files[0];
-      
-      if (!file.name.match(/\.(xlsx|xls)$/i)) {
-        alert('엑셀 파일(.xlsx, .xls)만 업로드 가능합니다.');
-        return;
-      }
-      
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('sheet', '기업정보');
-        formData.append('action', 'uploadExcel');
-        
-        // API 호출
-        const result = await uploadFile(formData);
-        
-        if (result.success) {
-          // 성공 시 데이터 갱신
-          await loadCompanies();
-          closeAddModal();
-          alert('기업 정보가 성공적으로 추가되었습니다.');
-        } else {
-          throw new Error(result.error || '업로드 실패');
-        }
-      } catch (error) {
-        console.error('API 오류:', error);
-        alert('기업 정보 추가 중 오류가 발생했습니다: ' + error.message);
-      }
-    }
-    
-    // 기업 수정 (파일 업로드)
-    async function editCompanies() {
-      const fileInput = document.getElementById('editExcelFile');
-      
-      if (!fileInput.files || fileInput.files.length === 0) {
-        alert('엑셀 파일을 선택해주세요.');
-        return;
-      }
-      
-      const file = fileInput.files[0];
-      
-      if (!file.name.match(/\.(xlsx|xls)$/i)) {
-        alert('엑셀 파일(.xlsx, .xls)만 업로드 가능합니다.');
-        return;
-      }
-      
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('sheet', '기업정보');
-        formData.append('action', 'updateExcel');
-        
-        // API 호출
-        const result = await uploadFile(formData);
-        
-        if (result.success) {
-          // 성공 시 데이터 갱신
-          await loadCompanies();
-          closeEditModal();
-          alert('기업 정보가 성공적으로 수정되었습니다.');
-        } else {
-          throw new Error(result.error || '업로드 실패');
-        }
-      } catch (error) {
-        console.error('API 오류:', error);
-        alert('기업 정보 수정 중 오류가 발생했습니다: ' + error.message);
       }
     }
     
