@@ -653,7 +653,10 @@
         .then(result => {
           if (result && result.success && result.data) {
             console.log('구글 시트에서 기업 데이터 가져오기 성공');
-            companies = result.data;
+            
+            // 데이터 정규화 수행
+            companies = normalizeCompanyData(result.data);
+            console.log('정규화된 기업 데이터:', companies);
             
             // CSV 문자셋 설정을 위한 BOM 추가
             const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
@@ -672,13 +675,19 @@
                 return text;
               };
               
+              // 테이블에 표시된 것과 같은 필드 사용
               const name = escapeCsv(company.name); 
               const businessNumber = escapeCsv(company.businessNumber);
-              const representative = escapeCsv(company.representative);
-              const manager = escapeCsv(company.manager);
-              const phone = escapeCsv(company.phone);
+              const representative = escapeCsv(company.representative || company.contactPerson);
+              const manager = escapeCsv(company.manager || company.contactPerson);
+              const phone = escapeCsv(company.phone || company.contact);
               const email = escapeCsv(company.email);
               const address = escapeCsv(company.address);
+              
+              // 데이터 확인을 위한 로깅
+              console.log('CSV 데이터 행:', {
+                name, businessNumber, representative, manager, phone, email, address
+              });
               
               csvContent += `${name},${businessNumber},${representative},${manager},${phone},${email},${address}\n`;
             });
