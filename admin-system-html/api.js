@@ -18,6 +18,9 @@ async function addData(sheet, data) {
   try {
     const response = await fetch(`${API_URL}?action=addData&sheet=${sheet}`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(data)
     });
     return await response.json();
@@ -32,6 +35,9 @@ async function updateData(sheet, data) {
   try {
     const response = await fetch(`${API_URL}?action=updateData&sheet=${sheet}`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(data)
     });
     return await response.json();
@@ -53,7 +59,7 @@ async function deleteData(sheet, id) {
 }
 
 // 엑셀 파일 다운로드
-async function downloadExcel(sheet) {
+async function downloadExcelFile(sheet) {
   try {
     const response = await fetch(`${API_URL}?action=exportToExcel&sheet=${sheet}`);
     const data = await response.json();
@@ -83,4 +89,20 @@ async function uploadFile(formData) {
     console.error('파일 업로드 오류:', error);
     return { success: false, error: error.message };
   }
-} 
+}
+
+// 데이터 유효성 검사 - 공통 함수
+function validateRequired(value, fieldName) {
+  if (!value || (typeof value === 'string' && value.trim() === '')) {
+    return `${fieldName}은(는) 필수입니다`;
+  }
+  return null;
+}
+
+// 숫자 유효성 검사
+function validateNumber(value, fieldName) {
+  if (isNaN(value) || value <= 0) {
+    return `${fieldName}은(는) 유효한 숫자여야 합니다`;
+  }
+  return null;
+}
