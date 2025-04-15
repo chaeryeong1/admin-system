@@ -1,5 +1,5 @@
 // 구글 스크립트 API URL
-const API_URL = 'https://script.google.com/macros/s/AKfycbz6D68s1_7jP1tss4OFjoz3XM_eIUAq7wwapWJi01AlWoUNJ3nceix3QJm6CCDJAmQ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyFpVXbun88s7jnOGx9nE8veAiClV8h_Rkb301ohnHXsaNiK_0AMBUDfxE7VX6T1G8/exec';
 
 // 시트 이름 맵핑 함수
 function getActualSheetName(sheet) {
