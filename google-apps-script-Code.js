@@ -56,6 +56,10 @@ function handleRequest(e) {
     var action = params.action || 'getData';
     var sheet = params.sheet || 'all';
     
+    Logger.log("=== 새 요청 시작 ===");
+    Logger.log("액션: " + action);
+    Logger.log("시트: " + sheet);
+    
     var result = {};
     
     // 액션에 따라 처리
@@ -66,19 +70,49 @@ function handleRequest(e) {
       case 'addData':
         // jsonData 파라미터에서 JSON 데이터 파싱
         var jsonData = params.jsonData;
-        var postData = jsonData ? JSON.parse(decodeURIComponent(jsonData)) : {};
-        Logger.log('데이터 추가 요청: ' + JSON.stringify(postData));
-        result = addData(sheet, postData);
+        
+        if (!jsonData) {
+          Logger.log("오류: jsonData 파라미터가 없습니다");
+          return { success: false, error: "데이터가 없습니다" };
+        }
+        
+        try {
+          var postData = JSON.parse(decodeURIComponent(jsonData));
+          Logger.log('데이터 추가 요청 - 원본: ' + jsonData);
+          Logger.log('데이터 추가 요청 - 파싱됨: ' + JSON.stringify(postData));
+          result = addData(sheet, postData);
+        } catch (parseError) {
+          Logger.log("JSON 파싱 오류: " + parseError);
+          return { success: false, error: "데이터 형식이 잘못되었습니다: " + parseError.message };
+        }
         break;
       case 'updateData':
         // jsonData 파라미터에서 JSON 데이터 파싱
         var jsonData = params.jsonData;
-        var postData = jsonData ? JSON.parse(decodeURIComponent(jsonData)) : {};
-        Logger.log('데이터 업데이트 요청: ' + JSON.stringify(postData));
-        result = updateData(sheet, postData);
+        
+        if (!jsonData) {
+          Logger.log("오류: jsonData 파라미터가 없습니다");
+          return { success: false, error: "데이터가 없습니다" };
+        }
+        
+        try {
+          var postData = JSON.parse(decodeURIComponent(jsonData));
+          Logger.log('데이터 업데이트 요청 - 원본: ' + jsonData);
+          Logger.log('데이터 업데이트 요청 - 파싱됨: ' + JSON.stringify(postData));
+          result = updateData(sheet, postData);
+        } catch (parseError) {
+          Logger.log("JSON 파싱 오류: " + parseError);
+          return { success: false, error: "데이터 형식이 잘못되었습니다: " + parseError.message };
+        }
         break;
       case 'deleteData':
-        result = deleteData(sheet, params.id);
+        var id = params.id;
+        if (!id) {
+          Logger.log("오류: 삭제할 ID가 없습니다");
+          return { success: false, error: "삭제할 ID가 없습니다" };
+        }
+        Logger.log('데이터 삭제 요청 - ID: ' + id);
+        result = deleteData(sheet, id);
         break;
       case 'exportToExcel':
         result = exportToExcel(sheet);
@@ -87,12 +121,16 @@ function handleRequest(e) {
         result = uploadFile(e);
         break;
       default:
+        Logger.log("오류: 지원하지 않는 액션 - " + action);
         result = { success: false, error: "지원하지 않는 작업입니다" };
     }
     
+    Logger.log("응답 결과: " + JSON.stringify(result));
+    Logger.log("=== 요청 종료 ===");
     return result;
   } catch (error) {
-    Logger.log("오류 발생: " + error.toString());
+    Logger.log("치명적 오류 발생: " + error.toString());
+    Logger.log("오류 스택: " + (error.stack || "스택 정보 없음"));
     return {
       success: false,
       error: error.toString()
