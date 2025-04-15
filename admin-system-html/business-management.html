@@ -55,7 +55,7 @@
             id="addButton"
             class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
-            사업추가
+            사업 리스트 추가
           </button>
         </div>
       </div>
@@ -68,9 +68,10 @@
               <tr class="border-b">
                 <th class="px-4 py-2 text-left">선택</th>
                 <th class="px-4 py-2 text-left cursor-pointer" data-sort="name">사업명 <span class="sort-icon"></span></th>
-                <th class="px-4 py-2 text-left cursor-pointer" data-sort="startDate">시작일 <span class="sort-icon"></span></th>
-                <th class="px-4 py-2 text-left cursor-pointer" data-sort="endDate">종료일 <span class="sort-icon"></span></th>
-                <th class="px-4 py-2 text-left cursor-pointer" data-sort="organizer">주최 기관 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="targetCount">목표업체수 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left">사업기간</th>
+                <th class="px-4 py-2 text-left cursor-pointer" data-sort="organizer">주최기관 <span class="sort-icon"></span></th>
+                <th class="px-4 py-2 text-left">공고</th>
               </tr>
             </thead>
             <tbody id="projectTableBody">
@@ -143,6 +144,16 @@
           >
         </div>
         <div>
+          <label class="block text-sm font-medium mb-1">목표업체수 <span class="text-red-500">*</span></label>
+          <input
+            id="addTargetCount"
+            type="number"
+            placeholder="목표 업체 수를 입력하세요"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          >
+        </div>
+        <div>
           <label class="block text-sm font-medium mb-1">사업 기간 <span class="text-red-500">*</span></label>
           <div class="flex space-x-2">
             <input
@@ -206,6 +217,15 @@
           <input
             id="editName"
             type="text"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          >
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">목표업체수 <span class="text-red-500">*</span></label>
+          <input
+            id="editTargetCount"
+            type="number"
             class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
@@ -323,7 +343,7 @@
     async function loadProjects() {
       console.log('사업 데이터 로딩 시작');
       document.getElementById('projectTableBody').innerHTML = 
-        '<tr><td colspan="5" class="px-4 py-2 text-center">데이터를 불러오는 중입니다...</td></tr>';
+        '<tr><td colspan="6" class="px-4 py-2 text-center">데이터를 불러오는 중입니다...</td></tr>';
       
       try {
         // API를 통해 데이터 가져오기
@@ -340,6 +360,7 @@
             {
               id: "1",
               name: "클라우드 보급 사업",
+              targetCount: 50,
               startDate: "2025-01-01",
               endDate: "2025-12-31",
               organizer: "정보통신산업진흥원",
@@ -348,6 +369,7 @@
             {
               id: "2",
               name: "디지털 전환 지원사업",
+              targetCount: 100,
               startDate: "2025-02-15",
               endDate: "2025-11-30",
               organizer: "중소기업기술정보진흥원",
@@ -356,6 +378,7 @@
             {
               id: "3",
               name: "ICT 융합 프로젝트",
+              targetCount: 30,
               startDate: "2025-03-01",
               endDate: "2025-10-31",
               organizer: "한국정보화진흥원",
@@ -367,7 +390,7 @@
       } catch (error) {
         console.error('사업 데이터 로드 중 오류 발생:', error);
         document.getElementById('projectTableBody').innerHTML = 
-          '<tr><td colspan="5" class="px-4 py-2 text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
+          '<tr><td colspan="6" class="px-4 py-2 text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
       }
     }
 
@@ -390,6 +413,11 @@
             const dateA = new Date(aValue);
             const dateB = new Date(bValue);
             return currentSort.direction === 'asc' ? dateA - dateB : dateB - dateA;
+          }
+          
+          // 숫자인 경우
+          if (currentSort.field === 'targetCount') {
+            return currentSort.direction === 'asc' ? aValue - bValue : bValue - aValue;
           }
           
           // 문자열인 경우
@@ -420,7 +448,7 @@
       projectTableBody.innerHTML = '';
       
       if (filteredProjects.length === 0) {
-        projectTableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
+        projectTableBody.innerHTML = '<tr><td colspan="6" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
         return;
       }
 
@@ -438,9 +466,12 @@
             >
           </td>
           <td class="px-4 py-2">${project.name}</td>
-          <td class="px-4 py-2">${project.startDate}</td>
-          <td class="px-4 py-2">${project.endDate}</td>
+          <td class="px-4 py-2">${project.targetCount || 0}개</td>
+          <td class="px-4 py-2">${project.startDate} ~ ${project.endDate}</td>
           <td class="px-4 py-2">${project.organizer}</td>
+          <td class="px-4 py-2">
+            ${project.noticeUrl ? `<a href="${project.noticeUrl}" target="_blank" class="text-blue-500 hover:underline">보기</a>` : '-'}
+          </td>
         `;
         projectTableBody.appendChild(tr);
       });
@@ -541,29 +572,31 @@
     // 사업 추가 모달 열기
     function openAddModal() {
       clearForm();
-      document.getElementById('addEditModalTitle').textContent = '사업 추가';
-      document.getElementById('addEditModal').classList.remove('hidden');
-      document.getElementById('addEditForm').setAttribute('data-mode', 'add');
+      document.getElementById('addModal').classList.remove('hidden');
     }
 
     // 사업 수정 모달 열기
-    function openEditModal(projectId) {
+    function openEditModal() {
+      if (!selectedProjectIds.length) {
+        alert('수정할 사업을 선택해주세요.');
+        return;
+      }
+      
+      const projectId = selectedProjectIds[0];
       const project = projects.find(p => p.id === projectId);
       if (!project) {
         alert('사업 정보를 찾을 수 없습니다.');
         return;
       }
       
-      document.getElementById('projectName').value = project.name;
-      document.getElementById('startDate').value = project.startDate;
-      document.getElementById('endDate').value = project.endDate;
-      document.getElementById('organizer').value = project.organizer;
-      document.getElementById('noticeUrl').value = project.noticeUrl || '';
+      document.getElementById('editName').value = project.name;
+      document.getElementById('editTargetCount').value = project.targetCount || '';
+      document.getElementById('editStartDate').value = project.startDate;
+      document.getElementById('editEndDate').value = project.endDate;
+      document.getElementById('editOrganizer').value = project.organizer;
+      document.getElementById('editNoticeUrl').value = project.noticeUrl || '';
       
-      document.getElementById('addEditModalTitle').textContent = '사업 수정';
-      document.getElementById('addEditModal').classList.remove('hidden');
-      document.getElementById('addEditForm').setAttribute('data-mode', 'edit');
-      document.getElementById('addEditForm').setAttribute('data-id', projectId);
+      document.getElementById('editModal').classList.remove('hidden');
     }
 
     // 사업 삭제 모달 열기
@@ -591,17 +624,19 @@
 
     // 모달 닫기
     function closeModals() {
-      document.getElementById('addEditModal').classList.add('hidden');
+      document.getElementById('addModal').classList.add('hidden');
+      document.getElementById('editModal').classList.add('hidden');
       document.getElementById('deleteModal').classList.add('hidden');
     }
 
     // 폼 초기화
     function clearForm() {
-      document.getElementById('projectName').value = '';
-      document.getElementById('startDate').value = '';
-      document.getElementById('endDate').value = '';
-      document.getElementById('organizer').value = '';
-      document.getElementById('noticeUrl').value = '';
+      document.getElementById('addName').value = '';
+      document.getElementById('addTargetCount').value = '';
+      document.getElementById('addStartDate').value = '';
+      document.getElementById('addEndDate').value = '';
+      document.getElementById('addOrganizer').value = '';
+      document.getElementById('addNoticeUrl').value = '';
     }
 
     // 이벤트 리스너
