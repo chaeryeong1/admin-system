@@ -68,11 +68,9 @@
               <tr class="border-b">
                 <th class="px-4 py-2 text-left">선택</th>
                 <th class="px-4 py-2 text-left cursor-pointer" data-sort="name">사업명 <span class="sort-icon"></span></th>
-                <th class="px-4 py-2 text-left cursor-pointer" data-sort="targetCompanies">참여기업 <span class="sort-icon"></span></th>
                 <th class="px-4 py-2 text-left cursor-pointer" data-sort="startDate">시작일 <span class="sort-icon"></span></th>
                 <th class="px-4 py-2 text-left cursor-pointer" data-sort="endDate">종료일 <span class="sort-icon"></span></th>
                 <th class="px-4 py-2 text-left cursor-pointer" data-sort="organizer">주관기관 <span class="sort-icon"></span></th>
-                <th class="px-4 py-2 text-left">작업</th>
               </tr>
             </thead>
             <tbody id="projectTableBody">
@@ -145,16 +143,6 @@
           >
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">목표 업체 수 <span class="text-red-500">*</span></label>
-          <input
-            id="addBudget"
-            type="number"
-            placeholder="숫자만 입력 가능"
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          >
-        </div>
-        <div>
           <label class="block text-sm font-medium mb-1">사업 기간 <span class="text-red-500">*</span></label>
           <div class="flex space-x-2">
             <input
@@ -218,15 +206,6 @@
           <input
             id="editName"
             type="text"
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          >
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">목표 업체 수 <span class="text-red-500">*</span></label>
-          <input
-            id="editBudget"
-            type="number"
             class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
@@ -344,7 +323,7 @@
     async function loadProjects() {
       console.log('사업 데이터 로딩 시작');
       document.getElementById('projectTableBody').innerHTML = 
-        '<tr><td colspan="6" class="px-4 py-2 text-center">데이터를 불러오는 중입니다...</td></tr>';
+        '<tr><td colspan="5" class="px-4 py-2 text-center">데이터를 불러오는 중입니다...</td></tr>';
       
       try {
         // API를 통해 데이터 가져오기
@@ -361,7 +340,6 @@
             {
               id: "1",
               name: "클라우드 보급 사업",
-              targetCompanies: "중소기업, 스타트업",
               startDate: "2025-01-01",
               endDate: "2025-12-31",
               organizer: "정보통신산업진흥원",
@@ -370,7 +348,6 @@
             {
               id: "2",
               name: "디지털 전환 지원사업",
-              targetCompanies: "제조업체, 소상공인",
               startDate: "2025-02-15",
               endDate: "2025-11-30",
               organizer: "중소기업기술정보진흥원",
@@ -379,7 +356,6 @@
             {
               id: "3",
               name: "ICT 융합 프로젝트",
-              targetCompanies: "IT 서비스 기업",
               startDate: "2025-03-01",
               endDate: "2025-10-31",
               organizer: "한국정보화진흥원",
@@ -391,7 +367,7 @@
       } catch (error) {
         console.error('사업 데이터 로드 중 오류 발생:', error);
         document.getElementById('projectTableBody').innerHTML = 
-          '<tr><td colspan="6" class="px-4 py-2 text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
+          '<tr><td colspan="5" class="px-4 py-2 text-center text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>';
       }
     }
 
@@ -444,7 +420,7 @@
       projectTableBody.innerHTML = '';
       
       if (filteredProjects.length === 0) {
-        projectTableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
+        projectTableBody.innerHTML = '<tr><td colspan="5" class="px-4 py-2 text-center">검색 결과가 없습니다.</td></tr>';
         return;
       }
 
@@ -462,14 +438,9 @@
             >
           </td>
           <td class="px-4 py-2">${project.name}</td>
-          <td class="px-4 py-2">${project.targetCompanies}</td>
           <td class="px-4 py-2">${project.startDate}</td>
           <td class="px-4 py-2">${project.endDate}</td>
           <td class="px-4 py-2">${project.organizer}</td>
-          <td class="px-4 py-2">
-            <button class="bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1 text-sm edit-button" data-id="${project.id}">수정</button>
-            <button class="bg-red-500 hover:bg-red-600 text-white rounded px-3 py-1 text-sm delete-button" data-id="${project.id}">삭제</button>
-          </td>
         `;
         projectTableBody.appendChild(tr);
       });
@@ -477,21 +448,7 @@
       // 이벤트 리스너 추가
       document.querySelectorAll('.project-select').forEach(radio => {
         radio.addEventListener('change', (e) => {
-          selectedProjectIds = e.target.value.split(',');
-        });
-      });
-
-      document.querySelectorAll('.edit-button').forEach(button => {
-        button.addEventListener('click', (e) => {
-          const projectId = e.target.getAttribute('data-id');
-          openEditModal(projectId);
-        });
-      });
-
-      document.querySelectorAll('.delete-button').forEach(button => {
-        button.addEventListener('click', (e) => {
-          const projectId = e.target.getAttribute('data-id');
-          openDeleteModal(projectId);
+          selectedProjectIds = [e.target.value];
         });
       });
       
@@ -598,7 +555,6 @@
       }
       
       document.getElementById('projectName').value = project.name;
-      document.getElementById('targetCompanies').value = project.targetCompanies;
       document.getElementById('startDate').value = project.startDate;
       document.getElementById('endDate').value = project.endDate;
       document.getElementById('organizer').value = project.organizer;
@@ -642,7 +598,6 @@
     // 폼 초기화
     function clearForm() {
       document.getElementById('projectName').value = '';
-      document.getElementById('targetCompanies').value = '';
       document.getElementById('startDate').value = '';
       document.getElementById('endDate').value = '';
       document.getElementById('organizer').value = '';
