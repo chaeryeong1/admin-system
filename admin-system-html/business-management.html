@@ -563,6 +563,12 @@
     let currentSortColumn = 'name';
     let currentSortDirection = 'asc';
     
+    // 캐싱 관련 변수
+    const CACHE_DURATION = 5 * 60 * 1000; // 5분 캐싱
+    let lastFetchTime = 0;
+    let dataRefreshInterval = null;
+    let isAutoRefreshEnabled = false; // 자동 새로고침 비활성화 상태로 시작
+    
     // 페이지 로드 시 실행
     document.addEventListener('DOMContentLoaded', function() {
       // 데이터 로드
@@ -651,32 +657,199 @@
       
       // 삭제 확인 버튼
       document.getElementById('confirmDeleteButton').addEventListener('click', deleteProjectHandler);
+      
+      // 데이터 자동 갱신 기능 추가 (기본적으로 비활성화)
+      addAutoRefreshToggle();
     });
     
+    // 자동 갱신 토글 버튼 추가
+    function addAutoRefreshToggle() {
+      const searchContainer = document.querySelector('.search-container');
+      const toggleContainer = document.createElement('div');
+      toggleContainer.className = 'flex items-center mt-2 mb-2';
+      
+      const toggleLabel = document.createElement('label');
+      toggleLabel.className = 'flex items-center cursor-pointer';
+      
+      const toggle = document.createElement('div');
+      toggle.className = 'relative';
+      
+      const input = document.createElement('input');
+      input.id = 'autoRefreshToggle';
+      input.type = 'checkbox';
+      input.className = 'sr-only';
+      input.checked = isAutoRefreshEnabled;
+      
+      const track = document.createElement('div');
+      track.className = 'w-10 h-4 bg-gray-300 rounded-full shadow-inner';
+      
+      const dot = document.createElement('div');
+      dot.className = 'absolute w-6 h-6 bg-white rounded-full shadow -left-1 -top-1 transition';
+      
+      input.addEventListener('change', function() {
+        if (this.checked) {
+          dot.style.transform = 'translateX(100%)';
+          dot.classList.remove('bg-white');
+          dot.classList.add('bg-blue-600');
+          enableAutoRefresh();
+        } else {
+          dot.style.transform = 'translateX(0)';
+          dot.classList.remove('bg-blue-600');
+          dot.classList.add('bg-white');
+          disableAutoRefresh();
+        }
+      });
+      
+      const text = document.createElement('span');
+      text.className = 'ml-3 text-sm font-medium text-gray-700';
+      text.textContent = '실시간 자동 갱신';
+      
+      toggle.appendChild(input);
+      toggle.appendChild(track);
+      toggle.appendChild(dot);
+      
+      toggleLabel.appendChild(toggle);
+      toggleLabel.appendChild(text);
+      
+      toggleContainer.appendChild(toggleLabel);
+      
+      // 검색 컨테이너 바로 아래에 삽입
+      searchContainer.parentNode.insertBefore(toggleContainer, searchContainer.nextSibling);
+    }
+    
+    // 자동 갱신 활성화
+    function enableAutoRefresh() {
+      isAutoRefreshEnabled = true;
+      
+      // 기존 인터벌 정리
+      if (dataRefreshInterval) {
+        clearInterval(dataRefreshInterval);
+      }
+      
+      // 매 1분마다 데이터 갱신
+      dataRefreshInterval = setInterval(() => {
+        loadProjects(true); // silent 모드로 로드 (로딩 표시 없음)
+      }, 60000); // 60초
+      
+      showToast('실시간 자동 갱신이 활성화되었습니다.', 'info');
+    }
+    
+    // 자동 갱신 비활성화
+    function disableAutoRefresh() {
+      isAutoRefreshEnabled = false;
+      
+      if (dataRefreshInterval) {
+        clearInterval(dataRefreshInterval);
+        dataRefreshInterval = null;
+      }
+      
+      showToast('실시간 자동 갱신이 비활성화되었습니다.', 'info');
+    }
+    
     // 프로젝트 데이터 로드
-    async function loadProjects() {
+    async function loadProjects(silent = false) {
       try {
-        // 로딩 표시
-        showLoading();
+        const now = Date.now();
+        const cachedData = localStorage.getItem('projectsData');
+        const cachedTime = localStorage.getItem('projectsDataTime');
+        
+        // 캐시가 유효한지 확인 (5분 이내)
+        if (cachedData && cachedTime && (now - parseInt(cachedTime) < CACHE_DURATION)) {
+          // 캐시 데이터 사용
+          projects = JSON.parse(cachedData);
+          lastFetchTime = parseInt(cachedTime);
+          filterAndRenderProjects();
+          
+          // 백그라운드에서 최신 데이터 로드 (자동 갱신 활성화 상태일 때만)
+          if (isAutoRefreshEnabled) {
+            fetchLatestDataInBackground();
+          }
+          
+          return;
+        }
+        
+        // 캐시가 없거나 만료된 경우 API 호출
+        if (!silent) {
+          // 로딩 표시 (silent 모드가 아닐 때만)
+          showLoading();
+        }
         
         // API 호출
         const response = await fetchData('사업정보');
         
         if (response && response.success && Array.isArray(response.data)) {
           projects = response.data;
+          
+          // 데이터를 로컬 스토리지에 캐싱
+          localStorage.setItem('projectsData', JSON.stringify(projects));
+          localStorage.setItem('projectsDataTime', now.toString());
+          lastFetchTime = now;
+          
           filterAndRenderProjects();
         } else {
-          showToast('데이터를 불러오는데 실패했습니다.', 'error');
-          projects = [];
-          renderProjects();
+          // API 호출 실패 시 캐시된 데이터 사용 시도
+          if (cachedData) {
+            projects = JSON.parse(cachedData);
+            lastFetchTime = parseInt(cachedTime || '0');
+            showToast('최신 데이터를 불러오는데 실패했습니다. 캐시된 데이터를 사용합니다.', 'warning');
+          } else {
+            showToast('데이터를 불러오는데 실패했습니다.', 'error');
+            projects = [];
+          }
+          filterAndRenderProjects();
         }
       } catch (error) {
         console.error('데이터 로드 오류:', error);
-        showToast('데이터를 불러오는데 실패했습니다.', 'error');
-        projects = [];
-        renderProjects();
+        
+        // 오류 발생 시 캐시된 데이터 사용 시도
+        const cachedData = localStorage.getItem('projectsData');
+        if (cachedData) {
+          projects = JSON.parse(cachedData);
+          lastFetchTime = parseInt(localStorage.getItem('projectsDataTime') || '0');
+          showToast('데이터 로드 중 오류가 발생했습니다. 캐시된 데이터를 사용합니다.', 'warning');
+        } else {
+          showToast('데이터를 불러오는데 실패했습니다.', 'error');
+          projects = [];
+        }
+        filterAndRenderProjects();
       } finally {
-        hideLoading();
+        if (!silent) {
+          // 로딩 해제 (silent 모드가 아닐 때만)
+          hideLoading();
+        }
+      }
+    }
+    
+    // 백그라운드에서 최신 데이터 가져오기
+    async function fetchLatestDataInBackground() {
+      try {
+        const response = await fetchData('사업정보');
+        
+        if (response && response.success && Array.isArray(response.data)) {
+          // 기존 데이터와 비교하여 변경사항이 있는지 확인
+          const oldDataJson = JSON.stringify(projects);
+          const newDataJson = JSON.stringify(response.data);
+          
+          if (oldDataJson !== newDataJson) {
+            // 데이터가 변경됨
+            projects = response.data;
+            
+            // 캐시 업데이트
+            const now = Date.now();
+            localStorage.setItem('projectsData', newDataJson);
+            localStorage.setItem('projectsDataTime', now.toString());
+            lastFetchTime = now;
+            
+            // 조용히 UI 업데이트
+            filterAndRenderProjects();
+            
+            // 토스트 메시지로 갱신 알림
+            showToast('데이터가 백그라운드에서 갱신되었습니다.', 'info');
+          }
+        }
+      } catch (error) {
+        console.error('백그라운드 데이터 로드 오류:', error);
+        // 백그라운드 로드 시 오류는 사용자에게 알리지 않음
       }
     }
     
