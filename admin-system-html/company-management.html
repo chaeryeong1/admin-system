@@ -392,9 +392,10 @@
           <td class="px-4 py-2">
             <input 
               type="checkbox" 
-              class="company-checkbox"
+              class="company-checkbox" 
               data-id="${company.id}"
-              data-name="${company.name}"
+              data-name="${company.name || ''}"
+              ${selectedCompanyIds.includes(String(company.id)) ? 'checked' : ''}
             >
           </td>
           <td class="px-4 py-2">${company.name || '-'}</td>
@@ -406,34 +407,103 @@
         </tr>
       `).join('');
       
-      // 라디오 버튼 이벤트 리스너 추가
-      document.querySelectorAll('.company-radio').forEach(radio => {
-        radio.addEventListener('change', handleCompanySelection);
+      // 체크박스 이벤트 리스너 추가
+      document.querySelectorAll('.company-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', handleCompanySelection);
       });
       
       // 테이블 행 클릭 이벤트 추가
       document.querySelectorAll('#companyTableBody tr').forEach(row => {
-        row.addEventListener('click', function() {
-          const radio = this.querySelector('.company-radio');
-          if (radio) {
-            radio.checked = true;
-            selectedCompanyIds.push(this.dataset.id);
-            updateButtonStates();
+        row.addEventListener('click', function(e) {
+          // 링크 클릭은 무시
+          if (e.target.tagName === 'A') return;
+          
+          // 체크박스 클릭은 체크박스 자체가 처리
+          if (e.target.type === 'checkbox') return;
+          
+          // 행 클릭 시 해당 체크박스 토글
+          const checkbox = this.querySelector('.company-checkbox');
+          if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+            
+            // 체크박스 변경 이벤트 발생시키기
+            const event = new Event('change', { bubbles: true });
+            checkbox.dispatchEvent(event);
           }
         });
       });
       
       // 버튼 상태 업데이트
       updateButtonStates();
+      
+      // 전체 선택 체크박스 상태 업데이트
+      updateSelectAllCheckbox();
     }
     
-    // 회사 선택 처리
+    // 회사 선택 처리 (이제 다중 선택 가능)
     function handleCompanySelection(event) {
-      const selectedCompanyId = event.target.closest('tr').dataset.id;
-      if (selectedCompanyId) {
-        selectedCompanyIds = [selectedCompanyId];
-        updateButtonStates();
+      const checkbox = event.target;
+      const companyId = checkbox.dataset.id;
+      
+      if (checkbox.checked) {
+        // 체크된 경우 배열에 ID 추가
+        if (!selectedCompanyIds.includes(companyId)) {
+          selectedCompanyIds.push(companyId);
+        }
+      } else {
+        // 체크 해제된 경우 배열에서 ID 제거
+        selectedCompanyIds = selectedCompanyIds.filter(id => id !== companyId);
       }
+      
+      console.log('선택된 기업 ID 목록:', selectedCompanyIds);
+      
+      updateButtonStates();
+      updateSelectAllCheckbox();
+    }
+    
+    // 전체 선택 체크박스 상태 업데이트
+    function updateSelectAllCheckbox() {
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      const checkboxes = document.querySelectorAll('.company-checkbox');
+      
+      if (!selectAllCheckbox || checkboxes.length === 0) return;
+      
+      // 모든 체크박스가 선택되었는지 확인
+      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+      // 일부 체크박스만 선택되었는지 확인
+      const someChecked = Array.from(checkboxes).some(cb => cb.checked);
+      
+      selectAllCheckbox.checked = allChecked;
+      // 여기서 필요하면 indeterminate 상태 추가 가능
+      selectAllCheckbox.indeterminate = someChecked && !allChecked;
+    }
+    
+    // 전체 선택/해제 처리
+    function handleSelectAll() {
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      const checkboxes = document.querySelectorAll('.company-checkbox');
+      
+      if (!selectAllCheckbox || checkboxes.length === 0) return;
+      
+      const isChecked = selectAllCheckbox.checked;
+      
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = isChecked;
+        
+        const companyId = checkbox.dataset.id;
+        
+        if (isChecked) {
+          // 전체 선택 시 모든 ID 추가
+          if (!selectedCompanyIds.includes(companyId)) {
+            selectedCompanyIds.push(companyId);
+          }
+        } else {
+          // 전체 해제 시 배열 비우기
+          selectedCompanyIds = [];
+        }
+      });
+      
+      updateButtonStates();
     }
     
     // 버튼 상태 업데이트
@@ -683,7 +753,10 @@
     
     // 선택된 기업 정보 가져오기
     function getSelectedCompanies() {
-      return selectedCompanyIds.map(id => companies.find(c => c.id === id));
+      return selectedCompanyIds.map(id => {
+        const company = companies.find(c => String(c.id) === String(id));
+        return company ? company : { id, name: `ID: ${id}` };
+      });
     }
     
     // 삭제 처리
@@ -864,13 +937,7 @@
       });
       
       // 전체선택 체크박스
-      document.getElementById('selectAllCheckbox').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('.company-checkbox');
-        checkboxes.forEach(checkbox => {
-          checkbox.checked = this.checked;
-        });
-        updateButtonStates();
-      });
+      document.getElementById('selectAllCheckbox').addEventListener('change', handleSelectAll);
       
       // 엑셀 다운로드 버튼
       document.getElementById('excelButton').addEventListener('click', downloadExcel);
