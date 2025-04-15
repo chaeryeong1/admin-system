@@ -555,9 +555,21 @@
       // 기업 추가 버튼
       addContractButton.addEventListener('click', openAddContractModal);
       
-      // 모달 버튼
-      cancelRequestButton.addEventListener('click', closeRequestModal);
-      confirmRequestButton.addEventListener('click', requestTransfer);
+      // 모달 버튼 이벤트
+      document.getElementById('cancelAddContractButton').addEventListener('click', closeAddContractModal);
+      document.getElementById('confirmAddContractButton').addEventListener('click', addContract);
+      
+      // 수정 모달 버튼
+      document.getElementById('cancelEditContractButton').addEventListener('click', closeEditContractModal);
+      document.getElementById('confirmEditContractButton').addEventListener('click', editContract);
+      
+      // 삭제 모달 버튼
+      document.getElementById('cancelDeleteContractButton').addEventListener('click', closeDeleteContractModal);
+      document.getElementById('confirmDeleteContractButton').addEventListener('click', deleteContract);
+      
+      // 수정/삭제 버튼
+      editContractButton.addEventListener('click', openEditContractModal);
+      deleteContractButton.addEventListener('click', openDeleteContractModal);
     });
     
     // 엑셀 관리 처리 함수
