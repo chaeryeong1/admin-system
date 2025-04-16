@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 시스템 - 기업 관리</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <!-- 상단 대메뉴 -->
+  <header class="bg-white border-b px-6 py-3 text-sm font-semibold flex space-x-6">
+    <a href="business-management.html" class="text-gray-500">사업 관리</a>
+    <a href="company-management.html" class="text-blue-600">기업 관리</a>
+    <a href="business-notification.html" class="text-gray-500">사업 안내</a>
+    <a href="cashback-management.html" class="text-gray-500">캐시백 송금</a>
+  </header>
+
+  <div class="flex">
+    <!-- 좌측 소메뉴 -->
+    <aside class="w-60 bg-gray-50 p-4 text-sm border-r h-screen">
+      <h2 class="text-base font-semibold mb-4">기업 관리</h2>
+      <ul class="space-y-2">
+        <li class="text-blue-600 font-semibold">ㆍ기업 리스트 관리</li>
+      </ul>
+    </aside>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="flex-1 p-6 space-y-6">
+      <div class="text-xl font-bold border-b pb-2">기업 리스트 관리</div>
+
+      <!-- 검색/필터링 -->
+      <div class="flex items-center space-x-4">
+        <input 
+          id="searchInput"
+          type="text" 
+          placeholder="기업명 검색" 
+          class="px-3 py-2 border rounded max-w-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+        <button 
+          id="searchButton"
+          class="px-4 py-2 border rounded hover:bg-gray-100"
+        >
+          조회
+        </button>
+        <div class="flex-1 text-right space-x-2">
+          <button 
+            id="addButton"
+            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            기업 리스트 추가
+          </button>
+          <button 
+            id="excelButton"
+            class="px-4 py-2 bg-gray-200 text-white rounded hover:bg-gray-300"
+          >
+            기업 리스트 다운로드
+          </button>
+        </div>
+      </div>
+
+      <!-- 표 -->
+      <div class="bg-white border rounded shadow">
+        <div class="p-4">
+          <table class="min-w-full">
+            <thead>
+              <tr class="border-b">
+                <th class="px-4 py-2 text-left">
+                  <input 
+                    type="checkbox" 
+                    id="selectAllCheckbox"
+                    class="cursor-pointer"
+                  >
+                </th>
+                <th class="px-4 py-2 text-left">기업명</th>
+                <th class="px-4 py-2 text-left">사업자등록번호</th>
+                <th class="px-4 py-2 text-left">대표자</th>
+                <th class="px-4 py-2 text-left">전화번호</th>
+                <th class="px-4 py-2 text-left">이메일</th>
+                <th class="px-4 py-2 text-left">등록일</th>
+                <th class="px-4 py-2 text-left">관리</th>
+              </tr>
+            </thead>
+            <tbody id="companyTableBody">
+              <!-- JavaScript로 채워질 부분 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 하단 버튼 -->
+      <div class="flex justify-end space-x-4">
+        <button 
+          id="deleteButton"
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 opacity-50 cursor-not-allowed"
+          disabled
+        >
+          삭제
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 추가 모달 -->
+  <div id="addModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+      <h2 class="text-xl font-bold mb-4">기업 등록</h2>
+      
+      <div class="mb-4">
+        <div class="mb-4">
+          <label class="block mb-2 font-semibold">파일 업로드</label>
+          <div id="dragDropArea" class="border-2 border-dashed border-gray-300 rounded-lg p-8 mb-4 text-center hover:border-blue-500 transition-colors cursor-pointer">
+            <div class="mb-2">
+              <i class="fas fa-file-upload text-3xl text-gray-400"></i>
+            </div>
+            <p class="mb-2 text-gray-700">파일을 이곳에 끌어다 놓거나</p>
+            <label class="cursor-pointer inline-block bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
+              파일 선택하기
+              <input type="file" id="companyFileInput" accept=".xlsx,.xls,.csv" class="hidden" />
+            </label>
+            <div id="selectedFileInfo" class="mt-4 text-sm text-gray-600">
+              <span id="selectedFileName">선택된 파일 없음</span>
+            </div>
+          </div>
+          
+          <p class="text-sm text-gray-500 mt-1">엑셀(.xlsx, .xls) 또는 CSV(.csv) 파일만 업로드 가능</p>
+          <p class="text-sm text-gray-500">* 등록일은 시스템에서 자동으로 생성되므로 입력하지 않아도 됩니다.</p>
+          
+          <button id="downloadSampleButton" class="mt-3 text-blue-500 hover:text-blue-700 text-sm underline text-gray-600">
+            기업리스트 다운로드
+          </button>
+        </div>
+      </div>
+      
+      <div class="flex justify-end mt-4">
+        <button id="cancelAddButton" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded mr-2">
+          취소
+        </button>
+        <button id="confirmAddButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded">
+          등록
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 수정 모달 -->
+  <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+      <h2 class="text-lg font-semibold mb-4">기업 정보 수정</h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">기존 데이터 다운로드</label>
+          <button 
+            id="downloadCurrentDataButton"
+            type="button" 
+            class="w-full px-3 py-2 bg-gray-100 border rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            엑셀 파일 다운로드
+          </button>
+          <p class="text-xs text-gray-500 mt-1">기존 데이터를 수정 후 아래에 업로드하세요</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">파일 업로드 <span class="text-red-500">*</span></label>
+          <input
+            id="editExcelFile"
+            type="file"
+            accept=".xlsx, .xls, .csv"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          >
+        </div>
+        <div class="flex justify-end space-x-2 mt-6">
+          <button 
+            id="editCancelButton"
+            type="button"
+            class="px-4 py-2 border rounded hover:bg-gray-100"
+          >
+            취소
+          </button>
+          <button 
+            id="confirmEditButton"
+            type="button"
+            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            저장
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 삭제 확인 모달 -->
+  <div id="deleteModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+      <h2 class="text-xl font-bold mb-4">기업 정보 삭제</h2>
+      
+      <p id="deleteModalContent" class="mb-4">선택한 기업 정보를 삭제하시겠습니까?</p>
+      
+      <div class="flex justify-end">
+        <button id="cancelDeleteButton" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded mr-2">
+          취소
+        </button>
+        <button id="confirmDeleteButton" class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded">
+          삭제
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script>
+    // 전역 데이터 상태
+    let companies = [];
+    let selectedCompanyId = null;
+    
+    // API에서 가져온 데이터 필드명 변환
+    function normalizeCompanyData(data) {
+      if (!Array.isArray(data)) return [];
+      
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
+      
+      return data.map(company => {
+        // 원본 데이터 로깅
+        console.log('원본 기업 데이터:', company);
+        
+        // API나 다른 소스에서 가져온 데이터 필드명 통일
+        return {
+          id: company.id || `id_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+          name: company.name || company.companyName || company.company_name || '',
+          businessNumber: company.businessNumber || company.business_number || company.businessNo || '',
+          representative: company.representative || company.대표자 || company.CEO || company.ceo || '',
+          phone: company.phone || company.phoneNumber || company.contact || company.전화번호 || '',
+          email: company.email || company.이메일 || company.email || company.email || '',
+          registrationDate: company.registrationDate || company.created_at || company.regDate || today // 등록일 자동 설정
+        };
+      });
+    }
+    
+    // DOM 요소 참조들은 DOMContentLoaded 이벤트 핸들러 내부에서 초기화할 것입니다.
+    
+    // 모달 열기 함수들
+    function openAddModal() {
+      console.log('기업 추가 모달 열기');
+      const addModal = document.getElementById('addModal');
+      if (!addModal) {
+        console.error('addModal 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
+      addModal.classList.remove('hidden');
+      
+      // 파일 입력 초기화
+      const fileInput = document.getElementById('companyFileInput');
+      if (fileInput) {
+        fileInput.value = '';
+        document.getElementById('selectedFileName').textContent = '선택된 파일 없음';
+      }
+      
+      // 버튼 초기화 (이전 상태 초기화 - 중요)
+      const confirmAddButton = document.getElementById('confirmAddButton');
+      if (confirmAddButton) {
+        confirmAddButton.disabled = false;
+        confirmAddButton.textContent = '등록';
+        confirmAddButton.removeAttribute('data-processing');
+      }
+      
+      // 버튼 이벤트 처리 - 모달이 열릴 때마다 새로 등록 (이중 이벤트 방지)
+      const cancelAddButton = document.getElementById('cancelAddButton');
+      
+      if (confirmAddButton) {
+        // 기존 이벤트 리스너 제거를 위해 복제 후 교체
+        const newConfirmButton = confirmAddButton.cloneNode(true);
+        confirmAddButton.parentNode.replaceChild(newConfirmButton, confirmAddButton);
+        
+        // 새 이벤트 리스너 등록 - 직접 함수 사용
+        newConfirmButton.onclick = function() {
+          addCompanies();
+        };
+      }
+      
+      if (cancelAddButton) {
+        // 취소 버튼도 동일하게 처리
+        const newCancelButton = cancelAddButton.cloneNode(true);
+        cancelAddButton.parentNode.replaceChild(newCancelButton, cancelAddButton);
+        newCancelButton.onclick = function() {
+          closeAddModal();
+        };
+      }
+    }
+    
+    function closeAddModal() {
+      console.log('기업 추가 모달 닫기');
+      const addModal = document.getElementById('addModal');
+      if (!addModal) {
+        console.error('addModal 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
+      addModal.classList.add('hidden');
+      
+      // 모달 닫을 때 이벤트 리스너 정리
+      const confirmAddButton = document.getElementById('confirmAddButton');
+      if (confirmAddButton) {
+        confirmAddButton.removeAttribute('data-processing');
+      }
+    }
+    
+    function openEditModal(companyId) {
+      console.log('기업 수정 모달 열기, ID:', companyId);
+      
+      // 기업 정보 찾기
+      const company = companies.find(c => c.id == companyId);
+      if (!company) {
+        alert('수정할 기업 정보를 찾을 수 없습니다.');
+        return;
+      }
+      
+      const editModal = document.getElementById('editModal');
+      if (!editModal) {
+        console.error('editModal 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
+      // 모달에 데이터 로드
+      // 여기서는 현재 HTML 구조에 맞게 수정 (엑셀 파일 업로드 형태)
+      
+      // 선택된 기업 ID 저장
+      selectedCompanyId = companyId;
+      
+      // 모달 열기
+      editModal.classList.remove('hidden');
+    }
+    
+    function closeEditModal() {
+      console.log('기업 수정 모달 닫기');
+      const editModal = document.getElementById('editModal');
+      if (!editModal) {
+        console.error('editModal 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
+      editModal.classList.add('hidden');
+      selectedCompanyId = null;
+    }
+    
+    function openDeleteModal(companyId) {
+      console.log('기업 삭제 모달 열기, ID:', companyId);
+      
+      const deleteModal = document.getElementById('deleteModal');
+      if (!deleteModal) {
+        console.error('deleteModal 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
+      // 삭제 확인 메시지 설정
+      let confirmMessage = '';
+      
+      if (companyId) {
+        // 단일 기업 삭제
+        selectedCompanyId = companyId;
+        const company = companies.find(c => c.id == companyId);
+        
+        if (!company) {
+          alert('삭제할 기업 정보를 찾을 수 없습니다.');
+          return;
+        }
+        
+        confirmMessage = `"${company.name}" 기업 정보를 삭제하시겠습니까?`;
+      } else {
+        // 다중 삭제
+        selectedCompanyId = null;
+        const checkedBoxes = document.querySelectorAll('.company-checkbox:checked');
+        
+        if (checkedBoxes.length === 0) {
+          alert('삭제할 기업을 선택해주세요.');
+          return;
+        }
+        
+        confirmMessage = `선택한 ${checkedBoxes.length}개 기업 정보를 삭제하시겠습니까?`;
+      }
+      
+      // 메시지 설정 및 모달 열기
+      const deleteModalContent = document.getElementById('deleteModalContent');
+      if (deleteModalContent) {
+        deleteModalContent.textContent = confirmMessage;
+      }
+      
+      // 버튼 초기화 (이전 상태 초기화 - 중요)
+      const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+      if (confirmDeleteButton) {
+        confirmDeleteButton.disabled = false;
+        confirmDeleteButton.textContent = '삭제';
+        confirmDeleteButton.removeAttribute('data-processing');
+      }
+      
+      // 버튼 이벤트 처리 - 모달이 열릴 때마다 새로 등록 (이중 이벤트 방지)
+      const cancelDeleteButton = document.getElementById('cancelDeleteButton');
+      
+      if (confirmDeleteButton) {
+        // 기존 이벤트 리스너 제거를 위해 복제 후 교체
+        const newConfirmButton = confirmDeleteButton.cloneNode(true);
+        confirmDeleteButton.parentNode.replaceChild(newConfirmButton, confirmDeleteButton);
+        
+        // 새 이벤트 리스너 등록 - 직접 함수 사용
+        newConfirmButton.onclick = function() {
+          deleteCompanies();
+        };
+      }
+      
+      if (cancelDeleteButton) {
+        // 취소 버튼도 동일하게 처리
+        const newCancelButton = cancelDeleteButton.cloneNode(true);
+        cancelDeleteButton.parentNode.replaceChild(newCancelButton, cancelDeleteButton);
+        newCancelButton.onclick = function() {
+          closeDeleteModal();
+        };
+      }
+      
+      deleteModal.classList.remove('hidden');
+    }
+    
+    function closeDeleteModal() {
+      console.log('기업 삭제 모달 닫기');
+      const deleteModal = document.getElementById('deleteModal');
+      if (!deleteModal) {
+        console.error('deleteModal 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
+      deleteModal.classList.add('hidden');
+      
+      // 모달 닫을 때 이벤트 리스너 정리
+      const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+      if (confirmDeleteButton) {
+        confirmDeleteButton.removeAttribute('data-processing');
+      }
+    }
+    
+    // 기업 정보 로드
+    async function loadCompanies() {
+      console.log('기업 정보 로드 시작');
+      
+      const companyTableBody = document.getElementById('companyTableBody');
+      
+      // 테이블 로딩 상태 표시
+      if (companyTableBody) {
+        companyTableBody.innerHTML = `
+          <tr>
+            <td colspan="8" class="text-center py-4">
+              <div class="flex justify-center items-center">
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-2"></div>
+                기업 정보를 불러오는 중...
+              </div>
+            </td>
+          </tr>
+        `;
+      } else {
+        console.error('companyTableBody 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
+      try {
+        // API에서 데이터 가져오기
+        const result = await fetchData('기업정보');
+        console.log('API 호출 결과:', result);
+        
+        if (result && result.success && Array.isArray(result.data)) {
+          // API에서 데이터를 성공적으로 가져온 경우
+          console.log('API에서 기업 정보 로드:', result.data.length, '개 항목');
+          companies = normalizeCompanyData(result.data);
+        } else {
+          // API 오류 또는 데이터 없음
+          console.warn('API 호출 실패 또는 데이터 형식 오류:', result?.error);
+          companies = [];
+          
+          companyTableBody.innerHTML = `
+            <tr>
+              <td colspan="8" class="text-center py-8">
+                <div class="text-red-500 mb-4">
+                  <i class="fas fa-exclamation-triangle text-2xl"></i>
+                </div>
+                <div class="text-lg font-bold mb-2">데이터를 불러올 수 없습니다</div>
+                <div class="text-sm text-gray-600">서버 연결에 문제가 있거나 데이터가 없습니다</div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+        
+        // 테이블 렌더링
+        renderCompaniesTable();
+      } catch (error) {
+        console.error('기업 정보 로드 오류:', error);
+        
+        if (companyTableBody) {
+          companyTableBody.innerHTML = `
+            <tr>
+              <td colspan="8" class="text-center py-8">
+                <div class="text-red-500 mb-4">
+                  <i class="fas fa-exclamation-triangle text-2xl"></i>
+                </div>
+                <div class="text-lg font-bold mb-2">데이터 로드 중 오류 발생</div>
+                <div class="text-sm text-red-600 mb-2">${error.message}</div>
+                <div class="text-sm text-gray-600">서버 연결에 문제가 있습니다</div>
+              </td>
+            </tr>
+          `;
+        }
+      }
+    }
+    
+    // 전체 선택 토글
+    function toggleSelectAll() {
+      console.log('전체 선택 토글');
+      
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      if (!selectAllCheckbox) {
+        console.error('selectAllCheckbox 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
+      const isChecked = selectAllCheckbox.checked;
+      document.querySelectorAll('.company-checkbox').forEach(checkbox => {
+        checkbox.checked = isChecked;
+      });
+      
+      // 삭제 버튼 활성화/비활성화
+      updateDeleteButtonState();
+    }
+    
+    // 삭제 버튼 상태 업데이트
+    function updateDeleteButtonState() {
+      const deleteButton = document.getElementById('deleteButton');
+      if (!deleteButton) {
+        console.error('deleteButton 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
+      const anyChecked = document.querySelector('.company-checkbox:checked') !== null;
+      
+      if (anyChecked) {
+        deleteButton.disabled = false;
+        deleteButton.classList.remove('opacity-50', 'cursor-not-allowed');
+      } else {
+        deleteButton.disabled = true;
+        deleteButton.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+    }
+    
+    // 기업 정보 테이블 렌더링
+    function renderCompaniesTable() {
+      console.log('기업 테이블 렌더링');
+      
+      const companyTableBody = document.getElementById('companyTableBody');
+      if (!companyTableBody) {
+        console.error('companyTableBody 요소를 찾을 수 없습니다.');
+        return;
+      }
+      
+      if (!companies || companies.length === 0) {
+        companyTableBody.innerHTML = `
+          <tr>
+            <td colspan="8" class="text-center py-8">
+              <div class="text-gray-400 mb-4">
+                <i class="fas fa-info-circle text-2xl"></i>
+              </div>
+              <div class="text-lg font-bold mb-2">등록된 기업 정보가 없습니다</div>
+              <div class="text-sm text-gray-600 mb-4">상단의 '기업 리스트 추가' 버튼을 클릭하여 기업을 등록하거나, 페이지 로딩을 위해 새로고침(F5) 하세요</div>
+              <div>
+                <button onclick="openAddModal()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                  기업 등록하기
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      // 테이블 초기화
+      companyTableBody.innerHTML = '';
+      
+      // 각 기업 데이터로 행 생성
+      companies.forEach(company => {
+        const row = document.createElement('tr');
+        row.className = 'border-b hover:bg-gray-100';
+        
+        row.innerHTML = `
+          <td class="px-4 py-2 text-left">
+            <input type="checkbox" class="company-checkbox cursor-pointer" 
+                   value="${company.id}" onchange="updateDeleteButtonState()">
+          </td>
+          <td class="px-4 py-2 text-left">${company.name || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.businessNumber || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.representative || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.phone || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.email || '-'}</td>
+          <td class="px-4 py-2 text-left">${company.registrationDate || '-'}</td>
+          <td class="px-4 py-2 text-left">
+            <div class="flex space-x-2">
+              <button onclick="openEditModal('${company.id}')" class="text-blue-500 hover:text-blue-700">
+                <i class="fas fa-edit"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        
+        companyTableBody.appendChild(row);
+      });
+      
+      // 전체 선택 체크박스 초기화
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      if (selectAllCheckbox) {
+        selectAllCheckbox.checked = false;
+      }
+      
+      // 삭제 버튼 상태 업데이트
+      updateDeleteButtonState();
+    }
+    
+    // 파일 선택 시 파일명 표시 & 기업 다운로드 버튼
+    // 기업목록 내려받기 버튼
+    const downloadSampleButton = document.getElementById('downloadSampleButton');
+    if (downloadSampleButton) {
+      downloadSampleButton.addEventListener('click', downloadCompanyList);
+    }
+    
+    // 엑셀 다운로드 버튼을 '다운로드'로 표시 및 연결
+    const excelButton = document.getElementById('excelButton');
+    if (excelButton) {
+      excelButton.addEventListener('click', downloadCompanyList);
+    } else {
+      console.warn('excelButton 요소를 찾을 수 없습니다.');
+    }
+    
+    // 구글 시트에서 기업 데이터를 가져와 다운로드하는 함수
+    function downloadCompanyList() {
+      console.log('구글 시트 기업 정보 다운로드');
+      
+      // 버튼 상태 변경
+      const button = event ? event.currentTarget : document.getElementById('excelButton');
+      const originalText = button.textContent;
+      button.textContent = '데이터 가져오는 중...';
+      button.disabled = true;
+      
+      // 먼저 최신 데이터 가져오기
+      fetchData('기업정보')
+        .then(result => {
+          if (result && result.success && result.data) {
+            console.log('구글 시트에서 기업 데이터 가져오기 성공');
+            
+            // 데이터 정규화 수행
+            companies = normalizeCompanyData(result.data);
+            console.log('정규화된 기업 데이터:', companies);
+            
+            // CSV 문자셋 설정을 위한 BOM 추가
+            const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
+            
+            // CSV 데이터 생성 (필요한 5개 필드만 포함)
+            let csvContent = "기업명,사업자 등록번호,대표자,전화번호,이메일";
+            
+            companies.forEach(company => {
+              // 데이터 정제 - 쉼표나 줄바꿈 있으면 따옴표로 감싸기
+              const escapeCsv = (text) => {
+                if (!text) return '';
+                text = String(text).replace(/"/g, '""'); // 따옴표는 두 개로 이스케이프
+                if (text.includes(',') || text.includes('\n') || text.includes('"')) {
+                  return `"${text}"`; 
+                }
+                return text;
+              };
+              
+              // 테이블에 표시된 것과 같은 필드 사용
+              const name = escapeCsv(company.name); 
+              const businessNumber = escapeCsv(company.businessNumber);
+              const representative = escapeCsv(company.representative);
+              const phone = escapeCsv(company.phone);
+              const email = escapeCsv(company.email);
+              
+              // 데이터 확인을 위한 로깅
+              console.log('CSV 데이터 행:', {
+                name, businessNumber, representative, phone, email
+              });
+              
+              csvContent += `${name},${businessNumber},${representative},${phone},${email}\n`;
+            });
+            
+            // Blob에 BOM 먼저 추가
+            const blob = new Blob([BOM, csvContent], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', '기업리스트.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert('기업 리스트가 다운로드되었습니다.');
+          } else {
+            throw new Error('데이터를 가져올 수 없습니다.');
+          }
+        })
+        .catch(error => {
+          console.error('기업 데이터 다운로드 오류:', error);
+          alert('기업 정보를 가져오는 중 오류가 발생했습니다: ' + error.message);
+        })
+        .finally(() => {
+          // 버튼 상태 복원
+          button.textContent = originalText;
+          button.disabled = false;
+        });
+    }
+    
+    // 엑셀 파일 업로드 처리 (추가)
+    async function addCompanies() {
+      console.log('기업 추가 시작');
+      const fileInput = document.getElementById('companyFileInput');
+      const addConfirmBtn = document.getElementById('confirmAddButton');
+      
+      // 이미 처리 중인지 확인
+      if (addConfirmBtn.getAttribute('data-processing') === 'true') {
+        console.log('이미 처리 중입니다.');
+        return;
+      }
+      
+      // 파일 입력 확인
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert('업로드할 파일을 선택해주세요.');
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      console.log(`선택된 파일: ${file.name}`);
+      
+      // 파일 형식 확인
+      const fileExtension = file.name.split('.').pop().toLowerCase();
+      if (!['xlsx', 'xls', 'csv'].includes(fileExtension)) {
+        alert('Excel(xlsx, xls) 또는 CSV 파일만 업로드 가능합니다.');
+        return;
+      }
+      
+      try {
+        addConfirmBtn.setAttribute('data-processing', 'true');
+        addConfirmBtn.textContent = '처리 중...';
+        
+        // FormData 생성 및 파일 추가
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        // API 호출하여 파일 업로드 (시트 이름 직접 전달)
+        const result = await uploadFile(formData, '기업정보');
+        
+        if (result.success) {
+          console.log(`파일 업로드 성공: ${result.fileName}`);
+          alert(`파일 업로드 성공: ${result.message || '기업 정보가 추가되었습니다.'}`);
+          closeAddModal();
+          loadCompanies(); // 기업 목록 다시 로드
+        } else {
+          console.error('파일 업로드 실패:', result.error);
+          alert(`업로드 실패: ${result.error || '알 수 없는 오류가 발생했습니다.'}`);
+        }
+      } catch (error) {
+        console.error('기업 추가 중 오류 발생:', error);
+        alert(`기업 추가 중 오류: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
+      } finally {
+        addConfirmBtn.setAttribute('data-processing', 'false');
+        addConfirmBtn.textContent = '확인';
+        fileInput.value = ''; // 파일 입력 초기화
+      }
+    }
+    
+    // 기업 정보 삭제
+    async function deleteCompanies() {
+      console.log('기업 정보 삭제 시작');
+      
+      // 삭제할 기업 ID 배열 생성
+      let companyIds = [];
+      
+      if (selectedCompanyId) {
+        // 단일 기업 삭제
+        companyIds = [selectedCompanyId];
+      } else {
+        // 다중 선택 삭제
+        document.querySelectorAll('.company-checkbox:checked').forEach(checkbox => {
+          companyIds.push(checkbox.value);
+        });
+      }
+      
+      if (companyIds.length === 0) {
+        alert('삭제할 기업을 선택해주세요.');
+        return;
+      }
+      
+      // 버튼 상태 변경
+      const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+      if (!confirmDeleteButton) return;
+      
+      const originalText = confirmDeleteButton.textContent;
+      confirmDeleteButton.textContent = '삭제 중...';
+      confirmDeleteButton.disabled = true;
+      
+      try {
+        console.log(`${companyIds.length}개 기업 정보 삭제 중...`);
+        
+        let successCount = 0;
+        
+        // 각 ID에 대해 삭제 요청
+        for (const id of companyIds) {
+          try {
+            const result = await deleteData('기업정보', id);
+            console.log(`기업 ID ${id} 삭제 결과:`, result);
+            
+            if (result && result.success) {
+              successCount++;
+            }
+          } catch (error) {
+            console.error(`기업 ID ${id} 삭제 중 오류:`, error);
+          }
+        }
+        
+        // 결과 메시지
+        if (successCount > 0) {
+          if (companyIds.length === 1) {
+            alert('기업 정보가 삭제되었습니다.');
+          } else {
+            alert(`${successCount}개 기업 정보가 삭제되었습니다.`);
+          }
+          
+          // 데이터 다시 로드
+          await loadCompanies();
+        } else {
+          alert('기업 정보를 삭제하지 못했습니다. 관리자에게 문의하세요.');
+        }
+        
+        // 모달 닫기
+        closeDeleteModal();
+      } catch (error) {
+        console.error('기업 정보 삭제 오류:', error);
+        alert(`기업 정보 삭제 중 오류가 발생했습니다: ${error.message}`);
+      } finally {
+        // 버튼 상태 복원
+        confirmDeleteButton.textContent = originalText;
+        confirmDeleteButton.disabled = false;
+        
+        // 선택 상태 초기화
+        selectedCompanyId = null;
+      }
+    }
+    
+    // 페이지 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('기업 관리 페이지 초기화');
+      
+      // 데이터 로드
+      loadCompanies();
+      
+      // 이벤트 리스너 설정
+      // 버튼 이벤트
+      const addButton = document.getElementById('addButton');
+      if (addButton) {
+        addButton.addEventListener('click', openAddModal);
+      } else {
+        console.warn('addButton 요소를 찾을 수 없습니다.');
+      }
+      
+      const deleteButton = document.getElementById('deleteButton');
+      if (deleteButton) {
+        deleteButton.addEventListener('click', () => openDeleteModal(null));
+      } else {
+        console.warn('deleteButton 요소를 찾을 수 없습니다.');
+      }
+      
+      // 전체 선택 체크박스
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', toggleSelectAll);
+      } else {
+        console.warn('selectAllCheckbox 요소를 찾을 수 없습니다.');
+      }
+      
+      // 드래그 앤 드롭 영역 설정
+      const dragDropArea = document.getElementById('dragDropArea');
+      const fileInput = document.getElementById('companyFileInput');
+      const fileNameDisplay = document.getElementById('selectedFileName');
+      
+      if (dragDropArea && fileInput && fileNameDisplay) {
+        // 파일 선택 이벤트
+        fileInput.addEventListener('change', function() {
+          updateSelectedFileInfo(this.files);
+        });
+        
+        // 드래그 앤 드롭 이벤트
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+          dragDropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        
+        // 드래그 효과
+        ['dragenter', 'dragover'].forEach(eventName => {
+          dragDropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+          dragDropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+          dragDropArea.classList.add('border-blue-500');
+          dragDropArea.classList.add('bg-blue-50');
+        }
+        
+        function unhighlight() {
+          dragDropArea.classList.remove('border-blue-500');
+          dragDropArea.classList.remove('bg-blue-50');
+        }
+        
+        // 파일 드롭 처리
+        dragDropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+          const dt = e.dataTransfer;
+          const files = dt.files;
+          updateSelectedFileInfo(files);
+          
+          // 파일 입력 필드에 파일 설정
+          if (files.length > 0) {
+            fileInput.files = files;
+          }
+        }
+        
+        // 파일 정보 업데이트
+        function updateSelectedFileInfo(files) {
+          if (files.length > 0) {
+            const file = files[0];
+            fileNameDisplay.textContent = file.name;
+            
+            // 파일 형식 확인
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            if (!['xlsx', 'xls', 'csv'].includes(fileExtension)) {
+              fileNameDisplay.innerHTML = `<span class="text-red-500">${file.name} (지원되지 않는 파일 형식)</span>`;
+            } else {
+              fileNameDisplay.innerHTML = `<span class="text-green-500">${file.name} (${formatFileSize(file.size)})</span>`;
+            }
+          } else {
+            fileNameDisplay.textContent = '선택된 파일 없음';
+          }
+        }
+        
+        // 파일 크기 포맷팅
+        function formatFileSize(bytes) {
+          if (bytes === 0) return '0 Bytes';
+          const k = 1024;
+          const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+          const i = Math.floor(Math.log(bytes) / Math.log(k));
+          return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 클릭으로 파일 선택 가능하게
+        dragDropArea.addEventListener('click', function() {
+          fileInput.click();
+        });
+      }
+      
+      console.log('이벤트 리스너 설정 완료');
+    });
+  </script>
+</body>
+</html> 
