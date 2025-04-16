@@ -1,5 +1,5 @@
 // 구글 스크립트 API URL
-const API_URL = 'https://script.google.com/macros/s/AKfycbztFR3HhNcCQGMKbiSXWz0unmxNzaGtQm5RvcbpFdO2sCcvMHhE-zeAhULJfuUWFek/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwmTz4Un2t19ggQVnnMygsbKtHl_0jGz_R8EO5kVuwPX1WDBS5749v1e4zcmPmmhms/exec-m2y7P3ABhljI79-fcH0oJjsk2sEEOZCI/exec';
 
 // 진행 중인 요청 관리 (중복 요청 방지용)
 let pendingRequests = {};
@@ -125,6 +125,12 @@ async function addData(sheet, data) {
       throw new Error('추가할 데이터가 없거나 형식이 올바르지 않습니다.');
     }
     
+    // 만약 데이터에 targetCompanies가 있고 targetCount가 없다면 targetCount로 변환
+    if (data.targetCompanies !== undefined && data.targetCount === undefined) {
+      data.targetCount = data.targetCompanies;
+      delete data.targetCompanies;
+    }
+    
     // CORS 우회를 위한 JSONP 방식 사용
     return new Promise((resolve, reject) => {
       const callbackName = 'add_' + Math.floor(Math.random() * 1000000);
@@ -213,6 +219,12 @@ async function updateData(sheet, id, data) {
     
     if (!data || typeof data !== 'object') {
       throw new Error('업데이트할 데이터가 없거나 형식이 올바르지 않습니다.');
+    }
+    
+    // 만약 데이터에 targetCompanies가 있고 targetCount가 없다면 targetCount로 변환
+    if (data.targetCompanies !== undefined && data.targetCount === undefined) {
+      data.targetCount = data.targetCompanies;
+      delete data.targetCompanies;
     }
     
     // CORS 우회를 위한 JSONP 방식 사용

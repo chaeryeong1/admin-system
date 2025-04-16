@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 시스템 - [페이지명]</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- 폰트어썸 아이콘 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+  <!-- Flatpickr 캘린더 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+  <!-- 공통 스타일 -->
+  <link rel="stylesheet" href="common-styles.css">
+  <!-- 라이브러리 버전 정보 -->
+  <meta name="library-version" content="1.0.0">
+  <!-- 페이지별 추가 스타일 -->
+  <style>
+    /* 페이지별 추가 스타일을 여기에 작성하세요 */
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <!-- 상단 대메뉴 -->
+  <header class="main-header flex items-center justify-between">
+    <div class="flex items-center">
+      <img src="https://placehold.co/120x40/4285F4/ffffff?text=ADMIN" alt="로고" class="logo">
+      <nav class="desktop-menu flex space-x-4">
+        <a href="business-management.html" class="active">사업 관리</a>
+        <a href="company-management.html">기업 관리</a>
+        <a href="business-notification.html">사업 안내</a>
+        <a href="cashback-management.html">캐시백 송금</a>
+      </nav>
+    </div>
+    <!-- 모바일 메뉴 버튼 -->
+    <button class="mobile-menu-button text-white">
+      <i class="fas fa-bars text-xl"></i>
+    </button>
+  </header>
+  
+  <!-- 모바일 메뉴 (기본적으로 숨김) -->
+  <div class="mobile-menu hidden">
+    <a href="business-management.html" class="active">사업 관리</a>
+    <a href="company-management.html">기업 관리</a>
+    <a href="business-notification.html">사업 안내</a>
+    <a href="cashback-management.html">캐시백 송금</a>
+  </div>
+
+  <div class="flex main-layout">
+    <!-- 좌측 소메뉴 -->
+    <aside class="sidebar p-4">
+      <h2 class="text-lg font-semibold mb-4 text-gray-800">[사이드바 제목]</h2>
+      <ul class="space-y-1">
+        <li class="sidebar-item active">
+          <i class="fas fa-list-ul mr-2"></i> [메뉴 항목]
+        </li>
+        <!-- 추가 메뉴 항목 -->
+      </ul>
+    </aside>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="flex-1 p-6 space-y-6">
+      <div class="flex items-center justify-between border-b pb-4">
+        <h1 class="text-2xl font-bold text-gray-800">[페이지 제목]</h1>
+      </div>
+
+      <!-- 메인 콘텐츠 내용 -->
+      <div class="table-container">
+        <!-- 여기에 테이블 또는 다른 콘텐츠를 추가하세요 -->
+        <div class="p-4">
+          <table class="min-w-full">
+            <thead>
+              <tr>
+                <th>항목 1</th>
+                <th>항목 2</th>
+                <th>항목 3</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>내용 1</td>
+                <td>내용 2</td>
+                <td>내용 3</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- 페이지네이션 -->
+        <div class="pagination-container">
+          <div class="pagination-info">
+            총 <span class="font-medium">0</span>개 항목 중 <span class="font-medium">0</span>-<span class="font-medium">0</span>
+          </div>
+          <div>
+            <nav class="flex items-center space-x-1" aria-label="Pagination">
+              <button class="pagination-button" disabled>
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <div class="pagination-numbers">
+                0 / 0
+              </div>
+              <button class="pagination-button" disabled>
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 모달 템플릿 -->
+  <div id="sampleModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+      <h2 class="text-lg font-semibold mb-4">[모달 제목]</h2>
+      <div class="space-y-4">
+        <!-- 모달 내용 -->
+      </div>
+      <div class="flex justify-end space-x-2 mt-6">
+        <button class="btn bg-gray-200 hover:bg-gray-300">취소</button>
+        <button class="btn btn-primary">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 공통 스크립트 -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+  <script>
+    // 모바일 메뉴 토글
+    document.addEventListener('DOMContentLoaded', function() {
+      // 모바일 메뉴
+      document.querySelector('.mobile-menu-button').addEventListener('click', () => 
+        document.querySelector('.mobile-menu').classList.toggle('hidden'));
+      
+      // Flatpickr 캘린더 초기화 (필요한 경우)
+      const dateConfig = {
+        locale: "ko",
+        dateFormat: "Y-m-d",
+        disableMobile: "true",
+        allowInput: true,
+        monthSelectorType: "dropdown",
+        yearSelectorType: "dropdown"
+      };
+      
+      const datepickers = document.querySelectorAll('.datepicker');
+      if (datepickers.length > 0) {
+        flatpickr(".datepicker", dateConfig);
+      }
+    });
+  </script>
+  
+  <!-- 페이지별 스크립트 -->
+  <script>
+    // 페이지별 자바스크립트를 여기에 작성하세요
+  </script>
+</body>
+</html> 
