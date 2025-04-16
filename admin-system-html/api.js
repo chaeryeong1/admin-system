@@ -1,6 +1,5 @@
 // 구글 스크립트 API URL
-const API_URL = 'https://script.google.com/macros/s/AKfycbwmTz4Un2t19ggQVnnMygsbKtHl_0jGz_R8EO5kVuwPX1WDBS5749v1e4zcmPmmhms/exec-m2y7P3ABhljI79-fcH0oJjsk2sEEOZCI/exec';
-
+const API_URL = 'https://script.google.com/macros/s/AKfycbyEBYYuMO-MO20-FuHTOdj35DIDFbmDWJNg5EFF4In-LTDZnQZQKZWghCKAP1yLRw/exec';
 // 진행 중인 요청 관리 (중복 요청 방지용)
 let pendingRequests = {};
 
@@ -135,13 +134,8 @@ async function addData(sheet, data) {
     return new Promise((resolve, reject) => {
       const callbackName = 'add_' + Math.floor(Math.random() * 1000000);
       
-      // 데이터를 URL 파라미터로 변환
-      const dataParams = Object.entries(data).map(([key, value]) => {
-        const encodedValue = (value === null || value === undefined) ? '' : encodeURIComponent(value);
-        return `data_${key}=${encodedValue}`;
-      }).join('&');
-      
-      const apiUrl = `${API_URL}?action=addData&sheet=${encodeURIComponent(actualSheet)}&${dataParams}&callback=${encodeURIComponent(callbackName)}&nocache=${Date.now()}`;
+      // jsonData 방식 사용
+      const apiUrl = `${API_URL}?action=addData&sheet=${encodeURIComponent(actualSheet)}&jsonData=${encodeURIComponent(JSON.stringify(data))}&callback=${encodeURIComponent(callbackName)}&nocache=${Date.now()}`;
       
       // 콜백 함수 정의
       window[callbackName] = function(response) {
@@ -227,17 +221,15 @@ async function updateData(sheet, id, data) {
       delete data.targetCompanies;
     }
     
+    // ID 추가
+    data.id = id;
+    
     // CORS 우회를 위한 JSONP 방식 사용
     return new Promise((resolve, reject) => {
       const callbackName = 'update_' + Math.floor(Math.random() * 1000000);
       
-      // 데이터를 URL 파라미터로 변환
-      const dataParams = Object.entries(data).map(([key, value]) => {
-        const encodedValue = (value === null || value === undefined) ? '' : encodeURIComponent(value);
-        return `data_${key}=${encodedValue}`;
-      }).join('&');
-      
-      const apiUrl = `${API_URL}?action=updateData&sheet=${encodeURIComponent(actualSheet)}&id=${encodeURIComponent(id)}&${dataParams}&callback=${encodeURIComponent(callbackName)}&nocache=${Date.now()}`;
+      // jsonData 방식 사용
+      const apiUrl = `${API_URL}?action=updateData&sheet=${encodeURIComponent(actualSheet)}&id=${encodeURIComponent(id)}&jsonData=${encodeURIComponent(JSON.stringify(data))}&callback=${encodeURIComponent(callbackName)}&nocache=${Date.now()}`;
       
       // 콜백 함수 정의
       window[callbackName] = function(response) {
