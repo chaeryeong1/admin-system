@@ -1,5 +1,5 @@
 // 구글 스크립트 API URL
-const API_URL = 'https://script.google.com/macros/s/AKfycbyEBYYuMO-MO20-FuHTOdj35DIDFbmDWJNg5EFF4In-LTDZnQZQKZWghCKAP1yLRw/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbz9E3_2V8n4mVE46nHjJ3V41fGFUHa8Q967-DEXmih8Gjl8hIH063rHE-emJzEXgA/exec';
 // 진행 중인 요청 관리 (중복 요청 방지용)
 let pendingRequests = {};
 
@@ -8,7 +8,7 @@ function getActualSheetName(sheet) {
   const sheetMapping = {
     '사업정보': '사업정보',
     '기업정보': '기업정보',
-    '계약금수령': '계약정보', 
+    '계약정보': '계약정보', 
     '송금정보': '송금정보',
     '안내정보': '안내정보',
     'all': 'all'
