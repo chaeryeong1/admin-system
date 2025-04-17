@@ -155,3 +155,605 @@
   </script>
 </body>
 </html> 
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 시스템 - 사업 안내</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- 폰트어썸 아이콘 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+  <!-- Flatpickr 캘린더 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+  <!-- 공통 스타일 -->
+  <link rel="stylesheet" href="common-styles.css">
+  <!-- 라이브러리 버전 정보 -->
+  <meta name="library-version" content="1.0.0">
+  <!-- 페이지별 추가 스타일 -->
+  <style>
+    /* 페이지별 추가 스타일을 여기에 작성하세요 */
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <!-- 상단 대메뉴 -->
+  <header class="main-header flex items-center justify-between">
+    <div class="flex items-center">
+      <img src="https://placehold.co/120x40/4285F4/ffffff?text=ADMIN" alt="로고" class="logo">
+      <nav class="desktop-menu flex space-x-4">
+        <a href="business-management.html" >사업 관리</a>
+        <a href="company-management.html">기업 관리</a>
+        <a href="business-notification.html" class="active"">사업 안내</a>
+        <a href="cashback-management.html">캐시백 송금</a>
+      </nav>
+    </div>
+    <!-- 모바일 메뉴 버튼 -->
+    <button class="mobile-menu-button text-white">
+      <i class="fas fa-bars text-xl"></i>
+    </button>
+  </header>
+  
+  <!-- 모바일 메뉴 (기본적으로 숨김) -->
+  <div class="mobile-menu hidden">
+    <a href="business-management.html" class="active">사업 관리</a>
+    <a href="company-management.html">기업 관리</a>
+    <a href="business-notification.html">사업 안내</a>
+    <a href="cashback-management.html">캐시백 송금</a>
+  </div>
+
+  <div class="flex main-layout">
+    <!-- 좌측 소메뉴 -->
+    <aside class="sidebar p-4">
+      <h2 class="text-lg font-semibold mb-4 text-gray-800">사업 안내</h2>
+      <ul class="space-y-1">
+        <li class="sidebar-item active">
+          <i class="fas fa-list-ul mr-2"></i>안내 대상 선별
+        </li>
+        <!-- 추가 메뉴 항목 -->
+      </ul>
+    </aside>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="flex-1 p-6 space-y-6">
+      <div class="flex items-center justify-between border-b pb-4">
+        <h1 class="text-2xl font-bold text-gray-800">안내 대상 선별</h1>
+      </div>
+
+      <!-- 검색 영역 -->
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center space-x-4">
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="사업명 검색" 
+            class="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+          <button 
+            id="searchButton"
+            class="btn search-btn flex-shrink-0 whitespace-nowrap min-w-[80px]"
+          >
+            <i class="fas fa-search mr-2"></i>조회
+          </button>
+        </div>
+        <button 
+          id="addButton"
+          class="btn btn-primary whitespace-nowrap"
+        >
+          <i class="fas fa-building mr-2"></i>대상 선별
+        </button>
+      </div>
+
+      <!-- 메인 콘텐츠 내용 -->
+      <div class="table-container">
+        <div class="p-4">
+          <table class="min-w-full">
+            <thead>
+              <tr>
+                <th class="w-16">
+                  <div class="flex items-center justify-center">
+                    <input 
+                      type="checkbox" 
+                      id="selectAllCheckbox" 
+                      class="w-4 h-4"
+                    >
+                  </div>
+                </th>
+                <th>기업명</th>
+                <th>사업자등록번호</th>
+                <th>대표자</th>
+                <th>연락처</th>
+                <th>이메일</th>
+                <th>등록일</th>
+                <th>작업</th>
+              </tr>
+            </thead>
+            <tbody id="companyTableBody">
+              <tr>
+                <td colspan="8" class="text-center">사업을 선택하고 조회 버튼을 클릭하세요.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- 페이지네이션 -->
+        <div class="pagination-container flex items-center justify-between flex-wrap">
+          <div class="text-sm text-gray-700 w-full md:w-auto mb-2 md:mb-0">
+            총 <span id="totalItems" class="font-medium">0</span>개 항목 중 <span id="startItem" class="font-medium">0</span>-<span id="endItem" class="font-medium">0</span>
+          </div>
+          <div>
+            <nav class="flex items-center space-x-1" aria-label="Pagination">
+              <button id="prevPageBtn" class="pagination-button" disabled>
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <div id="paginationNumbers" class="pagination-numbers">
+                <!-- 페이지 번호가 여기에 동적으로 추가됩니다 -->
+              </div>
+              <button id="nextPageBtn" class="pagination-button" disabled>
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      <!-- 하단 버튼 -->
+      <div class="flex justify-end space-x-4">
+        <button 
+          id="deleteButton"
+          class="btn btn-danger"
+        >
+          <i class="fas fa-trash-alt mr-2"></i>선택 삭제
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 기업 선택 모달 -->
+  <div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl">
+      <h2 class="text-xl font-bold mb-6 flex items-center">
+        <i class="fas fa-building text-yellow-500 mr-2"></i>
+        기업 선택
+      </h2>
+      <div class="overflow-y-auto max-h-[60vh]">
+        <table class="min-w-full">
+          <thead>
+            <tr>
+              <th class="w-16">
+                <div class="flex items-center justify-center">
+                  <input 
+                    type="checkbox" 
+                    id="modalSelectAllCheckbox" 
+                    class="w-4 h-4"
+                  >
+                </div>
+              </th>
+              <th>기업명</th>
+              <th>사업자등록번호</th>
+              <th>대표자</th>
+              <th>연락처</th>
+              <th>이메일</th>
+              <th>등록일</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody id="modalTableBody">
+            <tr>
+              <td colspan="8" class="text-center">데이터를 불러오는 중입니다...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="flex justify-end space-x-3 mt-8">
+        <button 
+          id="cancelAddButton"
+          class="px-5 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium"
+        >
+          취소
+        </button>
+        <button 
+          id="confirmAddButton"
+          class="px-5 py-2 bg-gray-900 text-white hover:bg-gray-800 rounded-lg font-medium"
+        >
+          확인
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 삭제 확인 모달 -->
+  <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+      <h2 class="text-lg font-semibold mb-4">기업 삭제</h2>
+      <p>정말 선택한 기업을 삭제하시겠습니까?</p>
+      <p id="deleteCompanyName" class="font-semibold mt-2"></p>
+      <div class="flex justify-end space-x-2 mt-6">
+        <button 
+          id="cancelDeleteButton"
+          class="btn bg-gray-200 hover:bg-gray-300"
+        >
+          취소
+        </button>
+        <button 
+          id="confirmDeleteButton"
+          class="btn btn-danger"
+        >
+          삭제
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 공통 스크립트 -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+  <script>
+    // 기본 설정
+    const API_URL = 'https://script.google.com/macros/s/AKfycbz9E3_2V8n4mVE46nHjJ3V41fGFUHa8Q967-DEXmih8Gjl8hIH063rHE-emJzEXgA/exec';
+    let companies = [], selectedCompanyIds = [], currentPage = 1;
+    const itemsPerPage = 10;
+    let currentSortColumn = 'id', currentSortDirection = 'asc', isLoading = false;
+    let lastApiCallTimestamp = 0;
+
+    // API 호출 통합 함수
+    async function apiCall(action, sheet, data = null, id = null) {
+      return new Promise((resolve, reject) => {
+        const now = Date.now();
+        const elapsed = now - lastApiCallTimestamp;
+        if (action !== 'getData' && elapsed < 1000) {
+          setTimeout(() => {
+            apiCall(action, sheet, data, id).then(resolve).catch(reject);
+          }, 1000 - elapsed);
+          return;
+        }
+        
+        lastApiCallTimestamp = now;
+        const sheetMap = {'사업정보': '사업정보', '기업정보': '기업정보', '계약금수령': '계약정보', '송금정보': '송금정보', '안내정보': '안내정보', 'all': 'all'};
+        const callbackName = 'api_cb_' + Math.floor(Math.random() * 1000000);
+        const script = document.createElement('script');
+        const actualSheet = sheetMap[sheet] || sheet;
+        
+        let url = `${API_URL}?action=${action}&sheet=${encodeURIComponent(actualSheet)}&callback=${callbackName}`;
+        
+        if (id) url += `&id=${encodeURIComponent(id)}`;
+        if (data) {
+          url += `&jsonData=${encodeURIComponent(JSON.stringify(data))}`;
+        }
+        
+        const timeoutId = setTimeout(() => {
+          delete window[callbackName];
+          script.remove();
+          resolve({ success: false, error: '요청 시간 초과', data: action === 'getData' ? [] : null });
+        }, 15000);
+        
+        window[callbackName] = (response) => {
+          clearTimeout(timeoutId);
+          delete window[callbackName];
+          script.remove();
+          resolve(response);
+        };
+        
+        script.onerror = () => {
+          clearTimeout(timeoutId);
+          delete window[callbackName];
+          script.remove();
+          resolve({ success: false, error: `${action} 오류`, data: action === 'getData' ? [] : null });
+        };
+        
+        document.head.appendChild(script);
+      });
+    }
+
+    // 초기화 및 이벤트 등록
+    document.addEventListener('DOMContentLoaded', function() {
+      // 모바일 메뉴
+      document.querySelector('.mobile-menu-button').addEventListener('click', () => 
+        document.querySelector('.mobile-menu').classList.toggle('hidden'));
+      
+      // 검색, 정렬, 페이지네이션
+      document.getElementById('selectAllCheckbox').addEventListener('change', toggleSelectAll);
+      document.getElementById('modalSelectAllCheckbox').addEventListener('change', toggleModalSelectAll);
+      document.getElementById('searchButton').addEventListener('click', () => { currentPage = 1; searchCompanies(); });
+      document.getElementById('searchInput').addEventListener('keypress', e => { if (e.key === 'Enter') { currentPage = 1; searchCompanies(); } });
+      
+      // 페이지네이션 버튼
+      document.getElementById('prevPageBtn').addEventListener('click', () => {
+        if (!isLoading && currentPage > 1) { currentPage--; renderTable(); }
+      });
+      
+      document.getElementById('nextPageBtn').addEventListener('click', () => {
+        if (!isLoading) {
+          const totalPages = Math.ceil(getFilteredCompanies().length / itemsPerPage);
+          if (currentPage < totalPages) { currentPage++; renderTable(); }
+        }
+      });
+      
+      // 모달 관련 이벤트 리스너
+      document.getElementById('addButton').addEventListener('click', () => {
+        openModal('add');
+        loadAvailableCompanies();
+      });
+      
+      document.getElementById('deleteButton').addEventListener('click', () => {
+        if (selectedCompanyIds.length === 0) {
+          alert('삭제할 기업을 선택해주세요.');
+          return;
+        }
+        openModal('delete');
+      });
+      
+      // 모달 취소/확인 버튼
+      document.getElementById('cancelAddButton').addEventListener('click', closeModals);
+      document.getElementById('confirmAddButton').addEventListener('click', () => handleCrud('add'));
+      document.getElementById('cancelDeleteButton').addEventListener('click', closeModals);
+      document.getElementById('confirmDeleteButton').addEventListener('click', () => handleCrud('delete'));
+    });
+
+    // 기업 검색 및 필터링
+    function searchCompanies() {
+      const searchTerm = document.getElementById('searchInput').value.trim();
+      if (!searchTerm) {
+        alert('사업명을 입력해주세요.');
+        return;
+      }
+      loadCompanies(searchTerm);
+    }
+
+    // 사용 가능한 기업 목록 로드 (상태가 '대기' 또는 '등록'인 기업만)
+    async function loadAvailableCompanies() {
+      const response = await apiCall('getData', '기업정보');
+      if (response.success && Array.isArray(response.data)) {
+        const availableCompanies = response.data.filter(company => 
+          company.status === '대기' || company.status === '등록'
+        );
+        renderModalTable(availableCompanies);
+      }
+    }
+
+    // 기업 목록 로드
+    async function loadCompanies(projectId) {
+      if (isLoading) return;
+      isLoading = true;
+
+      try {
+        // 계약 정보에서 해당 사업에 속한 기업 ID 목록 가져오기
+        const contractResponse = await apiCall('getData', '계약정보');
+        if (!contractResponse.success) {
+          throw new Error('계약 정보를 가져오는데 실패했습니다.');
+        }
+
+        const contracts = contractResponse.data.filter(contract => 
+          contract.projectId === projectId
+        );
+        const companyIds = contracts.map(contract => contract.companyId);
+
+        // 기업 정보 가져오기
+        const companyResponse = await apiCall('getData', '기업정보');
+        if (!companyResponse.success) {
+          throw new Error('기업 정보를 가져오는데 실패했습니다.');
+        }
+
+        companies = companyResponse.data.filter(company => 
+          companyIds.includes(company.id)
+        );
+
+        renderTable();
+      } catch (error) {
+        console.error('기업 목록 로드 중 오류:', error);
+        alert(error.message || '데이터를 불러오는데 실패했습니다.');
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    // 테이블 렌더링
+    function renderTable() {
+      const tbody = document.getElementById('companyTableBody');
+      const filtered = getFilteredCompanies();
+      const pageData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+      if (pageData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">등록된 기업이 없습니다.</td></tr>';
+      } else {
+        tbody.innerHTML = pageData.map(company => `
+          <tr>
+            <td class="text-center">
+              <input type="checkbox" class="company-checkbox" value="${company.id}" 
+                ${selectedCompanyIds.includes(company.id) ? 'checked' : ''}>
+            </td>
+            <td>${company.comname || ''}</td>
+            <td>${company.businessNumber || ''}</td>
+            <td>${company.representative || ''}</td>
+            <td>${company.phone || ''}</td>
+            <td>${company.email || ''}</td>
+            <td>${company.registrationDate || ''}</td>
+            <td class="text-center">
+              <button class="btn btn-danger btn-sm" onclick="removeCompany('${company.id}')">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      updatePagination(filtered.length);
+      updateSelectAllCheckbox();
+    }
+
+    // 모달 테이블 렌더링
+    function renderModalTable(companies) {
+      const tbody = document.getElementById('modalTableBody');
+      
+      if (companies.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">선택 가능한 기업이 없습니다.</td></tr>';
+      } else {
+        tbody.innerHTML = companies.map(company => `
+          <tr>
+            <td class="text-center">
+              <input type="checkbox" class="modal-company-checkbox" value="${company.id}" 
+                ${selectedCompanyIds.includes(company.id) ? 'checked' : ''}>
+            </td>
+            <td>${company.comname || ''}</td>
+            <td>${company.businessNumber || ''}</td>
+            <td>${company.representative || ''}</td>
+            <td>${company.phone || ''}</td>
+            <td>${company.email || ''}</td>
+            <td>${company.registrationDate || ''}</td>
+            <td>${company.status || ''}</td>
+          </tr>
+        `).join('');
+      }
+
+      updateModalSelectAllCheckbox();
+    }
+
+    // 페이지네이션 업데이트
+    function updatePagination(totalItems) {
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+      const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+      document.getElementById('totalItems').textContent = totalItems;
+      document.getElementById('startItem').textContent = startItem;
+      document.getElementById('endItem').textContent = endItem;
+      document.getElementById('prevPageBtn').disabled = (currentPage <= 1);
+      document.getElementById('nextPageBtn').disabled = (currentPage >= totalPages);
+      document.getElementById('paginationNumbers').textContent = `${currentPage} / ${totalPages || 1}`;
+    }
+
+    // 체크박스 관련 함수들
+    function toggleSelectAll() {
+      const isChecked = document.getElementById('selectAllCheckbox').checked;
+      const checkboxes = document.querySelectorAll('.company-checkbox');
+      selectedCompanyIds = isChecked ? Array.from(checkboxes).map(chk => chk.value) : [];
+      checkboxes.forEach(chk => chk.checked = isChecked);
+    }
+
+    function toggleModalSelectAll() {
+      const isChecked = document.getElementById('modalSelectAllCheckbox').checked;
+      const checkboxes = document.querySelectorAll('.modal-company-checkbox');
+      selectedCompanyIds = isChecked ? Array.from(checkboxes).map(chk => chk.value) : [];
+      checkboxes.forEach(chk => chk.checked = isChecked);
+    }
+
+    function updateSelectAllCheckbox() {
+      const checkboxes = document.querySelectorAll('.company-checkbox');
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      selectAllCheckbox.checked = checkboxes.length > 0 && Array.from(checkboxes).every(chk => chk.checked);
+    }
+
+    function updateModalSelectAllCheckbox() {
+      const checkboxes = document.querySelectorAll('.modal-company-checkbox');
+      const selectAllCheckbox = document.getElementById('modalSelectAllCheckbox');
+      selectAllCheckbox.checked = checkboxes.length > 0 && Array.from(checkboxes).every(chk => chk.checked);
+    }
+
+    // 모달 관련 함수들
+    function openModal(type) {
+      if (type === 'add') {
+        document.getElementById('addModal').classList.remove('hidden');
+      } else if (type === 'delete') {
+        const deleteText = selectedCompanyIds.length === 1 
+          ? `"${companies.find(c => c.id === selectedCompanyIds[0])?.comname}"` 
+          : `선택한 ${selectedCompanyIds.length}개 기업`;
+        document.getElementById('deleteCompanyName').textContent = deleteText;
+        document.getElementById('deleteModal').classList.remove('hidden');
+      }
+    }
+
+    function closeModals() {
+      document.getElementById('addModal').classList.add('hidden');
+      document.getElementById('deleteModal').classList.add('hidden');
+      selectedCompanyIds = [];
+      updateSelectAllCheckbox();
+      updateModalSelectAllCheckbox();
+    }
+
+    // CRUD 처리
+    async function handleCrud(type) {
+      if (type === 'add') {
+        const selectedCompanies = Array.from(document.querySelectorAll('.modal-company-checkbox:checked')).map(chk => chk.value);
+        if (selectedCompanies.length === 0) {
+          alert('추가할 기업을 선택해주세요.');
+          return;
+        }
+
+        const projectId = document.getElementById('searchInput').value.trim();
+        if (!projectId) {
+          alert('사업을 선택해주세요.');
+          return;
+        }
+
+        try {
+          const contractData = {
+            companies: selectedCompanies.map(companyId => ({
+              companyId: companyId,
+              projectId: projectId,
+              contractDate: new Date().toISOString().split('T')[0],
+              status: '진행중'
+            }))
+          };
+
+          const response = await apiCall('addData', '계약정보', contractData);
+          if (response.success) {
+            alert('선택한 기업이 성공적으로 추가되었습니다.');
+            closeModals();
+            loadCompanies(projectId);
+          } else {
+            throw new Error(response.error || '기업 추가 실패');
+          }
+        } catch (error) {
+          console.error('기업 추가 중 오류:', error);
+          alert(error.message || '기업 추가 중 오류가 발생했습니다.');
+        }
+      } else if (type === 'delete') {
+        try {
+          const projectId = document.getElementById('searchInput').value.trim();
+          const results = await Promise.all(
+            selectedCompanyIds.map(companyId => 
+              apiCall('deleteData', '계약정보', null, `${projectId}_${companyId}`)
+            )
+          );
+
+          if (results.every(r => r.success)) {
+            alert('선택한 기업이 성공적으로 삭제되었습니다.');
+            closeModals();
+            loadCompanies(projectId);
+          } else {
+            throw new Error('일부 기업 삭제에 실패했습니다.');
+          }
+        } catch (error) {
+          console.error('기업 삭제 중 오류:', error);
+          alert(error.message || '기업 삭제 중 오류가 발생했습니다.');
+        }
+      }
+    }
+
+    // 필터링된 기업 목록 가져오기
+    function getFilteredCompanies() {
+      return companies;
+    }
+
+    // 개별 기업 삭제
+    async function removeCompany(companyId) {
+      if (!confirm('이 기업을 삭제하시겠습니까?')) return;
+
+      const projectId = document.getElementById('searchInput').value.trim();
+      try {
+        const response = await apiCall('deleteData', '계약정보', null, `${projectId}_${companyId}`);
+        if (response.success) {
+          alert('기업이 성공적으로 삭제되었습니다.');
+          loadCompanies(projectId);
+        } else {
+          throw new Error(response.error || '기업 삭제 실패');
+        }
+      } catch (error) {
+        console.error('기업 삭제 중 오류:', error);
+        alert(error.message || '기업 삭제 중 오류가 발생했습니다.');
+      }
+    }
+  </script>
+</body>
+</html> 

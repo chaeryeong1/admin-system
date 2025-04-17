@@ -4,1041 +4,1309 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>관리자 시스템 - 사업 안내</title>
+  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <!-- 폰트어썸 아이콘 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+  <!-- Flatpickr 캘린더 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+  <!-- 공통 스타일 -->
+  <link rel="stylesheet" href="common-styles.css">
+  <!-- 라이브러리 버전 정보 -->
+  <meta name="library-version" content="1.0.0">
+  <!-- 페이지별 추가 스타일 -->
   <style>
-    body {
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-    }
-    .hidden {
-      display: none;
+    /* 페이지별 추가 스타일을 여기에 작성하세요 */
+    
+    @keyframes fishCaught {
+      0% { transform: translateX(-50%) scaleX(-1) translateY(0); }
+      50% { transform: translateX(-50%) scaleX(-1) translateY(-20px); }
+      100% { transform: translateX(-50%) scaleX(-1) translateY(-50px); opacity: 0; }
     }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50">
   <!-- 상단 대메뉴 -->
-  <header class="bg-white border-b px-6 py-3 text-sm font-semibold flex space-x-6">
-    <a href="business-management.html" class="text-gray-500">사업 관리</a>
-    <a href="company-management.html" class="text-gray-500">기업 관리</a>
-    <a href="business-notification.html" class="text-blue-600">사업 안내</a>
-    <a href="cashback-management.html" class="text-gray-500">캐시백 송금</a>
+  <header class="main-header flex items-center justify-between">
+    <div class="flex items-center">
+      <img src="https://placehold.co/120x40/4285F4/ffffff?text=ADMIN" alt="로고" class="logo">
+      <nav class="desktop-menu flex space-x-4">
+        <a href="business-management.html" >사업 관리</a>
+        <a href="company-management.html">기업 관리</a>
+        <a href="business-notification.html" class="active">사업 안내</a>
+        <a href="cashback-management.html">캐시백 송금</a>
+      </nav>
+    </div>
+    <!-- 모바일 메뉴 버튼 -->
+    <button class="mobile-menu-button text-white">
+      <i class="fas fa-bars text-xl"></i>
+    </button>
   </header>
+  
+  <!-- 모바일 메뉴 (기본적으로 숨김) -->
+  <div class="mobile-menu hidden">
+    <a href="business-management.html" class="active">사업 관리</a>
+    <a href="company-management.html">기업 관리</a>
+    <a href="business-notification.html">사업 안내</a>
+    <a href="cashback-management.html">캐시백 송금</a>
+  </div>
 
-  <div class="flex">
+  <!-- 메인콘텐츠 -->
+
+  <div class="flex main-layout">
     <!-- 좌측 소메뉴 -->
-    <aside class="w-60 bg-gray-50 p-4 text-sm border-r h-screen">
-      <h2 class="text-base font-semibold mb-4">사업 안내</h2>
-      <ul class="space-y-2">
-        <li class="text-blue-600 font-semibold">ㆍ안내 대상 선별</li>
+    <aside class="sidebar p-4">
+      <h2 class="text-lg font-semibold mb-4 text-gray-800">사업 안내</h2>
+      <ul class="space-y-1">
+        <li class="sidebar-item active">
+          <i class="fas fa-list-ul mr-2"></i>안내 대상 선별
+        </li>
+        <!-- 추가 메뉴 항목 -->
       </ul>
     </aside>
 
     <!-- 메인 콘텐츠 -->
     <div class="flex-1 p-6 space-y-6">
-      <div class="text-xl font-bold border-b pb-2">안내 대상 선별</div>
-      
-      <!-- 사업 선택 및 버튼 -->
-      <div class="flex items-center space-x-4">
-        <select 
-          id="businessSelector" 
-          class="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">사업 선택</option>
-          <!-- JavaScript로 채워질 부분 -->
-        </select>
-        
-        <button 
-          id="selectTargetButton"
-          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled
-        >
-          안내 대상 선별
-        </button>
-        
-        <div class="flex-1 text-right space-x-2">
-          <button 
-            id="downloadButton"
-            class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled
+      <div class="flex items-center justify-between border-b pb-4">
+        <h1 class="text-2xl font-bold text-gray-800">안내 대상 선별</h1>
+      </div>
+
+      <!-- 검색 영역 -->
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center space-x-4">
+          <select 
+            id="businessSelect" 
+            class="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            기업리스트 다운로드
+            <option value="">사업 선택</option>
+          </select>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="검색어 입력" 
+            class="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+          <button 
+            id="searchButton"
+            class="btn search-btn flex-shrink-0 whitespace-nowrap min-w-[80px]"
+          >
+            <i class="fas fa-search mr-2"></i>조회
           </button>
         </div>
+        <button 
+          id="addButton"
+          class="btn btn-primary whitespace-nowrap"
+        >
+          <i class="fas fa-building mr-2"></i>대상 선별
+        </button>
       </div>
-      
-      <!-- 안내 대상 기업 목록 테이블 -->
-      <div class="bg-white border rounded shadow">
+
+      <!-- 사업 선택 모달 -->
+      <div id="businessModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl">
+          <h2 class="text-xl font-bold mb-6 flex items-center">
+            <i class="fas fa-list text-blue-500 mr-2"></i>
+            사업 선택
+          </h2>
+          <div class="overflow-y-auto max-h-[60vh]">
+            <table class="min-w-full">
+              <thead>
+                <tr>
+                  <th>사업명</th>
+                  <th>설명</th>
+                  <th>담당자</th>
+                  <th>연락처</th>
+                  <th>이메일</th>
+                  <th>등록일</th>
+                  <th>선택</th>
+                </tr>
+              </thead>
+              <tbody id="businessTableBody">
+                <tr>
+                  <td colspan="7" class="text-center">데이터를 불러오는 중입니다...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex justify-end space-x-3 mt-8">
+            <button 
+              id="cancelBusinessButton"
+              class="px-5 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 메인 콘텐츠 내용 -->
+      <div class="table-container">
         <div class="p-4">
           <table class="min-w-full">
             <thead>
-              <tr class="border-b">
-                <th class="px-4 py-2 text-left">
-                  <input 
-                    type="checkbox" 
-                    id="selectAllCheckbox"
-                    class="cursor-pointer"
-                  >
+              <tr>
+                <th class="w-16">
+                  <div class="flex items-center justify-center">
+                    <input 
+                      type="checkbox" 
+                      id="selectAllCheckbox" 
+                      class="w-4 h-4"
+                    >
+                  </div>
                 </th>
-                <th class="px-4 py-2 text-left">기업명</th>
-                <th class="px-4 py-2 text-left">사업자등록번호</th>
-                <th class="px-4 py-2 text-left">대표자</th>
-                <th class="px-4 py-2 text-left">전화번호</th>
-                <th class="px-4 py-2 text-left">이메일</th>
-                <th class="px-4 py-2 text-left">상태</th>
-                <th class="px-4 py-2 text-left">관리</th>
+                <th>기업명</th>
+                <th>사업자등록번호</th>
+                <th>대표자</th>
+                <th>연락처</th>
+                <th>이메일</th>
+                <th>등록일</th>
+                <th>작업</th>
               </tr>
             </thead>
-            <tbody id="targetCompanyTableBody">
-              <!-- JavaScript로 채워질 부분 -->
+            <tbody id="companyTableBody">
+              <tr>
+                <td colspan="8" class="text-center">사업을 선택하고 조회 버튼을 클릭하세요.</td>
+              </tr>
             </tbody>
           </table>
+        </div>
+        <!-- 페이지네이션 -->
+        <div class="pagination-container flex items-center justify-between flex-wrap">
+          <div class="text-sm text-gray-700 w-full md:w-auto mb-2 md:mb-0">
+            총 <span id="totalItems" class="font-medium">0</span>개 항목 중 <span id="startItem" class="font-medium">0</span>-<span id="endItem" class="font-medium">0</span>
+          </div>
+          <div>
+            <nav class="flex items-center space-x-1" aria-label="Pagination">
+              <button id="prevPageBtn" class="pagination-button" disabled>
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <div id="paginationNumbers" class="pagination-numbers">
+                <!-- 페이지 번호가 여기에 동적으로 추가됩니다 -->
+              </div>
+              <button id="nextPageBtn" class="pagination-button" disabled>
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </nav>
+          </div>
         </div>
       </div>
 
       <!-- 하단 버튼 -->
       <div class="flex justify-end space-x-4">
         <button 
-          id="removeButton"
-          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 opacity-50 cursor-not-allowed"
-          disabled
+          id="deleteButton"
+          class="btn btn-danger"
         >
-          제외
+          <i class="fas fa-trash-alt mr-2"></i>선택 삭제
         </button>
       </div>
     </div>
   </div>
 
-  <!-- 선별 모달 -->
-  <div id="selectTargetModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
-      <h2 class="text-xl font-bold mb-4">안내 대상 선별</h2>
-      
-      <div class="mb-4">
-        <div class="mb-4">
-          <p class="mb-2 text-gray-700"><span id="selectedBusinessName">선택된 사업</span>의 안내 대상 기업을 선별합니다.</p>
-          <label class="block mb-2 font-semibold">파일 업로드</label>
-          <div id="dragDropArea" class="border-2 border-dashed border-gray-300 rounded-lg p-8 mb-4 text-center hover:border-blue-500 transition-colors cursor-pointer">
-            <div class="mb-2">
-              <i class="fas fa-file-upload text-3xl text-gray-400"></i>
-            </div>
-            <p class="mb-2 text-gray-700">파일을 이곳에 끌어다 놓거나</p>
-            <label class="cursor-pointer inline-block bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded">
-              파일 선택하기
-              <input type="file" id="targetFileInput" accept=".xlsx,.xls,.csv" class="hidden" />
-            </label>
-            <div id="selectedFileInfo" class="mt-4 text-sm text-gray-600">
-              <span id="selectedFileName">선택된 파일 없음</span>
-            </div>
-          </div>
-          
-          <p class="text-sm text-gray-500 mt-1">엑셀(.xlsx, .xls) 또는 CSV(.csv) 파일만 업로드 가능</p>
-          <p class="text-sm text-gray-500">* 선별된 기업 목록이 등록됩니다.</p>
-        </div>
+  <!-- 기업 선택 모달 -->
+  <div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl">
+      <h2 class="text-xl font-bold mb-6 flex items-center">
+        <i class="fas fa-building text-yellow-500 mr-2"></i>
+        기업 선택
+      </h2>
+      <div class="overflow-y-auto max-h-[60vh]">
+        <table class="min-w-full">
+          <thead>
+            <tr>
+              <th class="w-16">
+                <div class="flex items-center justify-center">
+                  <input 
+                    type="checkbox" 
+                    id="modalSelectAllCheckbox" 
+                    class="w-4 h-4"
+                  >
+                </div>
+              </th>
+              <th>기업명</th>
+              <th>사업자등록번호</th>
+              <th>대표자</th>
+              <th>연락처</th>
+              <th>이메일</th>
+              <th>등록일</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody id="modalTableBody">
+            <tr>
+              <td colspan="8" class="text-center">데이터를 불러오는 중입니다...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      
-      <div class="flex justify-end mt-4">
-        <button id="cancelSelectButton" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded mr-2">
+      <div class="flex justify-end space-x-3 mt-8">
+        <button 
+          id="cancelAddButton"
+          class="px-5 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium"
+        >
           취소
         </button>
-        <button id="confirmSelectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded">
-          등록
+        <button 
+          id="confirmAddButton"
+          class="px-5 py-2 bg-gray-900 text-white hover:bg-gray-800 rounded-lg font-medium"
+        >
+          확인
         </button>
       </div>
     </div>
   </div>
 
-  <!-- 제외 확인 모달 -->
-  <div id="removeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
-      <h2 class="text-xl font-bold mb-4">안내 대상 제외</h2>
-      
-      <p id="removeModalContent" class="mb-4">선택한 기업을 안내 대상에서 제외하시겠습니까?</p>
-      
-      <div class="flex justify-end">
-        <button id="cancelRemoveButton" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded mr-2">
+  <!-- 삭제 확인 모달 -->
+  <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+      <h2 class="text-lg font-semibold mb-4">기업 삭제</h2>
+      <p>정말 선택한 기업을 삭제하시겠습니까?</p>
+      <p id="deleteCompanyName" class="font-semibold mt-2"></p>
+      <div class="flex justify-end space-x-2 mt-6">
+        <button 
+          id="cancelDeleteButton"
+          class="btn bg-gray-200 hover:bg-gray-300"
+        >
           취소
         </button>
-        <button id="confirmRemoveButton" class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded">
-          제외
+        <button 
+          id="confirmDeleteButton"
+          class="btn btn-danger"
+        >
+          삭제
         </button>
       </div>
     </div>
   </div>
 
-  <script src="api.js"></script>
+  <!-- 공통 스크립트 -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
   <script>
-    // 전역 데이터 상태
-    let businesses = [];
-    let targetCompanies = [];
-    let selectedBusinessId = null;
-    let selectedCompanyIds = [];
-    
-    // API에서 가져온 데이터 필드명 변환
-    function normalizeBusinessData(data) {
-      if (!Array.isArray(data)) return [];
-      
-      return data.map(business => {
-        // 원본 데이터 로깅
-        console.log('원본 사업 데이터:', business);
+    // 기본 설정
+    const API_URL = 'https://script.google.com/macros/s/AKfycbz9E3_2V8n4mVE46nHjJ3V41fGFUHa8Q967-DEXmih8Gjl8hIH063rHE-emJzEXgA/exec';
+    let companies = [], selectedCompanyIds = [], currentPage = 1;
+    const itemsPerPage = 10;
+    let currentSortColumn = 'id', currentSortDirection = 'asc', isLoading = false;
+    let lastApiCallTimestamp = 0;
+    let notificationData = [];
+    let businessList = [];
+    let projects = [];
+    let selectedProjectIds = [];
+ 
+    // API 호출 통합 함수
+    async function apiCall(action, sheet, data = null, id = null) {
+      return new Promise((resolve, reject) => {
+        const now = Date.now();
+        const elapsed = now - lastApiCallTimestamp;
+        if (action !== 'getData' && elapsed < 1000) {
+          setTimeout(() => {
+            apiCall(action, sheet, data, id).then(resolve).catch(reject);
+          }, 1000 - elapsed);
+          return;
+        }
         
-        // API에서 가져온 데이터 필드명 통일
-        return {
-          id: business.id || `id_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-          name: business.name || business.businessName || business.project_name || '',
-          targetCompanies: business.targetCompanies || business.target_companies || [],
-          startDate: business.startDate || business.start_date || '',
-          endDate: business.endDate || business.end_date || '',
-          organizer: business.organizer || '',
-          noticeUrl: business.noticeUrl || business.notice_url || ''
+        lastApiCallTimestamp = now;
+        const sheetMap = {'사업정보': '사업정보', '기업정보': '기업정보', '계약정보': '계약정보', '송금정보': '송금정보', '안내정보': '안내정보', 'all': 'all'};
+        const callbackName = 'api_cb_' + Math.floor(Math.random() * 1000000);
+        const script = document.createElement('script');
+        const actualSheet = sheetMap[sheet] || sheet;
+        
+        let url = `${API_URL}?action=${action}&sheet=${encodeURIComponent(actualSheet)}&callback=${callbackName}`;
+        
+        if (id) url += `&id=${encodeURIComponent(id)}`;
+        if (data) {
+          url += `&jsonData=${encodeURIComponent(JSON.stringify(data))}`;
+        }
+        
+        const timeoutId = setTimeout(() => {
+          delete window[callbackName];
+          script.remove();
+          resolve({ success: false, error: '요청 시간 초과', data: action === 'getData' ? [] : null });
+        }, 15000);
+        
+        window[callbackName] = (response) => {
+          clearTimeout(timeoutId);
+          delete window[callbackName];
+          script.remove();
+          resolve(response);
         };
+        
+        script.onerror = () => {
+          clearTimeout(timeoutId);
+          delete window[callbackName];
+          script.remove();
+          resolve({ success: false, error: `${action} 오류`, data: action === 'getData' ? [] : null });
+        };
+        
+        document.head.appendChild(script);
       });
     }
-    
-    // 기업 데이터 정규화
-    function normalizeCompanyData(data) {
-      if (!Array.isArray(data)) return [];
+
+    // 초기화 및 이벤트 등록
+    document.addEventListener('DOMContentLoaded', function() {
+      // 모바일 메뉴
+      document.querySelector('.mobile-menu-button').addEventListener('click', () => 
+        document.querySelector('.mobile-menu').classList.toggle('hidden'));
       
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
+      // 사업 목록 로드
+      loadBusinessList();
       
-      return data.map(company => {
-        // 원본 데이터 로깅
-        console.log('원본 기업 데이터:', company);
+      // 페이지 초기화 시 안내정보 데이터 로드
+      loadNotificationData();
+      
+      // 검색, 정렬, 페이지네이션
+      document.getElementById('selectAllCheckbox').addEventListener('change', toggleSelectAll);
+      document.getElementById('modalSelectAllCheckbox').addEventListener('change', toggleModalSelectAll);
+      document.getElementById('searchButton').addEventListener('click', function() {
+        const businessId = document.getElementById('businessSelect').value;
+        const searchTerm = document.getElementById('searchInput').value.trim();
         
-        // API에서 가져온 데이터 필드명 통일
-        return {
-          id: company.id || `id_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-          name: company.name || company.companyName || company.company_name || '',
-          businessNumber: company.businessNumber || company.business_number || company.businessNo || '',
-          representative: company.representative || company.대표자 || company.CEO || company.ceo || '',
-          phone: company.phone || company.phoneNumber || company.contact || company.전화번호 || '',
-          email: company.email || company.이메일 || company.email || '',
-          status: company.status || '대기',
-          notificationDate: company.notificationDate || company.notification_date || ''
-        };
+        if (businessId) {
+          // 사업 선택된 경우 해당 사업의 데이터만 로드
+          loadBusinessData(businessId);
+        } else if (searchTerm) {
+          // 검색어만 입력된 경우 전체 데이터에서 검색
+          searchCompanies();
+        } else {
+          // 모든 안내정보 로드
+          loadNotificationData();
+        }
       });
-    }
+      
+      document.getElementById('searchInput').addEventListener('keypress', e => { 
+        if (e.key === 'Enter') {
+          document.getElementById('searchButton').click();
+        }
+      });
+      
+      document.getElementById('businessSelect').addEventListener('change', function() {
+        const selectedBusinessId = this.value;
+        if (selectedBusinessId) {
+          loadBusinessData(selectedBusinessId);
+          // 대상 선별 버튼 활성화
+          document.getElementById('addButton').disabled = false;
+        } else {
+          // 모든 안내정보 로드
+          loadNotificationData();
+          // 대상 선별 버튼 비활성화
+          document.getElementById('addButton').disabled = true;
+        }
+      });
+      
+      // 대상 선별 버튼 초기 비활성화
+      document.getElementById('addButton').disabled = true;
+      
+      // 페이지네이션 버튼
+      document.getElementById('prevPageBtn').addEventListener('click', () => {
+        if (!isLoading && currentPage > 1) { 
+          currentPage--; 
+          const businessId = document.getElementById('businessSelect').value;
+          if (businessId) {
+            renderTable();
+          } else {
+            renderNotificationTable();
+          }
+        }
+      });
+      
+      document.getElementById('nextPageBtn').addEventListener('click', () => {
+        if (!isLoading) {
+          const totalPages = Math.ceil(getFilteredCompanies().length / itemsPerPage);
+          if (currentPage < totalPages) { 
+            currentPage++; 
+            const businessId = document.getElementById('businessSelect').value;
+            if (businessId) {
+              renderTable();
+            } else {
+              renderNotificationTable();
+            }
+          }
+        }
+      });
+      
+      // 모달 관련 이벤트 리스너
+      document.getElementById('addButton').addEventListener('click', function() {
+        console.log('대상 선별 버튼 클릭됨');
+        openModal('add');
+      });
+      
+      document.getElementById('deleteButton').addEventListener('click', () => {
+        if (selectedCompanyIds.length === 0) {
+          alert('삭제할 기업을 선택해주세요.');
+          return;
+        }
+        openModal('delete');
+      });
+      
+      // 모달 취소/확인 버튼
+      document.getElementById('cancelAddButton').addEventListener('click', closeModals);
+      document.getElementById('confirmAddButton').addEventListener('click', () => handleCrud('add'));
+      document.getElementById('cancelDeleteButton').addEventListener('click', closeModals);
+      document.getElementById('confirmDeleteButton').addEventListener('click', () => handleCrud('delete'));
+    });
+
     
-    // 사업 목록 로드
-    async function loadBusinesses() {
-      console.log('사업 목록 로드 시작');
+    // 데이터 로드 및 테이블 렌더링
+    async function loadProjects() {
+      if (isLoading) return;
+      
+      isLoading = true;
+      
+      // 콜드 스타트 감지 및 개선된 로딩 표시
+      const isColdStart = !sessionStorage.getItem('projects_cache');
+      
+      // 유쾌한 랜덤 로딩 메시지 배열
+      const funnyLoadingMessages = [
+        "클라우드에서 데이터를 다운로드하는 중 ☁️",
+        "데이터 소환 주문 외우는 중이에요, 곧 소환될거예요!🔮✨",
+        "열심히 데이터를 찾는 중이에요... 거의 다 왔어요! 🔍",
+        "해킹은 아니지만 데이터 가져오는 중 👾",
+        "삐빅... 데이터를 발견했습니다! 관련 데이터 다운로드 중..🔄",
+        "거의 다 됐어요! 3초 세고 나타날 거예요... 아마도 🤔",
+        "데이터 낚시 중... 큰 데이터가 걸린 것 같아요! 🎣"
+      ];
+      
+      // 랜덤 메시지 선택
+      const randomMessage = funnyLoadingMessages[Math.floor(Math.random() * funnyLoadingMessages.length)];
       
       try {
-        // API에서 데이터 가져오기
-        const result = await fetchData('사업정보');
-        console.log('API 호출 결과:', result);
+        console.time('안내 데이터 로드');
+        const response = await apiCall('getData', '안내정보');
+        console.timeEnd('안내 데이터 로드');
         
-        if (result && result.success && Array.isArray(result.data)) {
-          // API에서 데이터를 성공적으로 가져온 경우
-          console.log('API에서 사업 정보 로드:', result.data.length, '개 항목');
-          businesses = normalizeBusinessData(result.data);
+        if (response.success && Array.isArray(response.data)) {
+          console.log(`안내 데이터 ${response.data.length}개 로드 성공`);
           
-          // 사업 선택 드롭다운 채우기
-          populateBusinessSelector();
+          // 물고기 잡힘 애니메이션 실행
+          showFishCaughtAnimation();
+          
+          // 응답 데이터가 비어있는지 확인
+          if (response.data.length === 0 && projects.length > 0 && !isColdStart) {
+            console.warn('API 응답이 비어있습니다. 캐시된 데이터를 유지합니다.');
+          } else {
+            projects = response.data;
+            // 세션 스토리지에 캐시 저장 (만료시간 30분)
+            const cacheData = {
+              timestamp: Date.now(),
+              data: response.data
+            };
+            sessionStorage.setItem('projects_cache', JSON.stringify(projects));
+            console.log('데이터 캐시 저장됨');
+          }
         } else {
-          // API 오류 또는 데이터 없음
-          console.warn('API 호출 실패 또는 데이터 형식 오류:', result?.error);
-          businesses = [];
-          
-          // 빈 선택기 표시
-          populateBusinessSelector();
+          if (sessionStorage.getItem('projects_cache')) {
+            console.warn('API 오류, 캐시된 데이터 유지합니다.');
+          } else {
+            projects = [];
+            console.error('데이터 로드 실패:', response.error || '알 수 없는 오류');
+          }
         }
       } catch (error) {
-        console.error('사업 정보 로드 오류:', error);
-        alert('사업 정보를 불러오는 중 오류가 발생했습니다: ' + error.message);
-        businesses = [];
-        
-        // 빈 선택기 표시
-        populateBusinessSelector();
+        if (sessionStorage.getItem('projects_cache')) {
+          console.warn('API 오류, 캐시된 데이터 유지합니다.');
+        } else {
+          projects = [];
+          console.error('데이터 로드 오류:', error);
+        }
+      } finally {
+        isLoading = false;
+        console.time('테이블 렌더링');
+        renderTable();
+        console.timeEnd('테이블 렌더링');
       }
     }
     
-    // 사업 선택 드롭다운 채우기
-    function populateBusinessSelector() {
-      const selector = document.getElementById('businessSelector');
-      if (!selector) {
-        console.error('businessSelector 요소를 찾을 수 없습니다.');
-        return;
+    // 필터링, 정렬, 테이블 렌더링
+    function getFilteredProjects() {
+      const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+      if (!searchTerm) return projects;
+      
+      return projects.filter(p => 
+        (p.name && p.name.toLowerCase().includes(searchTerm)) || 
+        (p.organizer && p.organizer.toLowerCase().includes(searchTerm))
+      );
+    }
+    
+    function renderTable() {
+      const tbody = document.getElementById('projectTableBody');
+      const filtered = getFilteredProjects();
+      
+      // 정렬 - 수동 정렬이 적용된 경우에만 정렬 실행
+      let displayData = filtered;
+      if (currentSortColumn !== 'id' || currentSortDirection !== 'asc') {
+        displayData = filtered.sort((a, b) => {
+          let valA = a[currentSortColumn] || '';
+          let valB = b[currentSortColumn] || '';
+          
+          if (currentSortColumn === 'targetCount') {
+            valA = parseInt(valA) || 0;
+            valB = parseInt(valB) || 0;
+          } else {
+            valA = String(valA).toLowerCase();
+            valB = String(valB).toLowerCase();
+          }
+          
+          return (valA < valB ? -1 : valA > valB ? 1 : 0) * (currentSortDirection === 'asc' ? 1 : -1);
+        });
       }
       
-      // 기존 옵션 제거 (첫 번째 기본 옵션 제외)
-      while (selector.options.length > 1) {
-        selector.remove(1);
+      // 초기 테이블 정렬 표시 업데이트
+      if (currentSortColumn !== 'id') {
+        document.querySelectorAll('th[data-sort]').forEach(th => {
+          const column = th.getAttribute('data-sort');
+          const sortIcon = th.querySelector('.sort-icon i');
+          
+          if (column === currentSortColumn) {
+            sortIcon.className = `fas fa-sort-${currentSortDirection === 'asc' ? 'up' : 'down'}`;
+            sortIcon.parentElement.classList.add('active');
+          } else {
+            sortIcon.className = 'fas fa-sort';
+            sortIcon.parentElement.classList.remove('active');
+          }
+        });
       }
       
-      // 새 옵션 추가
-      if (businesses && businesses.length > 0) {
-        businesses.forEach(business => {
-          const option = document.createElement('option');
-          option.value = business.id;
-          option.text = business.name;
-          selector.add(option);
+      // 페이징
+      const pageData = displayData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+      const fragment = document.createDocumentFragment();
+      
+      if (pageData.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td colspan="7" class="text-center py-4">등록된 사업이 없습니다.</td>';
+        fragment.appendChild(tr);
+      } else {
+        pageData.forEach(project => {
+          const tr = document.createElement('tr');
+          
+          // 체크박스
+          const checkboxCell = document.createElement('td');
+          checkboxCell.className = "align-middle text-center";
+          
+          const checkboxContainer = document.createElement('div');
+          checkboxContainer.className = "flex justify-center items-center";
+          
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.className = 'project-checkbox';
+          checkbox.value = project.id;
+          checkbox.checked = selectedProjectIds.includes(project.id);
+          checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+              if (!selectedProjectIds.includes(project.id)) selectedProjectIds.push(project.id);
+            } else {
+              selectedProjectIds = selectedProjectIds.filter(id => id !== project.id);
+            }
+            updateSelectAllCheckbox();
+          });
+          
+          checkboxContainer.appendChild(checkbox);
+          checkboxCell.appendChild(checkboxContainer);
+          tr.appendChild(checkboxCell);
+          tr.appendChild(createElement('td', project.name));
+          tr.appendChild(createElement('td', project.targetCount));
+          
+          // 사업기간
+          const startDate = project.startDate ? project.startDate.split('T')[0].replace(/-/g, '.') : '';
+          const endDate = project.endDate ? project.endDate.split('T')[0].replace(/-/g, '.') : '';
+          tr.appendChild(createElement('td', startDate && endDate ? `${startDate} ~ ${endDate}` : ''));
+          
+          tr.appendChild(createElement('td', project.organizer));
+          
+          // 공고 URL
+          const tdUrl = document.createElement('td');
+          if (project.noticeUrl) {
+            const link = document.createElement('a');
+            link.href = project.noticeUrl;
+            link.target = '_blank';
+            link.textContent = '공고 보기';
+            link.className = 'table-link';
+            tdUrl.appendChild(link);
+          }
+          tr.appendChild(tdUrl);
+          
+          // 수정 버튼
+          const editBtn = document.createElement('button');
+          editBtn.type = 'button';
+          editBtn.className = 'btn btn-sm edit-btn whitespace-nowrap';
+          editBtn.innerHTML = '<i class="fas fa-edit mr-1 flex-shrink-0"></i> 수정';
+          editBtn.addEventListener('click', () => openModal('edit', project));
+          
+          const tdEdit = document.createElement('td');
+          tdEdit.className = "text-center"; // 셀 자체도 중앙 정렬
+          tdEdit.appendChild(editBtn);
+          tr.appendChild(tdEdit);
+          fragment.appendChild(tr);
+        });
+      }
+      
+      tbody.innerHTML = '';
+      tbody.appendChild(fragment);
+      
+      // 페이지네이션 업데이트
+      const totalPages = Math.ceil(filtered.length / itemsPerPage);
+      const startItem = filtered.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+      const endItem = Math.min(currentPage * itemsPerPage, filtered.length);
+      
+      document.getElementById('totalItems').textContent = filtered.length;
+      document.getElementById('startItem').textContent = startItem;
+      document.getElementById('endItem').textContent = endItem;
+      document.getElementById('prevPageBtn').disabled = (currentPage <= 1);
+      document.getElementById('nextPageBtn').disabled = (currentPage >= totalPages);
+      document.getElementById('paginationNumbers').textContent = `${currentPage} / ${totalPages || 1}`;
+      
+      // 전체 선택 체크박스 상태 업데이트
+      updateSelectAllCheckbox();
+    }
+    
+    // 유틸리티 함수
+    function createElement(tag, textContent, child = null) {
+      const elem = document.createElement(tag);
+      if (textContent !== null) elem.textContent = textContent || '';
+      if (child) elem.appendChild(child);
+      return elem;
+    }
+    
+    function toggleSelectAll() {
+      const isChecked = document.getElementById('selectAllCheckbox').checked;
+      const checkboxes = document.querySelectorAll('.project-checkbox');
+      
+      selectedProjectIds = isChecked ? Array.from(checkboxes).map(chk => chk.value) : [];
+      checkboxes.forEach(chk => chk.checked = isChecked);
+    }
+    
+    function updateSelectAllCheckbox() {
+      const checkboxes = document.querySelectorAll('.project-checkbox');
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      
+      selectAllCheckbox.disabled = checkboxes.length === 0;
+      selectAllCheckbox.checked = checkboxes.length > 0 && Array.from(checkboxes).every(chk => chk.checked);
+    }
+    
+    // 모달 관련
+    function closeModals() {
+      console.log('모달 닫기 함수 호출됨');
+      document.getElementById('addModal').classList.add('hidden');
+      document.getElementById('editModal').classList.add('hidden');
+      document.getElementById('deleteModal').classList.add('hidden');
+    }
+    
+    // 삭제 취소 시 선택 항목 초기화
+    function cancelDelete() {
+      console.log('삭제 취소, 선택 초기화');
+      closeModals();
+      // 선택된 항목 초기화
+      selectedProjectIds = [];
+      // 체크박스 상태 업데이트
+      document.querySelectorAll('.project-checkbox').forEach(chk => {
+        chk.checked = false;
+      });
+      // 전체 선택 체크박스 상태 업데이트
+      updateSelectAllCheckbox();
+    }
+    
+    function openModal(type, project = null) {
+      console.log(`모달 열기: ${type}`);
+      if (type === 'add') {
+        document.getElementById('addName').value = '';
+        document.getElementById('addTargetCount').value = '';
+        
+        // flatpickr 인스턴스 초기화
+        const startDatePicker = document.getElementById('addStartDate')._flatpickr;
+        const endDatePicker = document.getElementById('addEndDate')._flatpickr;
+        
+        startDatePicker.clear();
+        endDatePicker.clear();
+        
+        document.getElementById('addOrganizer').value = '';
+        document.getElementById('addNoticeUrl').value = '';
+        document.getElementById('addModal').classList.remove('hidden');
+        console.log('사업 추가 모달이 열렸습니다.');
+      } 
+      else if (type === 'edit') {
+        if (!project || !project.id) return console.error('수정할 사업 정보를 찾을 수 없습니다.');
+        
+        document.getElementById('editName').value = project.name || '';
+        document.getElementById('editTargetCount').value = project.targetCount || '';
+        
+        // flatpickr 인스턴스로 날짜 설정
+        const startDatePicker = document.getElementById('editStartDate')._flatpickr;
+        const endDatePicker = document.getElementById('editEndDate')._flatpickr;
+        
+        if (project.startDate) {
+          startDatePicker.setDate(project.startDate.split('T')[0]);
+        } else {
+          startDatePicker.clear();
+        }
+        
+        if (project.endDate) {
+          endDatePicker.setDate(project.endDate.split('T')[0]);
+        } else {
+          endDatePicker.clear();
+        }
+        
+        document.getElementById('editOrganizer').value = project.organizer || '';
+        document.getElementById('editNoticeUrl').value = project.noticeUrl || '';
+        
+        selectedProjectIds = [project.id];
+        document.getElementById('editModal').classList.remove('hidden');
+      }
+      else if (type === 'delete') {
+        // 선택된 항목 다시 확인 (체크박스 기준으로 갱신)
+        selectedProjectIds = [];
+        document.querySelectorAll('.project-checkbox:checked').forEach(checkbox => {
+          selectedProjectIds.push(checkbox.value);
         });
         
-        // 버튼 활성화
-        const selectTargetButton = document.getElementById('selectTargetButton');
-        if (selectTargetButton) {
-          selectTargetButton.disabled = false;
-        }
-      } else {
-        // 옵션이 없는 경우 버튼 비활성화
-        const selectTargetButton = document.getElementById('selectTargetButton');
-        if (selectTargetButton) {
-          selectTargetButton.disabled = true;
+        // 선택된 항목이 없으면 경고 표시하고 모달 열지 않음
+        if (selectedProjectIds.length === 0) {
+          alert('삭제할 사업을 선택해주세요.');
+          return;
         }
         
-        // 안내 옵션 표시
-        const option = document.createElement('option');
-        option.value = '';
-        option.text = '등록된 사업이 없습니다';
-        selector.add(option);
-      }
-    }
-    
-    // 사업 선택 이벤트 핸들러
-    function onBusinessSelect() {
-      const selector = document.getElementById('businessSelector');
-      if (!selector) return;
-      
-      // 선택된 사업 ID 저장
-      selectedBusinessId = selector.value;
-      console.log('선택된 사업 ID:', selectedBusinessId);
-      
-      // 선택 상태에 따라 버튼 활성화/비활성화
-      const selectTargetButton = document.getElementById('selectTargetButton');
-      const downloadButton = document.getElementById('downloadButton');
-      
-      if (selectTargetButton) {
-        selectTargetButton.disabled = !selectedBusinessId;
-      }
-      
-      if (downloadButton) {
-        downloadButton.disabled = !selectedBusinessId;
-      }
-      
-      // 선택된 사업에 맞는 안내 대상 기업 로드
-      if (selectedBusinessId) {
-        loadTargetCompanies(selectedBusinessId);
-      } else {
-        targetCompanies = [];
-        renderTargetCompaniesTable();
-      }
-    }
-    
-    // 안내 대상 기업 로드
-    async function loadTargetCompanies(businessId) {
-      console.log('안내 대상 기업 로드 시작, 사업 ID:', businessId);
-      
-      const targetCompanyTableBody = document.getElementById('targetCompanyTableBody');
-      
-      // 테이블 로딩 상태 표시
-      if (targetCompanyTableBody) {
-        targetCompanyTableBody.innerHTML = `
-          <tr>
-            <td colspan="8" class="text-center py-4">
-              <div class="flex justify-center items-center">
-                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-2"></div>
-                안내 대상 기업 정보를 불러오는 중...
-              </div>
-            </td>
-          </tr>
-        `;
-      } else {
-        console.error('targetCompanyTableBody 요소를 찾을 수 없습니다.');
-        return;
-      }
-      
-      try {
-        // API에서 데이터 가져오기 - 안내정보 시트에서 해당 사업 ID에 맞는 데이터 필터링
-        const result = await fetchData('안내정보');
-        console.log('API 호출 결과:', result);
-        
-        if (result && result.success && Array.isArray(result.data)) {
-          // API에서 데이터를 성공적으로 가져온 경우
-          console.log('API에서 안내 정보 로드:', result.data.length, '개 항목');
+        // 삭제할 사업명 가져오기 개선
+        let deleteText = '';
+        if (selectedProjectIds.length === 1) {
+          // 단일 사업 삭제 시 사업명 표시
+          const projectId = selectedProjectIds[0];
+          const project = projects.find(p => String(p.id) === String(projectId));
           
-          // 해당 사업 ID에 맞는 안내 정보만 필터링
-          const filteredData = result.data.filter(item => item.businessId === businessId);
-          targetCompanies = normalizeCompanyData(filteredData);
-          
-          console.log('필터링된 안내 대상 기업:', targetCompanies.length, '개 항목');
+          if (project && project.name) {
+            deleteText = `"${project.name}"`;
+          } else {
+            deleteText = "선택한 사업";
+            console.error('사업명을 찾을 수 없습니다. ID:', projectId);
+          }
         } else {
-          // API 오류 또는 데이터 없음
-          console.warn('API 호출 실패 또는 데이터 형식 오류:', result?.error);
-          targetCompanies = [];
+          // 다중 사업 삭제 시 개수 표시
+          deleteText = `선택한 ${selectedProjectIds.length}개 사업`;
         }
         
-        // 테이블 렌더링
-        renderTargetCompaniesTable();
+        console.log('삭제 텍스트:', deleteText);
+        document.getElementById('deleteProjectName').textContent = deleteText;
+        document.getElementById('deleteModal').classList.remove('hidden');
+      }
+    }
+    
+    // CRUD 처리
+    async function handleCrud(type) {
+      console.log(`handleCrud 함수 호출됨 - 타입: ${type}, 시간: ${new Date().toISOString()}`);
+      
+      if (type === 'add') {
+        const nameInput = document.getElementById('addName');
+        const targetCountInput = document.getElementById('addTargetCount');
+        const startDateInput = document.getElementById('addStartDate');
+        const endDateInput = document.getElementById('addEndDate');
+        const organizerInput = document.getElementById('addOrganizer');
+        const noticeUrlInput = document.getElementById('addNoticeUrl');
+        
+        const data = {
+          name: nameInput.value.trim(),
+          targetCount: targetCountInput.value.trim(),
+          startDate: startDateInput.value,
+          endDate: endDateInput.value,
+          organizer: organizerInput.value.trim(),
+          noticeUrl: noticeUrlInput.value.trim()
+        };
+        
+        console.log('추가할 사업 데이터:', data);
+        
+        // 필수값 유효성 검사 및 시각적 피드백 제공
+        const hasName = data.name && data.name.length > 0;
+        const hasTargetCount = data.targetCount && !isNaN(parseInt(data.targetCount));
+        const hasStartDate = data.startDate && data.startDate.length > 0;
+        const hasEndDate = data.endDate && data.endDate.length > 0;
+        
+        nameInput.style.borderColor = hasName ? '#d1d5db' : 'red';
+        targetCountInput.style.borderColor = hasTargetCount ? '#d1d5db' : 'red'; 
+        startDateInput.style.borderColor = hasStartDate ? '#d1d5db' : 'red';
+        endDateInput.style.borderColor = hasEndDate ? '#d1d5db' : 'red';
+        
+        // 사용자에게 누락된 필드를 알려주기
+        if (!hasName || !hasTargetCount || !hasStartDate || !hasEndDate) {
+          console.error('필수값 누락:', {
+            name: !hasName,
+            targetCount: !hasTargetCount,
+            startDate: !hasStartDate,
+            endDate: !hasEndDate
+          });
+          
+          // 누락된 항목을 구체적으로 알려주는 메시지 생성
+          let missingFields = [];
+          if (!hasName) missingFields.push('사업명');
+          if (!hasTargetCount) missingFields.push('목표 업체 수');
+          if (!hasStartDate) missingFields.push('시작일');
+          if (!hasEndDate) missingFields.push('종료일');
+          
+          alert(`${missingFields.join(', ')} 입력해주세요.`);
+          return;
+        }
+        
+        try {
+          data.targetCount = parseInt(data.targetCount);
+          console.log('API 호출 시작 - 사업 추가');
+          
+          // 사용자에게 처리 중임을 알림
+          const confirmBtn = document.getElementById('confirmAddButton');
+          const originalText = confirmBtn.innerHTML;
+          confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>처리 중...';
+          confirmBtn.disabled = true;
+          
+          // 데이터 형식 강제
+          if (typeof data.targetCount !== 'number') {
+            data.targetCount = parseInt(data.targetCount) || 0;
+          }
+          
+          // 데이터 유효성 로깅
+          console.log('전송할 최종 데이터:', {
+            name: data.name + '',
+            targetCount: data.targetCount + '',
+            startDate: data.startDate + '',
+            endDate: data.endDate + '',
+            organizer: data.organizer + '',
+            noticeUrl: data.noticeUrl + ''
+          });
+          
+          // JSON 문자열로 변환해서 로그 확인
+          const jsonStr = JSON.stringify(data);
+          console.log('JSON 문자열:', jsonStr);
+          console.log('데이터 타입 확인:', {
+            name: typeof data.name,
+            targetCount: typeof data.targetCount,
+            startDate: typeof data.startDate,
+            endDate: typeof data.endDate
+          });
+          
+          const response = await apiCall('addData', '사업정보', data);
+          console.log('API 응답:', response);
+          
+          // 버튼 상태 복원
+          confirmBtn.innerHTML = originalText;
+          confirmBtn.disabled = false;
+          
+          if (response.success) {
+            console.log('사업 추가 성공');
+            alert('사업이 성공적으로 추가되었습니다.');
+            closeModals();
+            loadProjects();
+          } else {
+            console.error('사업 추가 실패:', response.error || '알 수 없는 오류');
+          }
+        } catch (error) {
+          console.error('사업 추가 중 오류 발생:', error);
+          alert('사업 추가 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류'));
+          document.getElementById('confirmAddButton').disabled = false;
+        }
+      }
+      else if (type === 'edit') {
+        if (selectedProjectIds.length === 0) {
+          return console.error('수정할 사업을 선택해주세요.');
+        }
+        
+        const data = {
+          name: document.getElementById('editName').value.trim(),
+          targetCount: document.getElementById('editTargetCount').value.trim(),
+          startDate: document.getElementById('editStartDate').value,
+          endDate: document.getElementById('editEndDate').value,
+          organizer: document.getElementById('editOrganizer').value.trim(),
+          noticeUrl: document.getElementById('editNoticeUrl').value.trim()
+        };
+        
+        if (!data.name || !data.targetCount || !data.startDate || !data.endDate) {
+          return console.error('필수값(사업명, 목표업체수, 사업기간)이 누락되었습니다.');
+        }
+        
+        data.targetCount = parseInt(data.targetCount);
+        const response = await apiCall('updateData', '사업정보', data, selectedProjectIds[0]);
+        
+        if (response.success) {
+          console.log('사업 수정 성공');
+          closeModals();
+          loadProjects();
+        } else {
+          console.error('사업 수정 실패:', response.error || '알 수 없는 오류');
+        }
+      }
+      else if (type === 'delete') {
+        if (selectedProjectIds.length === 0) {
+          return console.error('삭제할 사업을 선택해주세요.');
+        }
+        
+        // 삭제 버튼 로딩 상태로 변경
+        const confirmBtn = document.getElementById('confirmDeleteButton');
+        const originalText = confirmBtn.innerHTML;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>삭제 중...';
+        confirmBtn.disabled = true;
+        
+        try {
+          const results = await Promise.all(
+            selectedProjectIds.map(id => apiCall('deleteData', '사업정보', null, id))
+          );
+          
+          console.log(results.every(r => r.success) ? '사업 삭제 성공' : '일부 사업 삭제에 실패했습니다.');
+          
+          // 버튼 상태 복원
+          confirmBtn.innerHTML = originalText;
+          confirmBtn.disabled = false;
+          
+          closeModals();
+          loadProjects();
+        } catch (error) {
+          console.error('삭제 중 오류 발생:', error);
+          
+          // 오류 발생 시에도 버튼 상태 복원
+          confirmBtn.innerHTML = originalText;
+          confirmBtn.disabled = false;
+          
+          alert('삭제 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류'));
+        }
+      }
+    }
+
+    // 데이터 로드 완료 후 물고기 애니메이션 추가
+    function showFishCaughtAnimation() {
+      const fishingLoaders = document.querySelectorAll('.fishing-fish');
+      if (fishingLoaders.length > 0) {
+        fishingLoaders.forEach(fish => {
+          fish.classList.add('fish-caught');
+        });
+      }
+    }
+
+    // 페이지 초기화 함수
+    function initPage() {
+      try {
+        // 모바일 메뉴 토글 버튼 이벤트 등록
+        const mobileMenuButton = document.querySelector('.mobile-menu-button');
+        if (mobileMenuButton) {
+          mobileMenuButton.addEventListener('click', function() {
+            const mobileMenu = document.querySelector('.mobile-menu');
+            if (mobileMenu) {
+              mobileMenu.classList.toggle('hidden');
+            }
+          });
+        }
+    
+        // 검색 버튼 이벤트 등록
+        const searchButton = document.getElementById('searchButton');
+        if (searchButton) {
+          searchButton.addEventListener('click', function() {
+            currentPage = 1;
+            const businessSelect = document.getElementById('businessSelect');
+            if (businessSelect && businessSelect.value) {
+              loadBusinessData(businessSelect.value);
+            } else {
+              loadNotificationData();
+            }
+          });
+        }
+    
+        // 엔터키 검색 이벤트 등록
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+          searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+              currentPage = 1;
+              const businessSelect = document.getElementById('businessSelect');
+              if (businessSelect && businessSelect.value) {
+                loadBusinessData(businessSelect.value);
+              } else {
+                loadNotificationData();
+              }
+            }
+          });
+        }
+    
+        // 페이징 이벤트 등록
+        const prevPageBtn = document.getElementById('prevPageBtn');
+        if (prevPageBtn) {
+          prevPageBtn.addEventListener('click', function() {
+            if (currentPage > 1) {
+              currentPage--;
+              renderNotificationTable();
+            }
+          });
+        }
+    
+        const nextPageBtn = document.getElementById('nextPageBtn');
+        if (nextPageBtn) {
+          nextPageBtn.addEventListener('click', function() {
+            const totalPages = Math.ceil(notificationData.length / itemsPerPage);
+            if (currentPage < totalPages) {
+              currentPage++;
+              renderNotificationTable();
+            }
+          });
+        }
+    
+        // 초기 데이터 로드
+        loadBusinessList();
+        loadNotificationData();
+        
+        console.log('페이지 초기화 완료!');
       } catch (error) {
-        console.error('안내 대상 기업 로드 오류:', error);
+        console.error('페이지 초기화 중 오류 발생:', error);
+      }
+    }
+
+    // 사업 목록 로드
+    async function loadBusinessList() {
+      try {
+        const response = await apiCall('getData', '사업정보');
+        if (response.success && Array.isArray(response.data)) {
+          businessList = response.data;
+          console.log('사업 목록 로드 완료:', businessList);
+          
+          // 선택 항목 초기화
+          const selectElement = document.getElementById('businessSelect');
+          if (selectElement) {
+            selectElement.innerHTML = '<option value="">사업 선택</option>';
+            
+            // 목록 채우기
+            businessList.forEach(item => {
+              const option = document.createElement('option');
+              option.value = item.id;
+              option.textContent = item.name;
+              selectElement.appendChild(option);
+            });
+          }
+          
+          return businessList;
+        } else {
+          throw new Error('사업 정보를 가져오는데 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('사업 목록 로드 중 오류:', error);
         
-        targetCompanies = [];
+        // 오류 발생시 더미 데이터 사용
+        businessList = [
+          { id: '1', name: '스마트시티 사업' },
+          { id: '2', name: '바이오헬스 사업' },
+          { id: '3', name: '친환경 에너지 사업' }
+        ];
         
-        if (targetCompanyTableBody) {
-          targetCompanyTableBody.innerHTML = `
+        // 선택 항목 초기화
+        const selectElement = document.getElementById('businessSelect');
+        if (selectElement) {
+          selectElement.innerHTML = '<option value="">사업 선택</option>';
+          
+          // 목록 채우기
+          businessList.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = item.name;
+            selectElement.appendChild(option);
+          });
+        }
+        
+        return businessList;
+      }
+    }
+
+    // 선택한 사업 데이터 로드
+    async function loadBusinessData(businessId) {
+      const tbody = document.getElementById('companyTableBody');
+      if (!tbody) return;
+      
+      // 물고기 로딩 애니메이션 표시
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" class="text-center py-8">
+            <div class="flex flex-col items-center justify-center">
+              <div class="fishing-loader mb-4">
+                <div class="fishing-handle"></div>
+                <div class="fishing-rod"></div>
+                <div class="fishing-line"></div>
+                <i class="fas fa-hook fishing-hook"></i>
+                <i class="fas fa-fish fishing-fish"></i>
+              </div>
+              <p class="text-gray-600 font-medium">데이터를 불러오는 중입니다...</p>
+            </div>
+          </td>
+        </tr>
+      `;
+
+      try {
+        // 안내정보 시트에서 데이터 가져오기
+        const response = await apiCall('getData', '안내정보');
+        if (response.success && Array.isArray(response.data)) {
+          // 물고기 잡힘 애니메이션 실행
+          showFishCaughtAnimation();
+          
+          // 선택한 사업에 해당하는 안내정보 필터링
+          const businessNotifications = response.data.filter(notification => 
+            notification.businessId === businessId
+          );
+          
+          setTimeout(() => {
+            if (businessNotifications.length === 0) {
+              tbody.innerHTML = '<tr><td colspan="8" class="text-center">이 사업에 등록된 안내정보가 없습니다.</td></tr>';
+            } else {
+              companies = businessNotifications; // 전역 companies 변수에 저장
+              renderTable();
+            }
+          }, 500);
+        } else {
+          throw new Error('안내정보를 불러오는데 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('안내정보 로드 중 오류:', error);
+        setTimeout(() => {
+          tbody.innerHTML = `
             <tr>
-              <td colspan="8" class="text-center py-8">
-                <div class="text-red-500 mb-4">
-                  <i class="fas fa-exclamation-triangle text-2xl"></i>
-                </div>
-                <div class="text-lg font-bold mb-2">데이터 로드 중 오류 발생</div>
-                <div class="text-sm text-red-600 mb-2">${error.message}</div>
-                <div class="text-sm text-gray-600">서버 연결에 문제가 있습니다</div>
+              <td colspan="8" class="text-center text-red-500">
+                데이터를 불러오는데 실패했습니다. 다시 시도해주세요.
               </td>
             </tr>
           `;
-        }
-      }
-    }
-
-    // 안내 대상 기업 테이블 렌더링
-    function renderTargetCompaniesTable() {
-      console.log('안내 대상 기업 테이블 렌더링');
-      
-      const targetCompanyTableBody = document.getElementById('targetCompanyTableBody');
-      if (!targetCompanyTableBody) {
-        console.error('targetCompanyTableBody 요소를 찾을 수 없습니다.');
-        return;
-      }
-      
-      if (!targetCompanies || targetCompanies.length === 0) {
-        targetCompanyTableBody.innerHTML = `
-          <tr>
-            <td colspan="8" class="text-center py-8">
-              <div class="text-gray-400 mb-4">
-                <i class="fas fa-info-circle text-2xl"></i>
-              </div>
-              <div class="text-lg font-bold mb-2">등록된 안내 대상 기업이 없습니다</div>
-              <div class="text-sm text-gray-600 mb-4">상단의 '안내 대상 선별' 버튼을 클릭하여 대상 기업을 추가하세요</div>
-              <div>
-                <button onclick="openSelectTargetModal()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" ${!selectedBusinessId ? 'disabled' : ''}>
-                  안내 대상 선별하기
-                </button>
-              </div>
-            </td>
-          </tr>
-        `;
-        return;
-      }
-      
-      // 테이블 초기화
-      targetCompanyTableBody.innerHTML = '';
-      
-      // 각 기업 데이터로 행 생성
-      targetCompanies.forEach(company => {
-        const row = document.createElement('tr');
-        row.className = 'border-b hover:bg-gray-100';
-        
-        // 상태에 따른 스타일 결정
-        let statusClass = '';
-        switch(company.status) {
-          case '완료':
-            statusClass = 'text-green-600';
-            break;
-          case '진행중':
-            statusClass = 'text-blue-600';
-            break;
-          case '대기':
-          default:
-            statusClass = 'text-gray-600';
-            break;
-        }
-        
-        row.innerHTML = `
-          <td class="px-4 py-2 text-left">
-            <input type="checkbox" class="company-checkbox cursor-pointer" 
-                   value="${company.id}" onchange="updateRemoveButtonState()">
-          </td>
-          <td class="px-4 py-2 text-left">${company.name || '-'}</td>
-          <td class="px-4 py-2 text-left">${company.businessNumber || '-'}</td>
-          <td class="px-4 py-2 text-left">${company.representative || '-'}</td>
-          <td class="px-4 py-2 text-left">${company.phone || '-'}</td>
-          <td class="px-4 py-2 text-left">${company.email || '-'}</td>
-          <td class="px-4 py-2 text-left ${statusClass}">${company.status || '대기'}</td>
-          <td class="px-4 py-2 text-left">
-            <div class="flex space-x-2">
-              <button onclick="openRemoveModal('${company.id}')" class="text-red-500 hover:text-red-700">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </td>
-        `;
-        
-        targetCompanyTableBody.appendChild(row);
-      });
-      
-      // 전체 선택 체크박스 초기화
-      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-      if (selectAllCheckbox) {
-        selectAllCheckbox.checked = false;
-      }
-      
-      // 제거 버튼 상태 업데이트
-      updateRemoveButtonState();
-    }
-
-    // 전체 선택 토글
-    function toggleSelectAll() {
-      console.log('전체 선택 토글');
-      
-      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-      if (!selectAllCheckbox) {
-        console.error('selectAllCheckbox 요소를 찾을 수 없습니다.');
-        return;
-      }
-      
-      const isChecked = selectAllCheckbox.checked;
-      document.querySelectorAll('.company-checkbox').forEach(checkbox => {
-        checkbox.checked = isChecked;
-      });
-      
-      // 삭제 버튼 활성화/비활성화
-      updateRemoveButtonState();
-    }
-    
-    // 제거 버튼 상태 업데이트
-    function updateRemoveButtonState() {
-      const removeButton = document.getElementById('removeButton');
-      if (!removeButton) {
-        console.error('removeButton 요소를 찾을 수 없습니다.');
-        return;
-      }
-      
-      const anyChecked = document.querySelector('.company-checkbox:checked') !== null;
-      
-      if (anyChecked) {
-        removeButton.disabled = false;
-        removeButton.classList.remove('opacity-50', 'cursor-not-allowed');
-      } else {
-        removeButton.disabled = true;
-        removeButton.classList.add('opacity-50', 'cursor-not-allowed');
+        }, 500);
       }
     }
     
-    // 모달 열기 함수들
-    function openSelectTargetModal() {
-      console.log('안내 대상 선별 모달 열기');
-      
-      if (!selectedBusinessId) {
-        alert('사업을 먼저 선택해주세요.');
-        return;
-      }
-      
-      const selectedBusiness = businesses.find(b => b.id === selectedBusinessId);
-      if (!selectedBusiness) {
-        alert('선택한 사업 정보를 찾을 수 없습니다.');
-        return;
-      }
-      
-      const selectTargetModal = document.getElementById('selectTargetModal');
-      if (!selectTargetModal) {
-        console.error('selectTargetModal 요소를 찾을 수 없습니다.');
-        return;
-      }
-      
-      // 모달에 선택된 사업명 표시
-      const selectedBusinessNameElem = document.getElementById('selectedBusinessName');
-      if (selectedBusinessNameElem) {
-        selectedBusinessNameElem.textContent = selectedBusiness.name;
-      }
-      
-      selectTargetModal.classList.remove('hidden');
-      
-      // 파일 입력 초기화
-      const fileInput = document.getElementById('targetFileInput');
-      if (fileInput) {
-        fileInput.value = '';
-        document.getElementById('selectedFileName').textContent = '선택된 파일 없음';
-      }
-      
-      // 버튼 초기화 (이전 상태 초기화 - 중요)
-      const confirmSelectButton = document.getElementById('confirmSelectButton');
-      if (confirmSelectButton) {
-        confirmSelectButton.disabled = false;
-        confirmSelectButton.textContent = '등록';
-        confirmSelectButton.removeAttribute('data-processing');
-      }
-      
-      // 버튼 이벤트 처리 - 모달이 열릴 때마다 새로 등록 (이중 이벤트 방지)
-      const cancelSelectButton = document.getElementById('cancelSelectButton');
-      
-      if (confirmSelectButton) {
-        // 기존 이벤트 리스너 제거를 위해 복제 후 교체
-        const newConfirmButton = confirmSelectButton.cloneNode(true);
-        confirmSelectButton.parentNode.replaceChild(newConfirmButton, confirmSelectButton);
-        
-        // 새 이벤트 리스너 등록 - 직접 함수 사용
-        newConfirmButton.onclick = function() {
-          uploadTargetCompanies();
-        };
-      }
-      
-      if (cancelSelectButton) {
-        // 취소 버튼도 동일하게 처리
-        const newCancelButton = cancelSelectButton.cloneNode(true);
-        cancelSelectButton.parentNode.replaceChild(newCancelButton, cancelSelectButton);
-        newCancelButton.onclick = function() {
-          closeSelectTargetModal();
-        };
-      }
-    }
-    
-    function closeSelectTargetModal() {
-      console.log('안내 대상 선별 모달 닫기');
-      const selectTargetModal = document.getElementById('selectTargetModal');
-      if (!selectTargetModal) {
-        console.error('selectTargetModal 요소를 찾을 수 없습니다.');
-        return;
-      }
-      
-      selectTargetModal.classList.add('hidden');
-      
-      // 모달 닫을 때 이벤트 리스너 정리
-      const confirmSelectButton = document.getElementById('confirmSelectButton');
-      if (confirmSelectButton) {
-        confirmSelectButton.removeAttribute('data-processing');
-      }
-    }
-    
-    function openRemoveModal(companyId) {
-      console.log('안내 대상 제외 모달 열기, ID:', companyId);
-      
-      const removeModal = document.getElementById('removeModal');
-      if (!removeModal) {
-        console.error('removeModal 요소를 찾을 수 없습니다.');
-        return;
-      }
-      
-      // 제외 확인 메시지 설정
-      let confirmMessage = '';
-      
-      if (companyId) {
-        // 단일 기업 제외
-        selectedCompanyIds = [companyId];
-        const company = targetCompanies.find(c => c.id == companyId);
-        
-        if (!company) {
-          alert('제외할 기업 정보를 찾을 수 없습니다.');
-          return;
-        }
-        
-        confirmMessage = `"${company.name}" 기업을 안내 대상에서 제외하시겠습니까?`;
-      } else {
-        // 다중 제외
-        selectedCompanyIds = [];
-        const checkedBoxes = document.querySelectorAll('.company-checkbox:checked');
-        
-        if (checkedBoxes.length === 0) {
-          alert('제외할 기업을 선택해주세요.');
-          return;
-        }
-        
-        checkedBoxes.forEach(checkbox => {
-          selectedCompanyIds.push(checkbox.value);
-        });
-        
-        confirmMessage = `선택한 ${checkedBoxes.length}개 기업을 안내 대상에서 제외하시겠습니까?`;
-      }
-      
-      // 메시지 설정 및 모달 열기
-      const removeModalContent = document.getElementById('removeModalContent');
-      if (removeModalContent) {
-        removeModalContent.textContent = confirmMessage;
-      }
-      
-      // 버튼 초기화 (이전 상태 초기화 - 중요)
-      const confirmRemoveButton = document.getElementById('confirmRemoveButton');
-      if (confirmRemoveButton) {
-        confirmRemoveButton.disabled = false;
-        confirmRemoveButton.textContent = '제외';
-        confirmRemoveButton.removeAttribute('data-processing');
-      }
-      
-      // 버튼 이벤트 처리 - 모달이 열릴 때마다 새로 등록 (이중 이벤트 방지)
-      const cancelRemoveButton = document.getElementById('cancelRemoveButton');
-      
-      if (confirmRemoveButton) {
-        // 기존 이벤트 리스너 제거를 위해 복제 후 교체
-        const newConfirmButton = confirmRemoveButton.cloneNode(true);
-        confirmRemoveButton.parentNode.replaceChild(newConfirmButton, confirmRemoveButton);
-        
-        // 새 이벤트 리스너 등록 - 직접 함수 사용
-        newConfirmButton.onclick = function() {
-          removeTargetCompanies();
-        };
-      }
-      
-      if (cancelRemoveButton) {
-        // 취소 버튼도 동일하게 처리
-        const newCancelButton = cancelRemoveButton.cloneNode(true);
-        cancelRemoveButton.parentNode.replaceChild(newCancelButton, cancelRemoveButton);
-        newCancelButton.onclick = function() {
-          closeRemoveModal();
-        };
-      }
-      
-      removeModal.classList.remove('hidden');
-    }
-    
-    function closeRemoveModal() {
-      console.log('안내 대상 제외 모달 닫기');
-      const removeModal = document.getElementById('removeModal');
-      if (!removeModal) {
-        console.error('removeModal 요소를 찾을 수 없습니다.');
-        return;
-      }
-      
-      removeModal.classList.add('hidden');
-      
-      // 모달 닫을 때 이벤트 리스너 정리
-      const confirmRemoveButton = document.getElementById('confirmRemoveButton');
-      if (confirmRemoveButton) {
-        confirmRemoveButton.removeAttribute('data-processing');
-      }
-      
-      // 선택 초기화
-      selectedCompanyIds = [];
-    }
-    
-    // 파일 업로드 처리 (대상 기업 추가)
-    async function uploadTargetCompanies() {
-      console.log('안내 대상 기업 추가 시작');
-      
-      const fileInput = document.getElementById('targetFileInput');
-      const confirmSelectButton = document.getElementById('confirmSelectButton');
-      
-      // 이미 처리 중인지 확인
-      if (confirmSelectButton.getAttribute('data-processing') === 'true') {
-        console.log('이미 처리 중입니다.');
-        return;
-      }
-      
-      // 파일 입력 확인
-      if (!fileInput.files || fileInput.files.length === 0) {
-        alert('업로드할 파일을 선택해주세요.');
-        return;
-      }
-      
-      const file = fileInput.files[0];
-      console.log(`선택된 파일: ${file.name}`);
-      
-      // 파일 형식 확인
-      const fileExtension = file.name.split('.').pop().toLowerCase();
-      if (!['xlsx', 'xls', 'csv'].includes(fileExtension)) {
-        alert('Excel(xlsx, xls) 또는 CSV 파일만 업로드 가능합니다.');
-        return;
-      }
-      
+    // 안내정보 데이터 로드
+    async function loadNotificationData() {
       try {
-        confirmSelectButton.setAttribute('data-processing', 'true');
-        confirmSelectButton.textContent = '처리 중...';
+        const searchText = document.getElementById('searchInput')?.value || '';
+        const selectedBusiness = document.getElementById('businessSelect')?.value || '';
         
-        // FormData 생성 및 파일 추가
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('businessId', selectedBusinessId);
+        console.log('검색 조건:', { searchText, selectedBusiness });
         
-        // API 호출하여 파일 업로드 (시트 이름 직접 전달)
-        const result = await uploadFile(formData, '안내정보');
+        const response = await apiCall('getData', '안내정보');
         
-        if (result.success) {
-          console.log(`파일 업로드 성공: ${result.fileName}`);
-          alert(`파일 업로드 성공: ${result.message || '안내 대상 기업이 등록되었습니다.'}`);
-          closeSelectTargetModal();
-          loadTargetCompanies(selectedBusinessId); // 대상 기업 목록 다시 로드
-        } else {
-          console.error('파일 업로드 실패:', result.error);
-          alert(`업로드 실패: ${result.error || '알 수 없는 오류가 발생했습니다.'}`);
-        }
-      } catch (error) {
-        console.error('안내 대상 추가 중 오류 발생:', error);
-        alert(`안내 대상 추가 중 오류: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
-      } finally {
-        confirmSelectButton.setAttribute('data-processing', 'false');
-        confirmSelectButton.textContent = '등록';
-        fileInput.value = ''; // 파일 입력 초기화
-      }
-    }
-    
-    // 안내 대상 기업 제외
-    async function removeTargetCompanies() {
-      console.log('안내 대상 기업 제외 시작');
-      
-      if (selectedCompanyIds.length === 0) {
-        alert('제외할 기업을 선택해주세요.');
-        return;
-      }
-      
-      // 버튼 상태 변경
-      const confirmRemoveButton = document.getElementById('confirmRemoveButton');
-      if (!confirmRemoveButton) return;
-      
-      const originalText = confirmRemoveButton.textContent;
-      confirmRemoveButton.textContent = '제외 중...';
-      confirmRemoveButton.disabled = true;
-      
-      try {
-        console.log(`${selectedCompanyIds.length}개 기업 정보 제외 중...`);
-        
-        let successCount = 0;
-        
-        // 각 ID에 대해 제외 요청
-        for (const id of selectedCompanyIds) {
-          try {
-            const result = await deleteData('안내정보', id);
-            console.log(`기업 ID ${id} 제외 결과:`, result);
+        if (response.success && Array.isArray(response.data)) {
+          console.log('안내정보 원본 데이터:', response.data);
+          
+          // 원본 데이터 저장
+          const originalData = response.data;
+          
+          // 검색 필터링
+          notificationData = originalData.filter(item => {
+            // 검색어 필터링
+            const matchesSearch = !searchText || 
+              (item.title && item.title.includes(searchText)) ||
+              (item.content && item.content.includes(searchText));
             
-            if (result && result.success) {
-              successCount++;
-            }
-          } catch (error) {
-            console.error(`기업 ID ${id} 제외 중 오류:`, error);
-          }
-        }
-        
-        // 결과 메시지
-        if (successCount > 0) {
-          if (selectedCompanyIds.length === 1) {
-            alert('선택한 기업이 안내 대상에서 제외되었습니다.');
-          } else {
-            alert(`${successCount}개 기업이 안내 대상에서 제외되었습니다.`);
-          }
-          
-          // 데이터 다시 로드
-          await loadTargetCompanies(selectedBusinessId);
-        } else {
-          alert('안내 대상에서 기업을 제외하지 못했습니다. 관리자에게 문의하세요.');
-        }
-        
-        // 모달 닫기
-        closeRemoveModal();
-      } catch (error) {
-        console.error('안내 대상 제외 오류:', error);
-        alert(`안내 대상 제외 중 오류가 발생했습니다: ${error.message}`);
-      } finally {
-        // 버튼 상태 복원
-        confirmRemoveButton.textContent = originalText;
-        confirmRemoveButton.disabled = false;
-        
-        // 선택 상태 초기화
-        selectedCompanyIds = [];
-      }
-    }
-    
-    // 기업 목록 다운로드
-    function downloadTargetCompanies() {
-      console.log('안내 대상 기업 정보 다운로드');
-      
-      if (!selectedBusinessId || targetCompanies.length === 0) {
-        alert('다운로드할 안내 대상 기업이 없습니다.');
-        return;
-      }
-      
-      // 버튼 상태 변경
-      const button = event ? event.currentTarget : document.getElementById('downloadButton');
-      const originalText = button.textContent;
-      button.textContent = '데이터 처리 중...';
-      button.disabled = true;
-      
-      try {
-        console.log('다운로드할 기업 데이터:', targetCompanies.length, '개 항목');
-        
-        // CSV 문자셋 설정을 위한 BOM 추가
-        const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
-        
-        // CSV 데이터 생성 (필요한 5개 필드만 포함)
-        let csvContent = "기업명,사업자등록번호,대표자,전화번호,이메일,상태";
-        
-        targetCompanies.forEach(company => {
-          // 데이터 정제 - 쉼표나 줄바꿈 있으면 따옴표로 감싸기
-          const escapeCsv = (text) => {
-            if (!text) return '';
-            text = String(text).replace(/"/g, '""'); // 따옴표는 두 개로 이스케이프
-            if (text.includes(',') || text.includes('\n') || text.includes('"')) {
-              return `"${text}"`; 
-            }
-            return text;
-          };
-          
-          // 필드 추출
-          const name = escapeCsv(company.name); 
-          const businessNumber = escapeCsv(company.businessNumber);
-          const representative = escapeCsv(company.representative);
-          const phone = escapeCsv(company.phone);
-          const email = escapeCsv(company.email);
-          const status = escapeCsv(company.status);
-          
-          // 데이터 확인을 위한 로깅
-          console.log('CSV 데이터 행:', {
-            name, businessNumber, representative, phone, email, status
+            // 사업 필터링
+            const matchesBusiness = !selectedBusiness || item.businessId === selectedBusiness;
+            
+            return matchesSearch && matchesBusiness;
           });
           
-          csvContent += `\n${name},${businessNumber},${representative},${phone},${email},${status}`;
-        });
-        
-        // 선택된 사업명 가져오기
-        const selectedBusiness = businesses.find(b => b.id === selectedBusinessId);
-        const businessName = selectedBusiness ? selectedBusiness.name : '사업안내';
-        
-        // Blob에 BOM 먼저 추가
-        const blob = new Blob([BOM, csvContent], { type: 'text/csv;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', `${businessName}_안내대상.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        alert('안내 대상 기업 목록이 다운로드되었습니다.');
+          // 데이터 정렬 (최신 등록일 순)
+          notificationData.sort((a, b) => {
+            const dateA = a.registrationDate ? new Date(a.registrationDate) : new Date(0);
+            const dateB = b.registrationDate ? new Date(b.registrationDate) : new Date(0);
+            return dateB - dateA;
+          });
+          
+          console.log('필터링된 안내정보 데이터:', notificationData);
+          
+          // 테이블 렌더링
+          renderNotificationTable();
+        } else {
+          throw new Error('안내정보 데이터를 가져오는데 실패했습니다.');
+        }
       } catch (error) {
-        console.error('안내 대상 기업 다운로드 오류:', error);
-        alert('안내 대상 기업 목록을 다운로드하는 중 오류가 발생했습니다: ' + error.message);
-      } finally {
-        // 버튼 상태 복원
-        button.textContent = originalText;
-        button.disabled = false;
+        console.error('안내정보 데이터 로드 실패:', error);
+        
+        // 더미 데이터 로드
+        notificationData = [
+          {
+            id: '1',
+            businessId: '1',
+            title: '스마트시티 사업 관련 공지',
+            content: '스마트시티 사업에 관한 중요 공지사항입니다.',
+            registrationDate: '2023-12-01'
+          },
+          {
+            id: '2',
+            businessId: '2',
+            title: '바이오헬스 사업 안내',
+            content: '바이오헬스 사업 진행 관련 안내입니다.',
+            registrationDate: '2023-11-15'
+          },
+          {
+            id: '3',
+            businessId: '3',
+            title: '친환경 에너지 사업 설명회',
+            content: '친환경 에너지 사업 설명회를 개최합니다.',
+            registrationDate: '2023-10-20'
+          }
+        ];
+        
+        // 테이블 렌더링
+        renderNotificationTable();
       }
     }
-    
-    // 페이지 초기화
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('사업 안내 페이지 초기화');
+
+    // 안내정보 데이터 테이블 렌더링
+    function renderNotificationTable() {
+      const tableBody = document.getElementById('companyTableBody');
+      if (!tableBody) return;
       
-      // 사업 목록 로드
-      loadBusinesses();
-      
-      // 이벤트 리스너 설정
-      // 사업 선택 드롭다운
-      const businessSelector = document.getElementById('businessSelector');
-      if (businessSelector) {
-        businessSelector.addEventListener('change', onBusinessSelect);
+      const filteredData = notificationData;
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
+      const tableData = filteredData.slice(startIndex, endIndex);
+
+      // 테이블 본문 업데이트
+      if (tableData.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="8" class="py-4 text-center">등록된 안내정보가 없습니다.</td>
+          </tr>
+        `;
       } else {
-        console.warn('businessSelector 요소를 찾을 수 없습니다.');
+        // 홀짝 행 스타일 적용을 위한 클래스 추가
+        tableBody.innerHTML = tableData.map((item, index) => `
+          <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100">
+            <td class="text-center">
+              <input type="checkbox" class="company-checkbox w-4 h-4" 
+                     value="${item.id}" ${selectedCompanyIds.includes(item.id) ? 'checked' : ''}>
+            </td>
+            <td>${item.title || ''}</td>
+            <td>${item.content || ''}</td>
+            <td>${item.representative || ''}</td>
+            <td>${item.phone || ''}</td>
+            <td>${item.email || ''}</td>
+            <td>${item.registrationDate || ''}</td>
+            <td class="text-center">
+              <button class="btn btn-danger btn-sm" onclick="deleteNotification('${item.id}')">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </td>
+          </tr>
+        `).join('');
       }
+
+      // 페이지네이션 업데이트
+      updatePagination(filteredData.length);
+    }
+
+    // 페이지네이션 업데이트
+    function updatePagination(totalItems) {
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+      const endItem = Math.min(currentPage * itemsPerPage, totalItems);
       
-      // 안내 대상 선별 버튼
-      const selectTargetButton = document.getElementById('selectTargetButton');
-      if (selectTargetButton) {
-        selectTargetButton.addEventListener('click', openSelectTargetModal);
-      } else {
-        console.warn('selectTargetButton 요소를 찾을 수 없습니다.');
-      }
+      const totalItemsElem = document.getElementById('totalItems');
+      const startItemElem = document.getElementById('startItem');
+      const endItemElem = document.getElementById('endItem');
+      const prevPageBtn = document.getElementById('prevPageBtn');
+      const nextPageBtn = document.getElementById('nextPageBtn');
+      const paginationNumbers = document.getElementById('paginationNumbers');
       
-      // 다운로드 버튼
-      const downloadButton = document.getElementById('downloadButton');
-      if (downloadButton) {
-        downloadButton.addEventListener('click', downloadTargetCompanies);
-      } else {
-        console.warn('downloadButton 요소를 찾을 수 없습니다.');
-      }
-      
-      // 제외 버튼
-      const removeButton = document.getElementById('removeButton');
-      if (removeButton) {
-        removeButton.addEventListener('click', () => openRemoveModal(null));
-      } else {
-        console.warn('removeButton 요소를 찾을 수 없습니다.');
-      }
-      
-      // 전체 선택 체크박스
-      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-      if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', toggleSelectAll);
-      } else {
-        console.warn('selectAllCheckbox 요소를 찾을 수 없습니다.');
-      }
-      
-      // 드래그 앤 드롭 영역 설정
-      const dragDropArea = document.getElementById('dragDropArea');
-      const fileInput = document.getElementById('targetFileInput');
-      const fileNameDisplay = document.getElementById('selectedFileName');
-      
-      if (dragDropArea && fileInput && fileNameDisplay) {
-        // 파일 선택 이벤트
-        fileInput.addEventListener('change', function() {
-          updateSelectedFileInfo(this.files);
-        });
-        
-        // 드래그 앤 드롭 이벤트
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-          dragDropArea.addEventListener(eventName, preventDefaults, false);
-        });
-        
-        function preventDefaults(e) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-        
-        // 드래그 효과
-        ['dragenter', 'dragover'].forEach(eventName => {
-          dragDropArea.addEventListener(eventName, highlight, false);
-        });
-        
-        ['dragleave', 'drop'].forEach(eventName => {
-          dragDropArea.addEventListener(eventName, unhighlight, false);
-        });
-        
-        function highlight() {
-          dragDropArea.classList.add('border-blue-500');
-          dragDropArea.classList.add('bg-blue-50');
-        }
-        
-        function unhighlight() {
-          dragDropArea.classList.remove('border-blue-500');
-          dragDropArea.classList.remove('bg-blue-50');
-        }
-        
-        // 파일 드롭 처리
-        dragDropArea.addEventListener('drop', handleDrop, false);
-        
-        function handleDrop(e) {
-          const dt = e.dataTransfer;
-          const files = dt.files;
-          updateSelectedFileInfo(files);
-          
-          // 파일 입력 필드에 파일 설정
-          if (files.length > 0) {
-            fileInput.files = files;
-          }
-        }
-        
-        // 파일 정보 업데이트
-        function updateSelectedFileInfo(files) {
-          if (files.length > 0) {
-            const file = files[0];
-            fileNameDisplay.textContent = file.name;
-            
-            // 파일 형식 확인
-            const fileExtension = file.name.split('.').pop().toLowerCase();
-            if (!['xlsx', 'xls', 'csv'].includes(fileExtension)) {
-              fileNameDisplay.innerHTML = `<span class="text-red-500">${file.name} (지원되지 않는 파일 형식)</span>`;
-            } else {
-              fileNameDisplay.innerHTML = `<span class="text-green-500">${file.name} (${formatFileSize(file.size)})</span>`;
-            }
-          } else {
-            fileNameDisplay.textContent = '선택된 파일 없음';
-          }
-        }
-        
-        // 파일 크기 포맷팅
-        function formatFileSize(bytes) {
-          if (bytes === 0) return '0 Bytes';
-          const k = 1024;
-          const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-          const i = Math.floor(Math.log(bytes) / Math.log(k));
-          return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-        
-        // 클릭으로 파일 선택 가능하게
-        dragDropArea.addEventListener('click', function() {
-          fileInput.click();
-        });
-      }
-      
-      console.log('이벤트 리스너 설정 완료');
-    });
+      if (totalItemsElem) totalItemsElem.textContent = totalItems;
+      if (startItemElem) startItemElem.textContent = startItem;
+      if (endItemElem) endItemElem.textContent = endItem;
+      if (prevPageBtn) prevPageBtn.disabled = (currentPage <= 1);
+      if (nextPageBtn) nextPageBtn.disabled = (currentPage >= totalPages);
+      if (paginationNumbers) paginationNumbers.textContent = `${currentPage} / ${totalPages || 1}`;
+    }
+
+    // 페이지 로드 시 초기화 함수 호출
+    document.addEventListener('DOMContentLoaded', initPage);
   </script>
 </body>
 </html> 
