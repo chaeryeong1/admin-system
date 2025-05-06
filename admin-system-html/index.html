@@ -19,6 +19,10 @@
     <a href="business-notification.html" class="text-gray-500">사업 안내</a>
     <a href="cashback-management.html" class="text-gray-500">캐시백 송금</a>
   </header>
+  <h2>GPT에게 물어보기</h2>
+  <textarea id="gptInput" rows="4" cols="50" placeholder="GPT에게 질문하세요!"></textarea><br>
+  <button onclick="askGPT()">전송</button>
+  <pre id="gptResponse" style="white-space: pre-wrap; margin-top: 10px;"></pre>
 
   <div class="flex justify-center items-center min-h-screen">
     <div class="text-center">
@@ -99,17 +103,7 @@
       }
     });
   </script>
-  <!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <title>GPT 챗봇</title>
-</head>
-<body>
-  <h2>GPT에게 물어보기</h2>
-  <textarea id="gptInput" rows="4" cols="50" placeholder="GPT에게 질문하세요!"></textarea><br>
-  <button onclick="askGPT()">전송</button>
-  <pre id="gptResponse" style="white-space: pre-wrap; margin-top: 10px;"></pre>
+
 
   <script>
     async function askGPT() {
@@ -127,7 +121,6 @@
       resBox.innerText = data.reply || "응답 실패";
     }
   </script>
-</body>
-</html>
+  
 </body>
 </html> 
