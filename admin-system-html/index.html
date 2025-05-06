@@ -99,5 +99,35 @@
       }
     });
   </script>
+  <!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>GPT 챗봇</title>
+</head>
+<body>
+  <h2>GPT에게 물어보기</h2>
+  <textarea id="gptInput" rows="4" cols="50" placeholder="GPT에게 질문하세요!"></textarea><br>
+  <button onclick="askGPT()">전송</button>
+  <pre id="gptResponse" style="white-space: pre-wrap; margin-top: 10px;"></pre>
+
+  <script>
+    async function askGPT() {
+      const input = document.getElementById("gptInput").value;
+      const resBox = document.getElementById("gptResponse");
+      resBox.innerText = "GPT 응답 중...";
+
+      const res = await fetch("/.netlify/functions/chatgpt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input }),
+      });
+
+      const data = await res.json();
+      resBox.innerText = data.reply || "응답 실패";
+    }
+  </script>
+</body>
+</html>
 </body>
 </html> 
