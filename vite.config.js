@@ -1,9 +1,8 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  root: 'admin-system-html',
   build: {
-    outDir: '../dist',
+    outDir: 'dist',
     emptyOutDir: true,
     copyPublicDir: true
   },
