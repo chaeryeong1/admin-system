@@ -19,6 +19,9 @@ export default defineConfig({
         notification: 'admin-system-html/html/business-notification.html',
         application: 'admin-system-html/html/application.html'
       }
-    }
-  }
+    },
+    assetsDir: 'assets',
+    copyPublicDir: true
+  },
+  publicDir: 'admin-system-html'
 }); 
