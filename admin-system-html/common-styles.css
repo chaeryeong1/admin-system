@@ -1,3 +1,9 @@
+/* 공통 CSS 라이브러리 */
+@import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css');
+@import url('https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css');
+@import url('https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css');
+
 /* 관리자 시스템 공통 스타일 - business-management.html 기반 */
 body {
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
@@ -57,15 +63,23 @@ body {
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  overflow-x: auto;
-}
-table {
+  overflow-x: scroll;
   width: 100%;
+  position: relative;
+}
+
+table {
+  width: max-content;
+  min-width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 650px;
-  table-layout: fixed;
 }
+
+th, td {
+  white-space: nowrap;
+  padding: 0.75rem 1rem;
+}
+
 thead {
   background-color: #f8fafc;
 }
@@ -247,6 +261,7 @@ input[type="checkbox"] {
   background-color: white;
   color: #4B5563;
   border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
 }
 .search-btn:hover {
   background-color: #f3f4f6;
@@ -366,7 +381,7 @@ input[type="checkbox"] {
 }
 @keyframes fish-bite {
   0%, 75% { opacity: 0; transform: translateY(0) rotate(0); }
-  20% { opacity: 1; transform: translateY(-5px) rotate(10deg); }
+  20% { opacity: 1; transform: translateY(-10px) rotate(10deg); }
   25% { opacity: 1; transform: translateY(0) rotate(-5deg); }
   30% { opacity: 1; transform: translateY(-3px) rotate(5deg); }
   35% { opacity: 1; transform: translateY(0) rotate(0); }
@@ -473,6 +488,8 @@ input[type="checkbox"] {
 @media (max-width: 768px) {
   .main-layout {
     flex-direction: column;
+    display: flex;
+    min-width: 0;
   }
   .sidebar {
     width: 100%;
@@ -586,3 +603,289 @@ input[type="checkbox"] {
     width: auto;
   }
 } 
+
+
+    /* 구글 드라이브 가이드 모달 스타일 */
+    .drive-guide-modal {
+      display: none;
+      position: fixed;
+      z-index: 1050;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+    
+    .drive-guide-content {
+      background-color: #fefefe;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 600px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .drive-guide-close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .drive-guide-close:hover {
+      color: black;
+    }
+    
+    .guide-step {
+      margin-bottom: 15px;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+    }
+    
+    .guide-step-number {
+      display: inline-block;
+      width: 25px;
+      height: 25px;
+      background-color: #007bff;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    
+    /* 사업 표시 스타일 */
+    .business-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      margin: 2px;
+      border: 1px solid;
+      transition: all 0.2s;
+      cursor: pointer;
+      color: white;
+    }
+    
+    .business-badge:hover {
+      opacity: 0.8;
+    }
+
+    /* 사업 배지 컨테이너 */
+    .business-badges-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 4px;
+      padding: 2px 0;
+    }
+    
+    /* 파일 업로드 관련 스타일 */
+    .progress {
+      height: 20px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      background-color: #e9ecef;
+      border-radius: 4px;
+      display: none;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background-color: #1a73e8;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    
+    .success {
+      background-color: #e6f4ea;
+      color: #137333;
+      border: 1px solid #137333;
+    }
+    
+    .error {
+      background-color: #fce8e6;
+      color: #c5221f;
+      border: 1px solid #c5221f;
+    }
+    
+    /* 업로드 버튼 스타일 */
+    .upload-btn {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background-color: #f3f4f6;
+      color: #4b5563;
+      border: 1px solid #d1d5db;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    
+    .upload-btn:hover {
+      background-color: #e5e7eb;
+    }
+    
+    /* 로딩 메시지 스타일 */
+    .loading-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      color: #6b7280;
+      text-align: center;
+      width: 100%;
+    }
+    
+    .loading-icon {
+      position: relative;
+      width: 120px;
+      height: 80px;
+      margin-bottom: 15px;
+    }
+    
+   
+    
+    @keyframes swim {
+      0%, 100% { transform: scaleX(-1) translateX(0); }
+      50% { transform: scaleX(-1) translateX(-15px); }
+    }
+    
+    /* 파일 업로드 관련 스타일 */
+    .file-preview {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    
+    .file-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 250px; /* 파일명 최대 길이 제한 */
+      margin-right: 10px;
+    }
+    
+    /* 페이지네이션 관련 스타일 */
+    .pagination-button {
+      padding: 8px;
+      background-color: #f3f4f6;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    
+    .pagination-button:not(:disabled):hover {
+      background-color: #e5e7eb;
+    }
+    
+    .pagination-number {
+      padding: 6px 12px;
+      margin: 0 2px;
+      border-radius: 6px;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .pagination-number:hover {
+      background-color: #e5e7eb;
+    }
+    
+    .pagination-number.active {
+      background-color: #1a73e8;
+      color: white;
+    }
+    
+    /* 테이블 헤더 정렬 스타일 */
+    .sortable {
+      cursor: pointer;
+      position: relative;
+      padding-right: 18px;
+    }
+    
+    .sortable:hover {
+      background-color: #f8f9fa;
+    }
+    
+    /* 데이터 없음 메시지 스타일 */
+    .no-data-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1rem;
+      text-align: center;
+      width: 100%;
+    }
+    
+    .no-data-icon {
+      margin-bottom: 15px;
+      position: relative;
+    }
+    
+    .no-data-icon i {
+      font-size: 24px;
+      color: #6b7280;
+    }
+    
+    .no-data-fishing-rod {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      width: 80px;
+      height: 2px;
+      background-color: #4285F4;
+      transform: rotate(30deg) translateX(-50%);
+      transform-origin: 0% 50%;
+    }
+    
+    /* 테이블 셀 정렬 스타일 추가 */
+    .table-container table td[colspan] {
+      text-align: center;
+    }
+    
+    .table-container table td[colspan] > div {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+/* 상태 스타일 */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.status-waiting {
+  background-color: #F3F4F6;
+  color: #6B7280;
+  border: 1px solid #E5E7EB;
+}
+
+.status-selected {
+  background-color: #E8F0FE;
+  color: #1A73E8;
+  border: 1px solid #D2E3FC;
+}

@@ -5,19 +5,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>관리자 시스템</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="../js/api.js"></script>
   <style>
     body {
       font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+    .login-container {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .register-link {
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .email-verification {
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+    .verification-code {
+      display: none;
+    }
+    .verification-input-container {
+      display: flex;
+      gap: 10px;
     }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50">
   <!-- 상단 대메뉴 -->
-  <header class="bg-white border-b px-6 py-3 text-sm font-semibold flex space-x-6">
-    <a href="business-management.html" class="text-gray-500">사업 관리</a>
-    <a href="company-management.html" class="text-gray-500">기업 관리</a>
-    <a href="business-notification.html" class="text-gray-500">사업 안내</a>
-    <a href="cashback-management.html" class="text-gray-500">캐시백 송금</a>
+  <header class="bg-white border-b px-6 py-3 text-sm font-semibold flex space-x-6 hidden" id="mainHeader">
+    
+    <a href="business-management.html" class="text-gray-500 menu-item" data-permission="admin,manager">사업 관리</a>
+    <a href="company-management.html" class="text-gray-500 menu-item" data-permission="admin,manager,staff">기업 관리</a>
+    <a href="business-notification.html" class="text-gray-500 menu-item" data-permission="admin,manager,staff">사업 안내</a>
+    <a href="application.html" class="text-gray-500 menu-item" data-permission="admin,manager,staff">신청</a>
+    <a href="selection-confirmation.html" class="text-gray-500 menu-item" data-permission="admin,manager,staff">선정 확인</a>
+    <a href="gmoney-management.html" class="text-gray-500 menu-item" data-permission="admin,manager">계약금 수령</a>
+    <a href="cashback-request.html" class="text-gray-500 menu-item" data-permission="admin,manager,staff">캐시백 송금</a>
   </header>
   <h2>GPT에게 물어보기</h2>
   <textarea id="gptInput" rows="4" cols="50" placeholder="GPT에게 질문하세요!"></textarea><br>
@@ -25,11 +49,86 @@
   <pre id="gptResponse" style="white-space: pre-wrap; margin-top: 10px;"></pre>
 
   <div class="flex justify-center items-center min-h-screen">
-    <div class="text-center">
+    <!-- 로그인 폼 -->
+    <div class="login-container bg-white p-8 rounded-lg shadow-md" id="loginForm">
+      <h1 class="text-2xl font-bold mb-6 text-center">관리자 로그인</h1>
+      
+      <div class="mb-4">
+        <label for="username" class="block text-gray-700 mb-2">아이디</label>
+        <input type="text" id="username" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="아이디 입력">
+      </div>
+      
+      <div class="mb-6">
+        <label for="password" class="block text-gray-700 mb-2">비밀번호</label>
+        <input type="password" id="password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="비밀번호 입력">
+      </div>
+      
+      <button id="loginButton" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">로그인</button>
+      
+      <div class="mt-4 text-center">
+        <p>계정이 없으신가요? <span class="register-link text-blue-600" id="showRegisterForm">관리자 가입</span></p>
+      </div>
+      
+      <div id="loginMessage" class="mt-4 text-center hidden"></div>
+    </div>
+    
+    <!-- 회원가입 폼 -->
+    <div class="login-container bg-white p-8 rounded-lg shadow-md hidden" id="registerForm">
+      <h1 class="text-2xl font-bold mb-6 text-center">관리자 가입</h1>
+      
+      <div class="mb-4">
+        <label for="newUsername" class="block text-gray-700 mb-2">아이디</label>
+        <input type="text" id="newUsername" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="아이디 입력">
+      </div>
+      
+      <div class="mb-4">
+        <label for="newPassword" class="block text-gray-700 mb-2">비밀번호</label>
+        <input type="password" id="newPassword" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="비밀번호 입력">
+      </div>
+      
+      <div class="mb-4">
+        <label for="email" class="block text-gray-700 mb-2">이메일 (sepehrd.kr)</label>
+        <div class="verification-input-container">
+          <input type="text" id="emailId" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="아이디 입력">
+          <span class="py-2 px-1">@sepehrd.kr</span>
+          <button id="sendVerificationCode" class="bg-gray-200 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">인증</button>
+        </div>
+        <div class="email-verification text-gray-600">sepehrd.kr 도메인 메일로 인증코드가 발송됩니다.</div>
+      </div>
+      
+      <div class="mb-4 verification-code" id="verificationCodeContainer">
+        <label for="verificationCode" class="block text-gray-700 mb-2">인증 코드</label>
+        <div class="verification-input-container">
+          <input type="text" id="verificationCode" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="인증 코드 입력">
+          <button id="verifyCode" class="bg-gray-200 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">확인</button>
+        </div>
+        <div class="email-verification text-gray-600" id="verificationMessage">이메일로 전송된 인증 코드를 입력해주세요.</div>
+      </div>
+      
+      <div class="mb-6">
+        <label for="permission" class="block text-gray-700 mb-2">권한</label>
+        <select id="permission" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="staff">실무자</option>
+          <option value="manager">관리자</option>
+          <option value="admin">회계 담당자</option>
+        </select>
+      </div>
+      
+      <button id="registerButton" class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors" disabled>가입하기</button>
+      
+      <div class="mt-4 text-center">
+        <p>이미 계정이 있으신가요? <span class="register-link text-blue-600" id="showLoginForm">로그인</span></p>
+      </div>
+      
+      <div id="registerMessage" class="mt-4 text-center hidden"></div>
+    </div>
+
+    <!-- 메인 대시보드 -->
+    <div class="text-center hidden" id="mainDashboard">
       <h1 class="text-3xl font-bold mb-8">관리자 시스템</h1>
       
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <a href="business-management.html" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+        <a href="business-management.html" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow dashboard-item" data-permission="admin,manager">
           <div class="text-blue-600 text-5xl mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -39,7 +138,7 @@
           <p class="text-gray-600">사업 조회, 추가, 수정, 삭제</p>
         </a>
         
-        <a href="company-management.html" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+        <a href="company-management.html" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow dashboard-item" data-permission="admin,manager,staff">
           <div class="text-green-600 text-5xl mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -49,7 +148,7 @@
           <p class="text-gray-600">기업 조회, 추가, 수정, 삭제</p>
         </a>
         
-        <a href="cashback-management.html" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+        <a href="cashback-request.html" class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow dashboard-item" data-permission="admin,manager,staff">
           <div class="text-red-600 text-5xl mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -60,6 +159,10 @@
         </a>
       </div>
       
+      <div class="mt-8">
+        <button id="logoutButton" class="bg-gray-200 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">로그아웃</button>
+      </div>
+      
       <div class="mt-12 text-sm text-gray-500">
         <p>© 2025 관리자 시스템. All rights reserved.</p>
       </div>
@@ -67,39 +170,238 @@
   </div>
 
   <script>
-    // API 테스트를 위한 코드
-    document.addEventListener('DOMContentLoaded', async () => {
+    // 현재 로그인한 사용자 정보
+    let currentUser = null;
+    let isEmailVerified = false;
+    let verificationCodeSent = false;
+    let currentVerificationCode = '';
+    
+    // DOM 요소
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const mainDashboard = document.getElementById('mainDashboard');
+    const mainHeader = document.getElementById('mainHeader');
+    
+    // 폼 전환 버튼
+    document.getElementById('showRegisterForm').addEventListener('click', () => {
+      loginForm.classList.add('hidden');
+      registerForm.classList.remove('hidden');
+    });
+    
+    document.getElementById('showLoginForm').addEventListener('click', () => {
+      registerForm.classList.add('hidden');
+      loginForm.classList.remove('hidden');
+    });
+    
+    // 이메일 인증 처리
+    document.getElementById('sendVerificationCode').addEventListener('click', async () => {
+      const emailId = document.getElementById('emailId').value;
+      const email = emailId + '@sepehrd.kr';
+      const verificationMessage = document.getElementById('verificationMessage');
+      
+      if (!emailId) {
+        showMessage(document.getElementById('registerMessage'), '이메일 아이디를 입력해주세요.', 'error');
+        return;
+      }
+      
       try {
-        // API 상태 확인
-        console.log('API 연결 테스트 중...');
-
-        // Google Apps Script API 호출
-        const apiUrl = 'https://script.google.com/macros/s/AKfycby-9fAUMpLbkN7ISysznuKXeI9lo3NB7xN1ssv6gq3Zj5L2CLKThTyut88VwxM1ImQ/exec';
-        const response = await fetch(apiUrl);
-        const data = await response.json();
+        // 인증 코드 생성
+        currentVerificationCode = generateVerificationCode();
         
-        console.log('API 응답:', data);
+        // 이메일 전송 API 호출
+        const result = await sendVerificationEmail(email, currentVerificationCode);
         
-        if (data.success && data.companies) {
-          console.log('기업 목록:', data.companies);
-          // 성공 메시지를 페이지에 표시
-          const messageElement = document.createElement('div');
-          messageElement.className = 'mt-6 p-4 bg-green-100 text-green-800 rounded-lg';
-          messageElement.textContent = '데이터가 성공적으로 로드되었습니다!';
-          document.querySelector('.text-center').appendChild(messageElement);
+        if (result.success) {
+          // 인증 코드 입력 영역 표시
+          document.getElementById('verificationCodeContainer').style.display = 'block';
+          
+          // 상태 업데이트
+          verificationCodeSent = true;
+          
+          // 메시지 표시
+          showMessage(document.getElementById('registerMessage'), '인증 코드가 이메일로 전송되었습니다.', 'success');
         } else {
-          console.error('API 응답에 데이터가 없습니다.');
+          showMessage(document.getElementById('registerMessage'), result.message || '인증 코드 전송 중 오류가 발생했습니다.', 'error');
         }
-
-        console.log('API가 정상적으로 응답했습니다.');
       } catch (error) {
-        console.error('API 호출 중 오류 발생:', error);
+        console.error('이메일 인증 코드 전송 중 오류 발생:', error);
+        showMessage(document.getElementById('registerMessage'), '인증 코드 전송 중 오류가 발생했습니다.', 'error');
+      }
+    });
+    
+    // 인증 코드 확인
+    document.getElementById('verifyCode').addEventListener('click', () => {
+      const enteredCode = document.getElementById('verificationCode').value;
+      
+      if (enteredCode === currentVerificationCode) {
+        // 인증 성공
+        isEmailVerified = true;
+        showMessage(document.getElementById('registerMessage'), '이메일 인증이 완료되었습니다.', 'success');
+        document.getElementById('registerButton').disabled = false;
+        document.getElementById('emailId').readOnly = true;
+        document.getElementById('sendVerificationCode').disabled = true;
+        document.getElementById('verificationCode').readOnly = true;
+        document.getElementById('verifyCode').disabled = true;
+      } else {
+        // 인증 실패
+        showMessage(document.getElementById('registerMessage'), '인증 코드가 일치하지 않습니다.', 'error');
+      }
+    });
+    
+    // 로그인 처리
+    document.getElementById('loginButton').addEventListener('click', async () => {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const messageElement = document.getElementById('loginMessage');
+      
+      if (!username || !password) {
+        showMessage(messageElement, '아이디와 비밀번호를 모두 입력해주세요.', 'error');
+        return;
+      }
+      
+      try {
+        // 로그인 API 호출
+        const data = await login(username, password);
         
-        // 오류 메시지를 페이지에 표시
-        const messageElement = document.createElement('div');
-        messageElement.className = 'mt-6 p-4 bg-red-100 text-red-800 rounded-lg';
-        messageElement.textContent = 'API 연결 오류: ' + error.message;
-        document.querySelector('.text-center').appendChild(messageElement);
+        if (data.success) {
+          // 로그인 성공
+          currentUser = {
+            id: data.userId,
+            username: username,
+            permission: data.permission
+          };
+          
+          // 로컬 스토리지에 사용자 정보 저장
+          localStorage.setItem('adminUser', JSON.stringify(currentUser));
+          
+          // 대시보드 표시
+          showDashboard();
+        } else {
+          // 로그인 실패
+          showMessage(messageElement, '아이디 또는 비밀번호가 올바르지 않습니다.', 'error');
+        }
+      } catch (error) {
+        console.error('로그인 중 오류 발생:', error);
+        showMessage(messageElement, '로그인 처리 중 오류가 발생했습니다.', 'error');
+      }
+    });
+    
+    // 회원가입 처리
+    document.getElementById('registerButton').addEventListener('click', async () => {
+      const username = document.getElementById('newUsername').value;
+      const password = document.getElementById('newPassword').value;
+      const emailId = document.getElementById('emailId').value;
+      const email = emailId + '@sepehrd.kr';
+      const permission = document.getElementById('permission').value;
+      const messageElement = document.getElementById('registerMessage');
+      
+      if (!username || !password) {
+        showMessage(messageElement, '아이디와 비밀번호를 모두 입력해주세요.', 'error');
+        return;
+      }
+      
+      if (!isEmailVerified) {
+        showMessage(messageElement, '이메일 인증이 필요합니다.', 'error');
+        return;
+      }
+      
+      try {
+        // 회원가입 API 호출
+        const data = await register({
+          username,
+          password,
+          email,
+          permission
+        });
+        
+        if (data.success) {
+          // 회원가입 성공
+          showMessage(messageElement, '관리자 계정이 성공적으로 생성되었습니다.', 'success');
+          
+          // 3초 후 로그인 폼으로 전환
+          setTimeout(() => {
+            registerForm.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+          }, 3000);
+        } else {
+          // 회원가입 실패
+          showMessage(messageElement, data.message || '관리자 계정 생성에 실패했습니다.', 'error');
+        }
+      } catch (error) {
+        console.error('회원가입 중 오류 발생:', error);
+        showMessage(messageElement, '관리자 계정 생성 중 오류가 발생했습니다.', 'error');
+      }
+    });
+    
+    // 로그아웃 처리
+    document.getElementById('logoutButton').addEventListener('click', () => {
+      // 사용자 정보 초기화
+      currentUser = null;
+      localStorage.removeItem('adminUser');
+      
+      // 로그인 폼 표시
+      mainDashboard.classList.add('hidden');
+      mainHeader.classList.add('hidden');
+      loginForm.classList.remove('hidden');
+    });
+    
+    // 메시지 표시 함수
+    function showMessage(element, message, type) {
+      element.textContent = message;
+      element.classList.remove('hidden', 'text-green-600', 'text-red-600');
+      
+      if (type === 'success') {
+        element.classList.add('text-green-600');
+      } else if (type === 'error') {
+        element.classList.add('text-red-600');
+      }
+      
+      element.classList.remove('hidden');
+    }
+    
+    // 대시보드 표시 함수
+    function showDashboard() {
+      // 로그인 폼 숨기기
+      loginForm.classList.add('hidden');
+      registerForm.classList.add('hidden');
+      
+      // 대시보드 표시
+      mainDashboard.classList.remove('hidden');
+      mainHeader.classList.remove('hidden');
+      
+      // 권한에 따라 메뉴 항목 필터링
+      filterMenuByPermission();
+    }
+    
+    // 권한에 따라 메뉴 필터링
+    function filterMenuByPermission() {
+      if (!currentUser) return;
+      
+      // 메뉴 항목 필터링
+      document.querySelectorAll('.menu-item, .dashboard-item').forEach(item => {
+        const permissions = item.getAttribute('data-permission').split(',');
+        
+        if (permissions.includes(currentUser.permission)) {
+          item.classList.remove('hidden');
+        } else {
+          item.classList.add('hidden');
+        }
+      });
+    }
+    
+    // 페이지 로드 시 로그인 상태 확인
+    document.addEventListener('DOMContentLoaded', () => {
+      // 로컬 스토리지에서 사용자 정보 가져오기
+      const savedUser = localStorage.getItem('adminUser');
+      
+      if (savedUser) {
+        try {
+          currentUser = JSON.parse(savedUser);
+          showDashboard();
+        } catch (error) {
+          console.error('저장된 사용자 정보 파싱 오류:', error);
+          localStorage.removeItem('adminUser');
+        }
       }
     });
   </script>
