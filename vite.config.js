@@ -8,12 +8,12 @@ export default defineConfig({
     assetsDir: 'assets',
     rollupOptions: {
       input: {
-        main: 'admin-system-html/index.html',
-        business: 'admin-system-html/html/business-management.html',
-        company: 'admin-system-html/html/company-management.html',
-        gmoney: 'admin-system-html/html/gmoney-management.html',
-        cashback: 'admin-system-html/html/cashback-management.html',
-        notice: 'admin-system-html/html/notice-management.html'
+        main: 'index.html',
+        business: 'html/business-management.html',
+        company: 'html/company-management.html',
+        gmoney: 'html/gmoney-management.html',
+        cashback: 'html/cashback-management.html',
+        notice: 'html/notice-management.html'
       }
     }
   },
