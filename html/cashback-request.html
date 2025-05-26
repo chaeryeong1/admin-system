@@ -3,16 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>관리자 시스템 - 계약금 수령</title>
+  <title>관리자 시스템 - 캐시백 요청</title>
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <!-- 폰트어썸 아이콘 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-  <!-- Flatpickr 캘린더 CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
   <!-- 공통 스타일 -->
-  <link rel="stylesheet" href="..\css\common-styles.css">
   <!-- 라이브러리 버전 정보 -->
   <meta name="library-version" content="1.0.0">
   <!-- 페이지별 추가 스타일 -->
@@ -92,6 +88,7 @@
       background-color: #F3F4F6;
     }
   </style>
+  <link rel="stylesheet" crossorigin href="/admin-system/assets/common-styles-BjF4vjs-.css">
 </head>
 <body class="min-h-screen bg-gray-50">
   <!-- 상단 대메뉴 -->
@@ -99,13 +96,13 @@
     <div class="flex items-center">
       <img src="https://placehold.co/120x40/4285F4/ffffff?text=ADMIN" alt="로고" class="logo">
       <nav class="desktop-menu flex space-x-4">
-        <a href="business-management.html" class="active">사업 관리</a>
-        <a href="company-management.html">기업 관리</a>  
+        <a href="business-management.html">사업 관리</a>
+        <a href="company-management.html">기업 관리</a>
         <a href="business-notification.html">사업 안내</a>
         <a href="application.html">신청</a>
         <a href="selection-confirmation.html">선정 확인</a>
         <a href="gmoney-management.html">계약금 수령</a>
-        <a href="cashback-management.html">캐시백 송금</a>
+        <a href="cashback-request.html" class="active">캐시백 송금</a>
       </nav>
     </div>
     <!-- 모바일 메뉴 버튼 -->
@@ -122,7 +119,7 @@
     <a href="application.html">신청</a>
     <a href="selection-confirmation.html">선정 확인</a>
     <a href="gmoney-management.html">계약금 수령</a>
-    <a href="cashback-management.html">캐시백 송금</a>
+    <a href="cashback-request.html">캐시백 송금</a>
   </div>
 
   <div class="flex main-layout">
