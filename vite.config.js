@@ -8,7 +8,7 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: 'admin-system-html/index.html',
+        main: 'admin-system-html/html/index.html',
         business: 'admin-system-html/html/business-management.html',
         company: 'admin-system-html/html/company-management.html',
         cashback: 'admin-system-html/html/cashback-request.html',
