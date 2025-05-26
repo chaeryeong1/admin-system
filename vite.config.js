@@ -8,7 +8,7 @@ export default defineConfig({
     emptyOutDir: true,
     copyPublicDir: true,
     rollupOptions: {
-      input: resolve(__dirname, 'admin-system-html/html/index.html')
+      input: resolve(__dirname, 'admin-system-html/index.html')
     }
   },
   publicDir: 'admin-system-html',
