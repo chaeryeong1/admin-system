@@ -21,9 +21,15 @@ jobs:
         run: |
           npm install -g npm@latest
           npm install
+          chmod +x node_modules/.bin/vite
+
+      - name: Verify Vite Installation
+        run: |
+          ls -l node_modules/.bin
+          node_modules/.bin/vite --version
 
       - name: Build
-        run: npx vite build
+        run: ./node_modules/.bin/vite build
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
