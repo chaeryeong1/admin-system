@@ -263,22 +263,6 @@
         }
       });
     }
-    
-    // 페이지 로드 시 로그인 상태 확인
-    document.addEventListener('DOMContentLoaded', () => {
-      // 로컬 스토리지에서 사용자 정보 가져오기
-      const savedUser = localStorage.getItem('adminUser');
-      
-      if (savedUser) {
-        try {
-          currentUser = JSON.parse(savedUser);
-          showDashboard();
-        } catch (error) {
-          console.error('저장된 사용자 정보 파싱 오류:', error);
-          localStorage.removeItem('adminUser');
-        }
-      }
-    });
   </script>
 </body>
 </html> 
