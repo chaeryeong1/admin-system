@@ -27,13 +27,10 @@ jobs:
           npm install
           chmod +x node_modules/.bin/vite
 
-      - name: Verify Vite Installation
-        run: |
-          ls -l node_modules/.bin
-          node_modules/.bin/vite --version
-
       - name: Build
-        run: ./node_modules/.bin/vite build
+        run: |
+          ./node_modules/.bin/vite build
+          cp -r admin-system-html/* dist/
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
