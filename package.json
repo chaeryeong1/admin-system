@@ -1,20 +1,31 @@
 {
-  "name": "admin-system",
+  "name": "nas-upload-server",
   "version": "1.0.0",
-  "description": "관리자 시스템",
+  "description": "NAS 파일 업로드 프록시 서버",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "echo 'No build step needed'",
-    "deploy": "netlify deploy --prod"
+    "dev": "nodemon server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "googleapis": "^126.0.1",
-    "dotenv": "^16.3.1",
-    "openai": "^4.0.0"
+    "axios": "^1.8.4",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "form-data": "^4.0.2",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
-    "netlify-cli": "^17.0.0"
-  }
+    "nodemon": "^3.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chaeryeong1/admin-system.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chaeryeong1/admin-system/issues"
+  },
+  "homepage": "https://github.com/chaeryeong1/admin-system#readme"
 }
