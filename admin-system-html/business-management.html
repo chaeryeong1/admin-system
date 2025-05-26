@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
   <!-- 공통 스타일 -->
-  <link rel="stylesheet" href="common-styles.css">
+  <link rel="stylesheet" href="..\css\common-styles.css">
   <!-- 라이브러리 버전 정보 -->
   <meta name="library-version" content="1.0.0">
   <!-- 페이지별 추가 스타일 -->
@@ -29,7 +29,10 @@
         <a href="business-management.html" class="active">사업 관리</a>
         <a href="company-management.html">기업 관리</a>
         <a href="business-notification.html">사업 안내</a>
-        <a href="cashback-management.html">캐시백 송금</a>
+        <a href="application.html">신청</a>
+        <a href="selection-confirmation.html">선정 확인</a>
+        <a href="gmoney-management.html">계약금 수령</a>
+        <a href="cashback-request.html">캐시백 송금</a>
       </nav>
     </div>
     <!-- 모바일 메뉴 버튼 -->
@@ -43,12 +46,14 @@
     <a href="business-management.html" class="active">사업 관리</a>
     <a href="company-management.html">기업 관리</a>
     <a href="business-notification.html">사업 안내</a>
+    <a href="selection-confirmation.html">선정 확인</a>
+    <a href="gmoney-management.html">계약금 수령</a>
     <a href="cashback-management.html">캐시백 송금</a>
   </div>
 
   <div class="flex main-layout">
     <!-- 좌측 소메뉴 -->
-    <aside class="sidebar p-4">
+    <aside class="sidebar p-4 flex-shrink-0">
       <h2 class="text-lg font-semibold mb-4 text-gray-800">사업 관리</h2>
       <ul class="space-y-1">
         <li class="sidebar-item active">
@@ -58,27 +63,36 @@
     </aside>
 
     <!-- 메인 콘텐츠 -->
-    <div class="flex-1 p-6 space-y-6">
+    <div class="flex-1 min-w-0 p-6 space-y-6">
       <div class="flex items-center justify-between border-b pb-4">
         <h1 class="text-2xl font-bold text-gray-800">사업 리스트 관리</h1>
       </div>
-
+     
       <!-- 검색/조회 -->
       <div class="flex items-center justify-between search-container flex-wrap">
         <div class="flex items-center space-x-4 w-full md:w-auto">
+          <!-- 검색 -->
           <input 
             id="searchInput"
             type="text" 
             placeholder="사업명 검색" 
             class="form-input max-w-sm"
           >
+          <!-- 조회 -->
           <button 
             id="searchButton"
             class="btn search-btn flex-shrink-0 whitespace-nowrap min-w-[80px]"
           >
             <i class="fas fa-search mr-2"></i>조회
           </button>
+          <!-- 페이지당 항목 -->
+            <select id="itemsPerPage" class="search-btn py-1 px-2 text-sm">
+              <option value="10">10개</option>
+              <option value="50">50개</option>
+              <option value="100">100개</option>
+            </select>
         </div>
+        <!-- 사업 직접 추가 -->
         <div class="w-full md:w-auto mt-2 md:mt-0">
           <button 
             id="addButton"
@@ -87,6 +101,7 @@
             사업 직접 추가
           </button>
         </div>
+        
       </div>
 
       <!-- 표 -->
@@ -104,6 +119,7 @@
                     >
                   </div>
                 </th>
+                <!-- 사업명 -->
                 <th class="cursor-pointer" data-sort="name">
                   <div class="flex items-center">
                     사업명
@@ -129,8 +145,8 @@
                     </span>
                   </div>
                 </th>
-                <th>공고</th>
-                <th>정보 수정</th>
+                <th class="w-24">공고</th>
+                <th class="w-24">정보 수정</th>
               </tr>
             </thead>
             <tbody id="projectTableBody">
@@ -141,34 +157,37 @@
             </tbody>
           </table>
         </div>
-        <!-- 페이지네이션 -->
-        <div class="pagination-container flex items-center justify-between flex-wrap">
-          <div class="text-sm text-gray-700 w-full md:w-auto mb-2 md:mb-0">
-            총 <span id="totalItems" class="font-medium">0</span>개 항목 중 <span id="startItem" class="font-medium">0</span>-<span id="endItem" class="font-medium">0</span>
-          </div>
-          <div>
-            <nav class="flex items-center space-x-1" aria-label="Pagination">
-              <button id="prevPageBtn" class="pagination-button" disabled>
-                <i class="fas fa-chevron-left"></i>
-              </button>
-              <div id="paginationNumbers" class="pagination-numbers">
-                <!-- 페이지 번호가 여기에 동적으로 추가됩니다 -->
-              </div>
-              <button id="nextPageBtn" class="pagination-button" disabled>
-                <i class="fas fa-chevron-right"></i>
-              </button>
-            </nav>
-          </div>
-        </div>
       </div>
 
+      <!-- 페이지네이션 -->
+      <div class="pagination-container flex items-center justify-between flex-wrap">
+        <div class="flex items-center space-x-4">
+          <div class="text-sm text-gray-700">
+            총 <span id="totalItems" class="font-medium">0</span>개 항목 중 <span id="startItem" class="font-medium">0</span>-<span id="endItem" class="font-medium">0</span>
+          </div>
+          
+        </div>
+        <div>
+          <nav class="flex items-center space-x-1" aria-label="Pagination">
+            <button id="prevPageBtn" class="pagination-button" disabled>
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <div id="paginationNumbers" class="pagination-numbers">
+              <!-- 페이지 번호가 여기에 동적으로 추가됩니다 -->
+            </div>
+            <button id="nextPageBtn" class="pagination-button" disabled>
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </nav>
+        </div>
+      </div>
       <!-- 하단 버튼 -->
-      <div class="flex justify-end space-x-4">
+      <div class="flex justify-start space-x-4">
         <button 
           id="deleteButton"
           class="btn btn-danger"
         >
-          <i class="fas fa-trash-alt mr-2"></i>선택 삭제
+          <i class="fas fa-trash-alt mr-2"></i>삭제
         </button>
       </div>
     </div>
@@ -193,14 +212,27 @@
           >
         </div>
         <div>
-          <label class="block text-md mb-2">목표 업체 수 <span class="text-red-500">*</span></label>
-          <input
-            id="addTargetCount"
-            type="number"
-            placeholder="예: 30"
-            class="form-input py-3 w-full border border-gray-300 rounded-lg"
-            required
-          >
+          <label class="block text-md mb-2">목표 수 <span class="text-red-500">*</span></label>
+          <div class="flex space-x-4">
+            <div class="w-1/2">
+              <input
+                id="addTargetCount"
+                type="number"
+                placeholder="기업 수"
+                class="form-input py-3 w-full border border-gray-300 rounded-lg"
+                required
+              >
+            </div>
+            <div class="w-1/2">
+              <input
+                id="addTargetAmount"
+                type="number"
+                placeholder="목표 금액 (백만원)"
+                class="form-input py-3 w-full border border-gray-300 rounded-lg"
+                required
+              >
+            </div>
+          </div>
         </div>
         <div class="flex space-x-4">
           <div class="w-1/2">
@@ -288,12 +320,22 @@
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">목표 수 <span class="text-red-500">*</span></label>
-          <input
-            id="editTargetCount"
-            type="number"
-            class="form-input"
-            required
-          >
+          <div class="flex space-x-2">
+            <input
+              id="editTargetCount"
+              type="number"
+              placeholder="기업 수"
+              class="form-input w-1/2"
+              required
+            >
+            <input
+              id="editTargetAmount"
+              type="number"
+              placeholder="목표 금액 (백만원)"
+              class="form-input w-1/2"
+              required
+            >
+          </div>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">사업 기간 <span class="text-red-500">*</span></label>
@@ -382,11 +424,12 @@
     const ADMIN_LIBRARY_VERSION = '1.0.0';
     
     // 기본 설정
-    const API_URL = 'https://script.google.com/macros/s/AKfycbz9E3_2V8n4mVE46nHjJ3V41fGFUHa8Q967-DEXmih8Gjl8hIH063rHE-emJzEXgA/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyD031lOEQn_RKGDrwVmaQF_QssOSEqwSx1_Wp9UuHsykCqfJgLESTVIVHzCjv1PBE0/exec';
     let projects = [], selectedProjectIds = [], currentPage = 1;
-    const itemsPerPage = 10;
+    let itemsPerPage = 10; // 기본값 설정
     let currentSortColumn = 'id', currentSortDirection = 'asc', isLoading = false;
-    let lastApiCallTimestamp = 0; // API 호출 제한을 위한 타임스탬프
+    let lastApiCallTimestamp = 0;
+    const CACHE_EXPIRY = 5 * 60 * 1000; // 5분 캐시 유효기간
     
     // API 호출 모니터링 및 디버깅
     console.time('API 초기화 시간');
@@ -587,6 +630,13 @@
         });
       });
       
+      // 페이지당 항목 수 변경 이벤트 리스너 추가
+      document.getElementById('itemsPerPage').addEventListener('change', function() {
+        itemsPerPage = parseInt(this.value);
+        currentPage = 1; // 페이지를 1로 리셋
+        renderTable(); // 테이블 다시 렌더링
+      });
+      
       // 데이터 로드
       loadProjects();
       console.timeEnd('API 초기화 시간');
@@ -598,72 +648,17 @@
       
       isLoading = true;
       
-      // 콜드 스타트 감지 및 개선된 로딩 표시
-      const isColdStart = !sessionStorage.getItem('projects_cache');
-      
-      // 유쾌한 랜덤 로딩 메시지 배열
-      const funnyLoadingMessages = [
-        "클라우드에서 데이터를 다운로드하는 중 ☁️",
-        "데이터 소환 주문 외우는 중이에요, 곧 소환될거예요!🔮✨",
-        "열심히 데이터를 찾는 중이에요... 거의 다 왔어요! 🔍",
-        "해킹은 아니지만 데이터 가져오는 중 👾",
-        "삐빅... 데이터를 발견했습니다! 관련 데이터 다운로드 중..🔄",
-        "거의 다 됐어요! 3초 세고 나타날 거예요... 아마도 🤔",
-        "데이터 낚시 중... 큰 데이터가 걸린 것 같아요! 🎣"
-      ];
-      
-      // 랜덤 메시지 선택
-      const randomMessage = funnyLoadingMessages[Math.floor(Math.random() * funnyLoadingMessages.length)];
-      
-      if (isColdStart) {
-        console.log('콜드 스타트 감지: 초기 로딩');
-        
-        // 콜드 스타트 시 더 명확한 로딩 표시 (낚시 로더로 변경)
-        document.getElementById('projectTableBody').innerHTML = 
-          '<tr><td colspan="7" class="text-center py-8">' +
-          '<div class="flex flex-col items-center justify-center">' +
-          '<div class="fishing-loader" style="margin-bottom: 15px;">' +
-          '<div class="fishing-handle"></div>' +
-          '<div class="fishing-rod"></div>' +
-          '<div class="fishing-line"></div>' +
-          '<i class="fas fa-hook fishing-hook"></i>' +
-          '<i class="fas fa-fish fishing-fish"></i>' +
-          '</div>' +
-          `<p class="text-gray-600 font-medium">${randomMessage}</p>` +
-          '</div></td></tr>';
-      } else {
-        // 캐시 데이터가 있는 경우도 유쾌한 메시지 사용
-        const randomUpdateMessage = funnyLoadingMessages[Math.floor(Math.random() * funnyLoadingMessages.length)];
-        
-        // 랜덤 로딩 애니메이션 선택 (로켓 또는 마법 지팡이)
-        const animationStyles = [
-          `<i class="fas fa-rocket fa-lg rocket-loader mr-2 text-blue-500"></i>`, 
-          `<i class="fas fa-magic fa-lg magic-loader mr-2 text-purple-500"></i>`,
-          `<div class="discord-loader" style="margin-bottom: 0; margin-right: 8px;"><div></div><div></div><div></div></div>`,
-          `<div class="fishing-loader mr-3" style="height: 80px; width: 100px;">
-             <div class="fishing-handle"></div>
-             <div class="fishing-rod"></div>
-             <div class="fishing-line"></div>
-             <i class="fas fa-hook fishing-hook"></i>
-             <i class="fas fa-fish fishing-fish"></i>
-           </div>`
-        ];
-        const randomAnimation = animationStyles[Math.floor(Math.random() * animationStyles.length)];
-        
-        document.getElementById('projectTableBody').innerHTML = 
-          '<tr><td colspan="7" class="text-center py-4">' +
-          '<div class="flex items-center justify-center">' +
-          randomAnimation +
-          `<p class="text-gray-600">${randomUpdateMessage}</p>` +
-          '</div></td></tr>';
-      }
-      
-      // 캐시된 데이터 활용 (있는 경우)
+      // 캐시된 데이터 확인
       const cachedData = sessionStorage.getItem('projects_cache');
-      if (cachedData && !isColdStart) {
+      const cacheTimestamp = sessionStorage.getItem('projects_cache_timestamp');
+      const now = Date.now();
+      
+      if (cachedData && cacheTimestamp && (now - parseInt(cacheTimestamp)) < CACHE_EXPIRY) {
         console.log('캐시된 데이터 사용');
         projects = JSON.parse(cachedData);
         renderTable();
+        isLoading = false;
+        return;
       }
       
       try {
@@ -673,44 +668,20 @@
         
         if (response.success && Array.isArray(response.data)) {
           console.log(`사업 데이터 ${response.data.length}개 로드 성공`);
+          projects = response.data;
           
-          // 물고기 잡힘 애니메이션 실행
-          showFishCaughtAnimation();
-          
-          // 응답 데이터가 비어있는지 확인
-          if (response.data.length === 0 && projects.length > 0 && !isColdStart) {
-            console.warn('API 응답이 비어있습니다. 캐시된 데이터를 유지합니다.');
-          } else {
-            projects = response.data;
-            // 세션 스토리지에 캐시 저장 (만료시간 30분)
-            const cacheData = {
-              timestamp: Date.now(),
-              data: response.data
-            };
-            sessionStorage.setItem('projects_cache', JSON.stringify(projects));
-            console.log('데이터 캐시 저장됨');
-          }
+          // 캐시 저장
+          sessionStorage.setItem('projects_cache', JSON.stringify(projects));
+          sessionStorage.setItem('projects_cache_timestamp', now.toString());
+          console.log('데이터 캐시 저장됨');
         } else {
-          if (cachedData) {
-            console.warn('API 오류, 캐시된 데이터 유지합니다.');
-          } else {
-            projects = [];
-            console.error('데이터 로드 실패:', response.error || '알 수 없는 오류');
-          }
+          console.error('데이터 로드 실패:', response.error || '알 수 없는 오류');
         }
       } catch (error) {
-        if (cachedData) {
-          console.warn('API 오류, 캐시된 데이터 유지합니다.');
-        } else {
-          projects = [];
-          console.error('데이터 로드 오류:', error);
-        }
+        console.error('데이터 로드 오류:', error);
       } finally {
         isLoading = false;
-        console.time('테이블 렌더링');
         renderTable();
-        console.timeEnd('테이블 렌더링');
-        console.timeEnd('전체 페이지 로드');
       }
     }
     
@@ -801,7 +772,11 @@
           checkboxCell.appendChild(checkboxContainer);
           tr.appendChild(checkboxCell);
           tr.appendChild(createElement('td', project.name));
-          tr.appendChild(createElement('td', project.targetCount));
+          
+          // 목표 수와 금액 표시 개선
+          const targetCount = project.targetCount ? project.targetCount : '0';
+          const targetAmount = project.targetCountA ? project.targetCountA : '0';
+          tr.appendChild(createElement('td', `${targetCount}기업/${targetAmount}백만원`));
           
           // 사업기간
           const startDate = project.startDate ? project.startDate.split('T')[0].replace(/-/g, '.') : '';
@@ -812,6 +787,7 @@
           
           // 공고 URL
           const tdUrl = document.createElement('td');
+          tdUrl.className = 'w-24';
           if (project.noticeUrl) {
             const link = document.createElement('a');
             link.href = project.noticeUrl;
@@ -830,7 +806,7 @@
           editBtn.addEventListener('click', () => openModal('edit', project));
           
           const tdEdit = document.createElement('td');
-          tdEdit.className = "text-center"; // 셀 자체도 중앙 정렬
+          tdEdit.className = "text-center w-24"; // 너비를 96px로 제한
           tdEdit.appendChild(editBtn);
           tr.appendChild(tdEdit);
           fragment.appendChild(tr);
@@ -907,6 +883,7 @@
       if (type === 'add') {
         document.getElementById('addName').value = '';
         document.getElementById('addTargetCount').value = '';
+        document.getElementById('addTargetAmount').value = '';
         
         // flatpickr 인스턴스 초기화
         const startDatePicker = document.getElementById('addStartDate')._flatpickr;
@@ -923,8 +900,11 @@
       else if (type === 'edit') {
         if (!project || !project.id) return console.error('수정할 사업 정보를 찾을 수 없습니다.');
         
+        console.log('수정할 사업 데이터:', project);
+        
         document.getElementById('editName').value = project.name || '';
         document.getElementById('editTargetCount').value = project.targetCount || '';
+        document.getElementById('editTargetAmount').value = project.targetCountA || '';
         
         // flatpickr 인스턴스로 날짜 설정
         const startDatePicker = document.getElementById('editStartDate')._flatpickr;
@@ -992,6 +972,7 @@
       if (type === 'add') {
         const nameInput = document.getElementById('addName');
         const targetCountInput = document.getElementById('addTargetCount');
+        const targetAmountInput = document.getElementById('addTargetAmount');
         const startDateInput = document.getElementById('addStartDate');
         const endDateInput = document.getElementById('addEndDate');
         const organizerInput = document.getElementById('addOrganizer');
@@ -1000,6 +981,7 @@
         const data = {
           name: nameInput.value.trim(),
           targetCount: targetCountInput.value.trim(),
+          targetAmount: targetAmountInput.value.trim(),
           startDate: startDateInput.value,
           endDate: endDateInput.value,
           organizer: organizerInput.value.trim(),
@@ -1011,19 +993,22 @@
         // 필수값 유효성 검사 및 시각적 피드백 제공
         const hasName = data.name && data.name.length > 0;
         const hasTargetCount = data.targetCount && !isNaN(parseInt(data.targetCount));
+        const hasTargetAmount = data.targetAmount && !isNaN(parseInt(data.targetAmount));
         const hasStartDate = data.startDate && data.startDate.length > 0;
         const hasEndDate = data.endDate && data.endDate.length > 0;
         
         nameInput.style.borderColor = hasName ? '#d1d5db' : 'red';
         targetCountInput.style.borderColor = hasTargetCount ? '#d1d5db' : 'red'; 
+        targetAmountInput.style.borderColor = hasTargetAmount ? '#d1d5db' : 'red';
         startDateInput.style.borderColor = hasStartDate ? '#d1d5db' : 'red';
         endDateInput.style.borderColor = hasEndDate ? '#d1d5db' : 'red';
         
         // 사용자에게 누락된 필드를 알려주기
-        if (!hasName || !hasTargetCount || !hasStartDate || !hasEndDate) {
+        if (!hasName || !hasTargetCount || !hasTargetAmount || !hasStartDate || !hasEndDate) {
           console.error('필수값 누락:', {
             name: !hasName,
             targetCount: !hasTargetCount,
+            targetAmount: !hasTargetAmount,
             startDate: !hasStartDate,
             endDate: !hasEndDate
           });
@@ -1032,6 +1017,7 @@
           let missingFields = [];
           if (!hasName) missingFields.push('사업명');
           if (!hasTargetCount) missingFields.push('목표 업체 수');
+          if (!hasTargetAmount) missingFields.push('목표 금액');
           if (!hasStartDate) missingFields.push('시작일');
           if (!hasEndDate) missingFields.push('종료일');
           
@@ -1041,6 +1027,7 @@
         
         try {
           data.targetCount = parseInt(data.targetCount);
+          data.targetAmount = parseInt(data.targetAmount);
           console.log('API 호출 시작 - 사업 추가');
           
           // 사용자에게 처리 중임을 알림
@@ -1053,11 +1040,15 @@
           if (typeof data.targetCount !== 'number') {
             data.targetCount = parseInt(data.targetCount) || 0;
           }
+          if (typeof data.targetAmount !== 'number') {
+            data.targetAmount = parseInt(data.targetAmount) || 0;
+          }
           
           // 데이터 유효성 로깅
           console.log('전송할 최종 데이터:', {
             name: data.name + '',
             targetCount: data.targetCount + '',
+            targetAmount: data.targetAmount + '',
             startDate: data.startDate + '',
             endDate: data.endDate + '',
             organizer: data.organizer + '',
@@ -1070,6 +1061,7 @@
           console.log('데이터 타입 확인:', {
             name: typeof data.name,
             targetCount: typeof data.targetCount,
+            targetAmount: typeof data.targetAmount,
             startDate: typeof data.startDate,
             endDate: typeof data.endDate
           });
@@ -1083,7 +1075,7 @@
           
           if (response.success) {
             console.log('사업 추가 성공');
-            alert('사업이 성공적으로 추가되었습니다.');
+            invalidateCache(); // 캐시 무효화
             closeModals();
             loadProjects();
           } else {
@@ -1101,27 +1093,68 @@
         }
         
         const data = {
+          id: selectedProjectIds[0],
           name: document.getElementById('editName').value.trim(),
           targetCount: document.getElementById('editTargetCount').value.trim(),
+          targetCountA: document.getElementById('editTargetAmount').value.trim(),
           startDate: document.getElementById('editStartDate').value,
           endDate: document.getElementById('editEndDate').value,
           organizer: document.getElementById('editOrganizer').value.trim(),
           noticeUrl: document.getElementById('editNoticeUrl').value.trim()
         };
         
-        if (!data.name || !data.targetCount || !data.startDate || !data.endDate) {
-          return console.error('필수값(사업명, 목표업체수, 사업기간)이 누락되었습니다.');
+        console.log('수정할 데이터:', data);
+        
+        // 필수값 검증
+        if (!data.name) {
+          alert('사업명을 입력해주세요.');
+          return;
+        }
+        if (!data.targetCount || isNaN(parseInt(data.targetCount))) {
+          alert('목표 기업 수를 올바르게 입력해주세요.');
+          return;
+        }
+        if (!data.targetCountA || isNaN(parseInt(data.targetCountA))) {
+          alert('목표 금액을 올바르게 입력해주세요.');
+          return;
+        }
+        if (!data.startDate) {
+          alert('시작일을 입력해주세요.');
+          return;
+        }
+        if (!data.endDate) {
+          alert('종료일을 입력해주세요.');
+          return;
         }
         
-        data.targetCount = parseInt(data.targetCount);
-        const response = await apiCall('updateData', '사업정보', data, selectedProjectIds[0]);
-        
-        if (response.success) {
-          console.log('사업 수정 성공');
-          closeModals();
-          loadProjects();
-        } else {
-          console.error('사업 수정 실패:', response.error || '알 수 없는 오류');
+        try {
+          data.targetCount = parseInt(data.targetCount);
+          data.targetCountA = parseInt(data.targetCountA);
+          
+          // 수정 버튼 로딩 상태로 변경
+          const confirmBtn = document.getElementById('confirmEditButton');
+          const originalText = confirmBtn.innerHTML;
+          confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>수정 중...';
+          confirmBtn.disabled = true;
+          
+          const response = await apiCall('updateData', '사업정보', data);
+          console.log('수정 API 응답:', response);
+          
+          // 버튼 상태 복원
+          confirmBtn.innerHTML = originalText;
+          confirmBtn.disabled = false;
+          
+          if (response.success) {
+            console.log('사업 수정 성공');
+            invalidateCache(); // 캐시 무효화
+            closeModals();
+            loadProjects();
+          } else {
+            console.error('사업 수정 실패:', response.error || '알 수 없는 오류');
+          }
+        } catch (error) {
+          console.error('수정 중 오류 발생:', error);
+          alert('수정 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류'));
         }
       }
       else if (type === 'delete') {
@@ -1158,6 +1191,12 @@
           alert('삭제 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류'));
         }
       }
+    }
+
+    // CRUD 작업 후 캐시 무효화
+    function invalidateCache() {
+      sessionStorage.removeItem('projects_cache');
+      sessionStorage.removeItem('projects_cache_timestamp');
     }
 
     // 데이터 로드 완료 후 물고기 애니메이션 추가

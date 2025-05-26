@@ -17,7 +17,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
   <!-- 공통 스타일 -->
-  <link rel="stylesheet" href="common-styles.css">
+  <link rel="stylesheet" href="..\css\common-styles.css">
   <!-- 라이브러리 버전 정보 -->
   <meta name="library-version" content="1.0.0">
   <!-- 페이지별 추가 스타일 -->
@@ -27,6 +27,61 @@
     }
     .hidden {
       display: none;
+    }
+    
+    /* 테이블 스트라이프 스타일 추가 */
+    .table-container table tbody tr:nth-child(even) {
+      background-color: #f9fafb; /* 매우 연한 회색 */
+    }
+    
+    .table-container table tbody tr:nth-child(odd) {
+      background-color: #ffffff; /* 흰색 */
+    }
+    
+    /* 테이블 행에 호버 효과 추가 */
+    .table-container table tbody tr:hover {
+      background-color: #f0f4f8; /* 호버 시 약간 진한 회색 */
+    }
+    
+    /* 테이블 테두리 및 셀 스타일 개선 */
+    .table-container table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+    }
+    
+    .table-container table th,
+    .table-container table td {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0.75rem 1rem;
+    }
+    
+    .table-container table th {
+      font-weight: 600;
+      text-align: left;
+      background-color: #f8fafc;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    /* 버튼 스타일 */
+    .btn-warning {
+      background-color: #f59e0b;
+      color: white;
+    }
+    
+    .btn-warning:hover {
+      background-color: #d97706;
+    }
+
+    /* 폐업 상태 배지 */
+    .shutdown-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      background-color: #ef4444;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
     }
   </style>
 </head>
@@ -39,6 +94,9 @@
         <a href="business-management.html">사업 관리</a>
         <a href="company-management.html" class="active">기업 관리</a>
         <a href="business-notification.html">사업 안내</a>
+        <a href="application.html">신청</a>
+        <a href="selection-confirmation.html">선정 확인</a>
+        <a href="gmoney-management.html">계약금 수령</a>
         <a href="cashback-management.html">캐시백 송금</a>
       </nav>
     </div>
@@ -53,12 +111,15 @@
     <a href="business-management.html">사업 관리</a>
     <a href="company-management.html" class="active">기업 관리</a>
     <a href="business-notification.html">사업 안내</a>
+    <a href="application.html">신청</a>
+    <a href="selection-confirmation.html">선정 확인</a>
+    <a href="gmoney-management.html">계약금 수령</a>
     <a href="cashback-management.html">캐시백 송금</a>
   </div>
 
   <div class="flex main-layout">
     <!-- 좌측 소메뉴 -->
-    <aside class="sidebar p-4">
+    <aside class="sidebar p-4 flex-shrink-0">
       <h2 class="text-lg font-semibold mb-4 text-gray-800">기업 관리</h2>
       <ul class="space-y-1">
         <li class="sidebar-item active">
@@ -68,7 +129,7 @@
     </aside>
 
     <!-- 메인 콘텐츠 -->
-    <div class="flex-1 p-6 space-y-6">
+    <div class="flex-1 min-w-0 p-6 space-y-6">
       <div class="flex items-center justify-between border-b pb-4">
         <h1 class="text-2xl font-bold text-gray-800">기업 리스트 관리</h1>
       </div>
@@ -103,7 +164,7 @@
             기업 직접 추가
           </button>
         </div>
-      </div>
+        
 
       <!-- 표 -->
       <div class="table-container">
@@ -120,7 +181,8 @@
                     >
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="name">
+                <th class="w-12">NO</th>
+                <th class="cursor-pointer" data-sort="comname">
                   <div class="flex items-center">
                     기업명
                     <span class="sort-icon ml-1">
@@ -128,9 +190,9 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="businessNumber">
+                <th class="cursor-pointer" data-sort="homepage">
                   <div class="flex items-center">
-                    사업자등록번호
+                    홈페이지
                     <span class="sort-icon ml-1">
                       <i class="fas fa-sort"></i>
                     </span>
@@ -144,6 +206,14 @@
                     </span>
                   </div>
                 </th>
+                <th class="cursor-pointer" data-sort="businessNumber">
+                  <div class="flex items-center">
+                    사업자등록번호
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
                 <th class="cursor-pointer" data-sort="phone">
                   <div class="flex items-center">
                     전화번호
@@ -152,9 +222,65 @@
                     </span>
                   </div>
                 </th>
+                <th class="cursor-pointer" data-sort="address">
+                  <div class="flex items-center">
+                    주소
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="employeeCount">
+                  <div class="flex items-center">
+                    종업원 수
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="industry">
+                  <div class="flex items-center">
+                    업종
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="manager">
+                  <div class="flex items-center">
+                    담당자
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="representativePhone">
+                  <div class="flex items-center">
+                    담당자 전화번호
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="job">
+                  <div class="flex items-center">
+                    담당자 직책
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
                 <th class="cursor-pointer" data-sort="email">
                   <div class="flex items-center">
                     이메일
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="CID1">
+                  <div class="flex items-center">
+                    폐업정보
                     <span class="sort-icon ml-1">
                       <i class="fas fa-sort"></i>
                     </span>
@@ -179,40 +305,59 @@
             </tbody>
           </table>
         </div>
-        <!-- 페이지네이션 -->
-        <div class="pagination-container flex items-center justify-between flex-wrap">
-          <div class="text-sm text-gray-700 w-full md:w-auto mb-2 md:mb-0">
-            총 <span id="totalItems" class="font-medium">0</span>개 항목 중 <span id="startItem" class="font-medium">0</span>-<span id="endItem" class="font-medium">0</span>
-          </div>
-          <div>
-            <nav class="flex items-center space-x-1" aria-label="Pagination">
-              <button id="prevPageBtn" class="pagination-button" disabled>
-                <i class="fas fa-chevron-left"></i>
-              </button>
-              <div id="paginationNumbers" class="pagination-numbers">
-                <!-- 페이지 번호가 여기에 동적으로 추가됩니다 -->
-              </div>
-              <button id="nextPageBtn" class="pagination-button" disabled>
-                <i class="fas fa-chevron-right"></i>
-              </button>
-            </nav>
-          </div>
+        
+    
+      </div>
+    <!-- 페이지네이션 -->
+    <div class="pagination-container">
+      <div class="flex items-center space-x-4">
+        <div class="text-sm text-gray-700">
+          총 <span id="totalItems" class="font-medium">0</span>개 항목 중 <span id="startItem" class="font-medium">0</span>-<span id="endItem" class="font-medium">0</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <label for="itemsPerPage" class="text-sm text-gray-700">페이지:</label>
+          <select id="itemsPerPage" class="form-input py-1 px-2 text-sm">
+            <option value="10">10개</option>
+            <option value="50">50개</option>
+            <option value="100">100개</option>
+          </select>
         </div>
       </div>
-
+      <div>
+        <nav class="flex items-center space-x-1" aria-label="Pagination">
+          <button id="prevPageBtn" class="pagination-button" disabled>
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <div id="paginationNumbers" class="pagination-numbers">
+            <!-- 페이지 번호가 여기에 동적으로 추가됩니다 -->
+          </div>
+          <button id="nextPageBtn" class="pagination-button" disabled>
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </nav>
+      </div>
+    </div>
       <!-- 하단 버튼 -->
-      <div class="flex justify-between space-x-4">
-        <button 
-          id="excelButton"
-          class="btn search-btn whitespace-nowrap"
-        >
-          <i class="fas fa-download mr-2"></i>기업 엑셀 다운로드
-        </button>
+      <div class="flex space-x-4">
+        <div class="flex space-x-2">
+          <button 
+            id="excelButton"
+            class="btn search-btn whitespace-nowrap"
+          >
+            <i class="fas fa-download mr-2"></i>기업 엑셀 다운로드
+          </button>
+          <button 
+            id="shutdownButton"
+            class="btn btn-warning whitespace-nowrap"
+          >
+            <i class="fas fa-store-slash mr-2"></i>폐업
+          </button>
+        </div>
         <button 
           id="deleteButton"
           class="btn btn-danger"
         >
-          <i class="fas fa-trash-alt mr-2"></i>선택 삭제
+          <i class="fas fa-trash-alt mr-2"></i>삭제
         </button>
       </div>
     </div>
@@ -245,9 +390,11 @@
           <p class="text-sm text-gray-500 mt-1">CSV(.csv) 파일만 업로드 가능</p>
           <div class="mt-2 text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
             <p><i class="fas fa-info-circle text-blue-500 mr-1"></i> <strong>CSV 파일 작성 팁:</strong></p>
-            <ul class="list-disc pl-5 mt-1 space-y-1">
-              <li>헤더는 'comname,businessNumber,representative,phone,email' 형식으로 작성해주세요.</li>
+            <ul class="list-disc pl-5 mt-1 space-y-1 whitespace-pre-wrap flex flex-col items-start">
+              <li>헤더 형식에 제한이 없습니다. 자유롭게 작성하세요.</li>
               <li>사업자등록번호는 하이픈(-) 포함 여부에 관계없이 인식됩니다. (예: 123-45-67890 또는 1234567890)</li>
+              <li>필수 항목이 없어도 등록됩니다.</li>
+              <li>날짜 형식은 YYYY-MM-DD 형식으로 작성해주세요.</li>
             </ul>
           </div>
         </div>
@@ -336,33 +483,53 @@
     </div>
   </div>
 
+  <!-- 폐업 확인 모달 -->
+  <div id="shutdownModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+      <h2 class="text-lg font-semibold mb-4">기업 폐업 처리</h2>
+      <p id="shutdownModalContent">선택한 기업을 폐업 처리하시겠습니까?</p>
+      <p id="shutdownCompanyName" class="font-semibold mt-2"></p>
+      <div class="flex justify-end space-x-2 mt-6">
+        <button 
+          id="cancelShutdownButton"
+          class="btn bg-gray-200 hover:bg-gray-300"
+        >
+          취소
+        </button>
+        <button 
+          id="confirmShutdownButton"
+          class="btn btn-warning"
+        >
+          폐업 처리
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- 기업 직접 등록 모달 -->
   <div id="addSingleCompanyModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md max-h-screen overflow-y-auto">
       <h2 class="text-xl font-bold mb-6 flex items-center">
         <i class="fas fa-building text-blue-500 mr-2"></i>
         기업 직접 등록
       </h2>
       <div class="space-y-4">
         <div>
-          <label for="singleCompanyName" class="block text-sm font-medium mb-1">기업명 <span class="text-red-500">*</span></label>
+          <label for="singleCompanyName" class="block text-sm font-medium mb-1">기업명</label>
           <input
             id="singleCompanyName"
             type="text"
             class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
           >
         </div>
         <div>
-          <label for="singleBusinessNumber" class="block text-sm font-medium mb-1">사업자등록번호 <span class="text-red-500">*</span></label>
+          <label for="singleHomepage" class="block text-sm font-medium mb-1">홈페이지</label>
           <input
-            id="singleBusinessNumber"
-            type="text"
-            placeholder="000-00-00000"
+            id="singleHomepage"
+            type="url"
+            placeholder="https://example.com"
             class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
           >
-          <p class="text-xs text-gray-500 mt-1">하이픈(-)을 포함하거나 제외하고 입력 가능합니다.</p>
         </div>
         <div>
           <label for="singleRepresentative" class="block text-sm font-medium mb-1">대표자</label>
@@ -371,6 +538,16 @@
             type="text"
             class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
+        </div>
+        <div>
+          <label for="singleBusinessNumber" class="block text-sm font-medium mb-1">사업자등록번호</label>
+          <input
+            id="singleBusinessNumber"
+            type="text"
+            placeholder="000-00-00000"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+          <p class="text-xs text-gray-500 mt-1">하이픈(-)을 포함하거나 제외하고 입력 가능합니다. 비워두어도 됩니다.</p>
         </div>
         <div>
           <label for="singlePhone" class="block text-sm font-medium mb-1">전화번호</label>
@@ -382,6 +559,55 @@
           >
         </div>
         <div>
+          <label for="singleAddress" class="block text-sm font-medium mb-1">주소</label>
+          <input
+            id="singleAddress"
+            type="text"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div>
+          <label for="singleEmployeeCount" class="block text-sm font-medium mb-1">종업원 수</label>
+          <input
+            id="singleEmployeeCount"
+            type="number"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div>
+          <label for="singleIndustry" class="block text-sm font-medium mb-1">업종</label>
+          <input
+            id="singleIndustry"
+            type="text"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div>
+          <label for="singleManager" class="block text-sm font-medium mb-1">담당자</label>
+          <input
+            id="singleManager"
+            type="text"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div>
+          <label for="singleRepresentativePhone" class="block text-sm font-medium mb-1">담당자 전화번호</label>
+          <input
+            id="singleRepresentativePhone"
+            type="text"
+            placeholder="000-0000-0000"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div>
+          <label for="singleJob" class="block text-sm font-medium mb-1">담당자 직책</label>
+          <input
+            id="singleJob"
+            type="text"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div>
           <label for="singleEmail" class="block text-sm font-medium mb-1">이메일</label>
           <input
             id="singleEmail"
@@ -389,6 +615,15 @@
             class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
         </div>
+        <div>
+          <label for="singleCID1" class="block text-sm font-medium mb-1">폐업정보</label>
+          <input
+            id="singleCID1"
+            type="text"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <!-- 추가 필드 끝 -->
       </div>
       <div class="flex justify-end space-x-3 mt-6">
         <button 
@@ -410,14 +645,73 @@
   <!-- API 스크립트 -->
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
-  <script src="api.js"></script>
   <script>
+    // API URL 정의 (api.js 파일 의존성 제거)
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyD031lOEQn_RKGDrwVmaQF_QssOSEqwSx1_Wp9UuHsykCqfJgLESTVIVHzCjv1PBE0/exec';
+    
     // 라이브러리 버전
     const ADMIN_LIBRARY_VERSION = '1.0.0';
     
-    // 기본 설정
+    // API URL 체크 및 대체 URL
+    // API 접근 문제 해결을 위해 CORS 프록시 추가
+    function getAPIUrl() {
+      // 기본 URL이 작동하는지 확인하는 테스트 함수
+      const testAPIConnection = async (url) => {
+        try {
+          console.log(`API URL 테스트 중: ${url}`);
+          const callbackName = 'jsonpCallback_test_' + Math.round(Math.random() * 1000000);
+          
+          return new Promise((resolve) => {
+            // 5초 타임아웃 설정
+            const timeout = setTimeout(() => {
+              delete window[callbackName];
+              if (testScript.parentNode) {
+                testScript.parentNode.removeChild(testScript);
+              }
+              resolve(false); // 타임아웃은 실패로 간주
+            }, 5000);
+            
+            // 콜백 함수 등록
+            window[callbackName] = function(response) {
+              clearTimeout(timeout);
+              delete window[callbackName];
+              if (testScript.parentNode) {
+                testScript.parentNode.removeChild(testScript);
+              }
+              resolve(response && response.success);
+            };
+            
+            // 테스트 스크립트 생성
+            const testScript = document.createElement('script');
+            testScript.src = `${url}?action=test&callback=${callbackName}`;
+            
+            // 오류 처리
+            testScript.onerror = function() {
+              clearTimeout(timeout);
+              delete window[callbackName];
+              if (testScript.parentNode) {
+                testScript.parentNode.removeChild(testScript);
+              }
+              resolve(false);
+            };
+            
+            document.body.appendChild(testScript);
+          });
+        } catch (error) {
+          console.error('API 테스트 중 오류:', error);
+          return false;
+        }
+      };
+      
+      // 기본 URL이 작동하지 않으면 대체 URL 사용
+      return API_URL;
+    }
+    
+    // 실제 작동하는 API URL
+    const ACTIVE_API_URL = getAPIUrl();
+    
     let companies = [], selectedCompanyIds = [], currentPage = 1;
-    const itemsPerPage = 10;
+    let itemsPerPage = 10; // 기본값 설정
     let currentSortColumn = 'id', currentSortDirection = 'asc', isLoading = false;
     let lastApiCallTimestamp = 0; // API 호출 제한을 위한 타임스탬프
     
@@ -427,7 +721,7 @@
     // API 데이터 가져오기
     async function fetchData(sheet, id = null, extraParams = {}) {
       try {
-        let url = `${API_URL}?action=getData&sheet=${sheet}`;
+        let url = `${ACTIVE_API_URL}?action=getData&sheet=${sheet}`;
         
         if (id) {
           url += `&id=${id}`;
@@ -460,6 +754,7 @@
           // 스크립트 태그 생성 및 추가
           const script = document.createElement('script');
           script.src = url;
+          script.async = true; // 비동기 로딩 설정
           
           // 오류 처리
           script.onerror = function() {
@@ -467,6 +762,7 @@
             if (script.parentNode) {
               script.parentNode.removeChild(script);
             }
+            console.error('API 호출 실패:', url);
             reject(new Error('네트워크 요청 실패'));
           };
           
@@ -476,6 +772,7 @@
             if (script.parentNode) {
               script.parentNode.removeChild(script);
             }
+            console.error('API 요청 시간 초과:', url);
             reject(new Error('요청 시간 초과 (30초)'));
           }, 30000);
           
@@ -486,11 +783,80 @@
             originalCallback(response);
           };
           
+          // 디버깅 정보 추가
+          console.log('JSONP 요청 전송:', url);
+          
           // 스크립트 추가
           document.body.appendChild(script);
         });
       } catch (error) {
         console.error('API 호출 오류:', error);
+        throw error;
+      }
+    }
+    
+    // 데이터 삭제 함수 추가
+    async function deleteData(sheet, id) {
+      try {
+        // 콜백 이름 생성
+        const callbackName = 'jsonpCallback_delete_' + Math.round(Math.random() * 1000000);
+        const url = `${ACTIVE_API_URL}?action=deleteData&sheet=${encodeURIComponent(sheet)}&id=${encodeURIComponent(id)}&callback=${callbackName}`;
+        
+        // JSONP 호출
+        return new Promise((resolve, reject) => {
+          // 콜백 함수 등록
+          window[callbackName] = function(response) {
+            // 콜백 함수 제거
+            delete window[callbackName];
+            
+            // 스크립트 태그 제거
+            if (script.parentNode) {
+              script.parentNode.removeChild(script);
+            }
+            
+            resolve(response);
+          };
+          
+          // 스크립트 태그 생성 및 추가
+          const script = document.createElement('script');
+          script.src = url;
+          script.async = true; // 비동기 로딩 설정
+          
+          // 오류 처리
+          script.onerror = function() {
+            delete window[callbackName];
+            if (script.parentNode) {
+              script.parentNode.removeChild(script);
+            }
+            console.error('삭제 API 호출 실패:', url);
+            reject(new Error('네트워크 요청 실패'));
+          };
+          
+          // 타임아웃 설정 (30초)
+          const timeout = setTimeout(function() {
+            delete window[callbackName];
+            if (script.parentNode) {
+              script.parentNode.removeChild(script);
+            }
+            console.error('삭제 API 요청 시간 초과:', url);
+            reject(new Error('요청 시간 초과 (30초)'));
+          }, 30000);
+          
+          // 원래 콜백 함수를 래핑하여 타임아웃 제거
+          const originalCallback = window[callbackName];
+          window[callbackName] = function(response) {
+            clearTimeout(timeout);
+            originalCallback(response);
+          };
+          
+          // 디버깅 정보 추가
+          console.log('삭제 JSONP 요청 전송:', url);
+          
+          // 스크립트 추가
+          document.body.appendChild(script);
+        });
+      } catch (error) {
+        console.error('삭제 API 호출 오류:', error);
         throw error;
       }
     }
@@ -584,10 +950,18 @@
         
         // 폼 초기화
         document.getElementById('singleCompanyName').value = '';
-        document.getElementById('singleBusinessNumber').value = '';
+        document.getElementById('singleHomepage').value = '';
         document.getElementById('singleRepresentative').value = '';
+        document.getElementById('singleBusinessNumber').value = '';
         document.getElementById('singlePhone').value = '';
+        document.getElementById('singleAddress').value = '';
+        document.getElementById('singleEmployeeCount').value = '';
+        document.getElementById('singleIndustry').value = '';
+        document.getElementById('singleManager').value = '';
+        document.getElementById('singleRepresentativePhone').value = '';
+        document.getElementById('singleJob').value = '';
         document.getElementById('singleEmail').value = '';
+        document.getElementById('singleCID1').value = '';
       });
       
       // 기업 직접 등록 모달 취소 버튼
@@ -597,51 +971,92 @@
       
       // 기업 직접 등록 모달 확인 버튼
       document.getElementById('confirmSingleCompanyButton').addEventListener('click', () => {
-        // 필수 입력값 검증
+        // 필수 입력값 검증 완화
         const companyName = document.getElementById('singleCompanyName').value.trim();
         const businessNumber = document.getElementById('singleBusinessNumber').value.trim();
         
-        if (!companyName) {
-          alert('기업명을 입력해주세요.');
-          document.getElementById('singleCompanyName').focus();
-          return;
-        }
+        // 기업명이 없으면 기본값 할당
+        const finalCompanyName = companyName || `기업_${new Date().getTime()}`;
         
-        if (!businessNumber) {
-          alert('사업자등록번호를 입력해주세요.');
-          document.getElementById('singleBusinessNumber').focus();
-          return;
-        }
-        
-        // 사업자등록번호 정규화 (하이픈 제거)
+        // 사업자번호 정규화 (하이픈 제거)
         const normalizedBusinessNumber = businessNumber.replace(/-/g, '');
         
-        // 사업자등록번호 형식 검증 (10자리 숫자)
-        if (!/^\d{10}$/.test(normalizedBusinessNumber)) {
-          alert('사업자등록번호는 10자리 숫자여야 합니다.');
-          document.getElementById('singleBusinessNumber').focus();
-          return;
+        // 중복 체크는 유효한 사업자번호가 있는 경우에만 수행
+        let isDuplicate = false;
+        
+        if (normalizedBusinessNumber) {
+          // 기존 기업의 정규화된 사업자등록번호 맵 생성
+          const existingBusinessNumbers = {};
+          companies.forEach(company => {
+            if (company && company.businessNumber) {
+              // 중복 체크를 위해 숫자만 추출
+              const normalized = String(company.businessNumber).replace(/[^0-9]/g, '');
+              if (normalized) {
+                // 중복 체크용 맵에는 숫자만 저장하되
+                // 실제 사업자번호 반환시에는 원본 형태 유지를 위해 객체로 저장
+                existingBusinessNumbers[normalized] = {
+                  id: company.id,
+                  originalNumber: company.businessNumber // 원본 형태 유지
+                };
+              }
+            }
+          });
+          
+          // 중복 검사용으로는 숫자만, 표시용으로는 원본 형태 사용
+          isDuplicate = companies.some(company => {
+            // 숫자만 추출해서 비교
+            const existingNumber = String(company.businessNumber || '').replace(/[^0-9]/g, '');
+            const inputNumberDigits = String(normalizedBusinessNumber).replace(/[^0-9]/g, '');
+            return existingNumber === inputNumberDigits && inputNumberDigits.length > 0;
+          });
+          
+          if (isDuplicate) {
+            const continueAnyway = confirm('이미 등록된 사업자등록번호입니다. 그래도 등록하시겠습니까?');
+            if (!continueAnyway) {
+              return;
+            }
+          }
         }
         
-        // 중복 체크
-        const isDuplicate = companies.some(company => {
-          const existingNumber = (company.businessNumber || '').toString().replace(/-/g, '');
-          return existingNumber === normalizedBusinessNumber;
-        });
-        
-        if (isDuplicate) {
-          alert('이미 등록된 사업자등록번호입니다.');
-          return;
-        }
-        
-        // 새 기업 데이터 준비
+        // 새 기업 데이터 준비 (finalCompanyName 사용)
         const newCompany = {
-          comname: companyName,
-          businessNumber: normalizedBusinessNumber,
+          comname: finalCompanyName,
+          name: finalCompanyName, // name 필드 명시적 추가
+          homepage: document.getElementById('singleHomepage').value.trim() || '',
           representative: document.getElementById('singleRepresentative').value.trim() || '',
+          businessNumber: businessNumber || '', // 원본 형식 유지
           phone: document.getElementById('singlePhone').value.trim() || '',
+          address: document.getElementById('singleAddress').value.trim() || '',
+          employeeCount: document.getElementById('singleEmployeeCount').value.trim() || '',
+          industry: document.getElementById('singleIndustry').value.trim() || '',
+          manager: document.getElementById('singleManager').value.trim() || '',
+          representativePhone: document.getElementById('singleRepresentativePhone').value.trim() || '',
+          job: document.getElementById('singleJob').value.trim() || '',
           email: document.getElementById('singleEmail').value.trim() || '',
+          CID1: document.getElementById('singleCID1').value.trim() || '',
           registrationDate: new Date().toISOString().split('T')[0]
+        };
+        
+        // 서버로 전송하는 데이터에서도 하이픈 유지
+        // 단일 기업 추가시 businessNumber와 representativePhone 하이픈 유지
+        const serverData = {
+          companies: [{
+            name: newCompany.name,
+            comname: newCompany.comname,
+            homepage: newCompany.homepage,
+            representative: newCompany.representative,
+            businessNumber: newCompany.businessNumber, // 원본 형태 유지
+            phone: newCompany.phone,
+            address: newCompany.address,
+            employeeCount: newCompany.employeeCount,
+            industry: newCompany.industry,
+            manager: newCompany.manager,
+            representativePhone: newCompany.representativePhone, // 원본 형태 유지
+            job: newCompany.job,
+            email: newCompany.email,
+            CID1: newCompany.CID1,
+            registrationDate: newCompany.registrationDate
+          }]
         };
         
         // 기업 추가 API 호출
@@ -657,8 +1072,18 @@
         }
         openModal('delete');
       });
+
+      // 폐업 처리 버튼 이벤트 리스너 
+      document.getElementById('shutdownButton').addEventListener('click', () => {
+        console.log('폐업 처리 버튼 클릭됨');
+        if (selectedCompanyIds.length === 0) {
+          alert('폐업 처리할 기업을 선택해주세요.');
+          return;
+        }
+        openModal('shutdown');
+      });
       
-      ['edit', 'delete'].forEach(type => {
+      ['edit', 'delete', 'shutdown'].forEach(type => {
         const cancelButton = document.getElementById(`cancel${type.charAt(0).toUpperCase() + type.slice(1)}Button`);
         const confirmButton = document.getElementById(`confirm${type.charAt(0).toUpperCase() + type.slice(1)}Button`);
         
@@ -775,13 +1200,19 @@
         
         if (response.success && Array.isArray(response.data)) {
           console.log(`기업 데이터 ${response.data.length}개 로드 성공`);
-          
+          // 서버 응답의 첫 번째 아이템 필드 확인 (디버깅)
+          if (response.data.length > 0) {
+            console.log("첫 번째 기업 데이터 필드:", Object.keys(response.data[0]));
+            console.log("첫 번째 기업 데이터:", JSON.stringify(response.data[0]));
+          }
           // 물고기 잡힘 애니메이션 실행
           showFishCaughtAnimation();
-          
           // 응답 데이터가 비어있는지 확인
-          if (response.data.length === 0 && companies.length > 0 && !isColdStart && !forceRefresh) {
-            console.warn('API 응답이 비어있습니다. 캐시된 데이터를 유지합니다.');
+          if (response.data.length === 0) {
+            // 시트가 비어있으면 캐시도 비우고, companies도 빈 배열로
+            companies = [];
+            sessionStorage.removeItem('companies_cache');
+            console.warn('API 응답이 비어있습니다. 캐시와 화면 데이터도 비웁니다.');
           } else {
             companies = response.data;
             // 세션 스토리지에 캐시 저장 (만료시간 30분)
@@ -892,10 +1323,10 @@
       
       if (pageData.length === 0) {
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td colspan="8" class="text-center py-4">등록된 기업이 없습니다.</td>';
+        tr.innerHTML = '<td colspan="16" class="text-center py-4">등록된 기업이 없습니다.</td>';
         fragment.appendChild(tr);
       } else {
-        pageData.forEach(company => {
+        pageData.forEach((company, index) => {
           const tr = document.createElement('tr');
           
           // 체크박스
@@ -924,6 +1355,14 @@
           checkboxCell.appendChild(checkboxContainer);
           tr.appendChild(checkboxCell);
           
+          // NO 열 추가 (순번)
+          const noCell = document.createElement('td');
+          noCell.className = 'text-center';
+          // 순번 계산: (현재 페이지 - 1) * 페이지당 항목 수 + 현재 행 인덱스 + 1
+          const rowNumber = (currentPage - 1) * itemsPerPage + index + 1;
+          noCell.textContent = rowNumber;
+          tr.appendChild(noCell);
+          
           // 디버깅: 콘솔에 각 회사의 데이터 구조 출력 (첫 번째 회사만)
           if (company === pageData[0]) {
             console.log("회사 데이터:", company);
@@ -932,20 +1371,55 @@
               "typeof=", typeof company.businessNumber);
           }
           
-          // 필드명 대체 로직 추가 (서버에서 다양한 필드명을 사용할 수 있음)
+          // 필드명 대체 로직 추가 (서버에서 다양한 필드명을 사용할 수 있음, 기업명)
           tr.appendChild(createElement('td', company.comname || company.name || company['기업명'] || ''));
           
-          // 사업자번호 표시 (문자열로 강제 변환)
-          const businessNum = company.businessNumber || company['사업자등록번호'] || '';
-          tr.appendChild(createElement('td', businessNum ? businessNum.toString() : ''));
+          // 홈페이지에 링크 추가
+          const homepageUrl = company.homepage || company['홈페이지'] || '';
+          tr.appendChild(createElement('td', homepageUrl, null, true, homepageUrl));
           
           tr.appendChild(createElement('td', company.representative || company['대표자'] || ''));
-          tr.appendChild(createElement('td', company.phone || company['전화번호'] || ''));
+          
+          // 사업자번호 표시 (하이픈 유지)
+          const businessNum = company.businessNumber || company['사업자등록번호'] || '';
+          tr.appendChild(createElement('td', formatWithHyphen(businessNum)));
+          
+          // 전화번호 표시 (하이픈 유지)
+          const phoneNum = company.phone || company['전화번호'] || '';
+          tr.appendChild(createElement('td', formatWithHyphen(phoneNum)));
+          
+          tr.appendChild(createElement('td', company.address || company['주소'] || ''));
+          tr.appendChild(createElement('td', company.employeeCount || company['종업원 수'] || ''));
+          tr.appendChild(createElement('td', company.industry || company['업종'] || ''));
+          tr.appendChild(createElement('td', company.manager || company['담당자'] || ''));
+          
+          // 담당자 전화번호 표시 (하이픈 유지)
+          const repPhoneNum = company.representativePhone || company['담당자 전화번호'] || '';
+          tr.appendChild(createElement('td', formatWithHyphen(repPhoneNum)));
+          
+          // 담당자 직책 추가
+          tr.appendChild(createElement('td', company.job || company['담당자 직책'] || ''));
+          
           tr.appendChild(createElement('td', company.email || company['이메일'] || ''));
+          
+          // 폐업정보 표시 - 폐업 상태면 빨간색 배지로 표시
+          const shutdownCell = document.createElement('td');
+          const shutdownInfo = company.CID1 || company['폐업정보'] || '';
+          if (shutdownInfo === '폐업') {
+            const badge = document.createElement('span');
+            badge.className = 'shutdown-badge';
+            badge.textContent = '폐업';
+            shutdownCell.appendChild(badge);
+          } else {
+            shutdownCell.textContent = shutdownInfo;
+          }
+          tr.appendChild(shutdownCell);
           
           // 등록일 표시 로직 개선
           const registrationDate = company.registrationDate || company['등록일'] || '';
-          tr.appendChild(createElement('td', registrationDate));
+          // 날짜 형식 변환 (YYYY-MM-DD 형식으로 표시)
+          const formattedDate = registrationDate ? registrationDate.split('T')[0] : '';
+          tr.appendChild(createElement('td', formattedDate));
           
           // 수정 버튼
           const editBtn = document.createElement('button');
@@ -981,12 +1455,49 @@
       updateSelectAllCheckbox();
     }
     
-    // 유틸리티 함수
-    function createElement(tag, textContent, child = null) {
+    // 유틸리티 함수 수정 - 링크 기능 추가
+    function createElement(tag, textContent, child = null, isLink = false, href = '') {
       const elem = document.createElement(tag);
-      if (textContent !== null) elem.textContent = textContent || '';
+      
+      if (isLink && href) {
+        // 링크인 경우 a 태그 생성
+        const link = document.createElement('a');
+        link.href = href.startsWith('http') ? href : 'https://' + href;
+        link.textContent = textContent || '';
+        link.target = '_blank'; // 새 탭에서 열기
+        link.rel = 'noopener noreferrer'; // 보안 속성 추가
+        link.className = 'text-blue-600 hover:underline'; // 링크 스타일
+        elem.appendChild(link);
+      } else {
+        // 일반 텍스트인 경우
+        if (textContent !== null) elem.textContent = textContent || '';
+      }
+      
       if (child) elem.appendChild(child);
       return elem;
+    }
+    
+    // 홈페이지 링크 생성 함수 추가
+    function createHomepageLink(homepage) {
+      if (!homepage) return document.createElement('td');
+      
+      const td = document.createElement('td');
+      const link = document.createElement('a');
+      
+      // URL 형식 확인 및 수정
+      let url = homepage.trim();
+      if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+      
+      link.href = url;
+      link.textContent = homepage;
+      link.target = '_blank'; // 새 탭에서 열기
+      link.rel = 'noopener noreferrer'; // 보안 속성 추가
+      link.className = 'text-blue-600 hover:underline'; // 링크 스타일
+      
+      td.appendChild(link);
+      return td;
     }
     
     function toggleSelectAll() {
@@ -1046,12 +1557,61 @@
       }
     }
     
+    // 사업자등록번호 자동 하이픈 추가 함수
+     function formatBusinessNumber(input) {
+      // 숫자만 추출
+      const numbers = input.replace(/[^0-9]/g, '');
+      
+      // 숫자가 없으면 빈 문자열 반환
+      if (numbers.length === 0) return '';
+      
+      // 사업자등록번호 형식에 맞게 하이픈 추가 (000-00-00000)
+      if (numbers.length <= 3) {
+        return numbers;
+      } else if (numbers.length <= 5) {
+        return numbers.substring(0, 3) + '-' + numbers.substring(3);
+      } else {
+        return numbers.substring(0, 3) + '-' + numbers.substring(3, 5) + '-' + numbers.substring(5, 10);
+      }
+    }
+    
+    // DOM이 로드된 후 이벤트 리스너 추가
+    document.addEventListener('DOMContentLoaded', function() {
+      // 사업자등록번호 입력 필드에 이벤트 리스너 추가
+      const businessNumberInput = document.getElementById('singleBusinessNumber');
+      if (businessNumberInput) {
+        businessNumberInput.addEventListener('input', function(e) {
+          const formattedValue = formatBusinessNumber(e.target.value);
+          e.target.value = formattedValue;
+        });
+      }
+      
+      // 전화번호 입력 필드에 이벤트 리스너 추가
+      const phoneInput = document.getElementById('singlePhone');
+      if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+          const formattedValue = formatPhoneNumber(e.target.value);
+          e.target.value = formattedValue;
+        });
+      }
+      
+      // 담당자 전화번호 입력 필드에 이벤트 리스너 추가
+      const repPhoneInput = document.getElementById('singleRepresentativePhone');
+      if (repPhoneInput) {
+        repPhoneInput.addEventListener('input', function(e) {
+          const formattedValue = formatPhoneNumber(e.target.value);
+          e.target.value = formattedValue;
+        });
+      }
+    });
+   
     // 모달 관련
     function closeModals() {
       console.log('모달 닫기 함수 호출됨');
       document.getElementById('addModal').classList.add('hidden');
       document.getElementById('editModal').classList.add('hidden');
       document.getElementById('deleteModal').classList.add('hidden');
+      document.getElementById('shutdownModal').classList.add('hidden');
     }
     
     // 삭제 취소 시 선택 항목 초기화
@@ -1117,6 +1677,38 @@
         console.log('삭제 텍스트:', deleteText);
         document.getElementById('deleteCompanyName').textContent = deleteText;
         document.getElementById('deleteModal').classList.remove('hidden');
+      }
+      else if (type === 'shutdown') {
+        // 선택 확인
+        if (selectedCompanyIds.length === 0) {
+          alert('폐업 처리할 기업을 선택해주세요.');
+          return;
+        }
+        
+        // 선택된 ID 개수 표시 및 로그
+        console.log('폐업 처리 대상 ID 목록:', selectedCompanyIds);
+        
+        // 폐업 처리할 기업명 가져오기
+        let shutdownText = '';
+        if (selectedCompanyIds.length === 1) {
+          // 단일 기업 폐업 시 기업명 표시
+          const companyId = selectedCompanyIds[0];
+          const company = companies.find(p => String(p.id) === String(companyId));
+          
+          if (company && (company.comname || company.name)) {
+            shutdownText = `"${company.comname || company.name}"`;
+          } else {
+            shutdownText = "선택한 기업";
+            console.error('기업명을 찾을 수 없습니다. ID:', companyId);
+          }
+        } else {
+          // 다중 기업 폐업 시 개수 표시
+          shutdownText = `선택한 ${selectedCompanyIds.length}개 기업`;
+        }
+        
+        console.log('폐업 텍스트:', shutdownText);
+        document.getElementById('shutdownCompanyName').textContent = shutdownText;
+        document.getElementById('shutdownModal').classList.remove('hidden');
       }
     }
     
@@ -1445,6 +2037,141 @@
           alert('삭제 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류'));
         }
       }
+      else if (type === 'shutdown') {
+        if (selectedCompanyIds.length === 0) {
+          return console.error('폐업 처리할 기업을 선택해주세요.');
+        }
+        
+        // 폐업 처리 버튼 로딩 상태로 변경
+        const confirmBtn = document.getElementById('confirmShutdownButton');
+        const originalText = confirmBtn.innerHTML;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>처리 중...';
+        confirmBtn.disabled = true;
+        
+        try {
+          console.log(`총 ${selectedCompanyIds.length}개 기업 폐업 처리 진행 중...`);
+          
+          // 각 선택된 기업에 대해 폐업 처리 수행
+          const updatePromises = [];
+          
+          for (const id of selectedCompanyIds) {
+            // 현재 기업 정보 가져오기
+            const company = companies.find(c => String(c.id) === String(id));
+            if (!company) continue;
+            
+            // 기업 객체 복사 및 CID1 필드 업데이트 (폐업 정보)
+            const updatedCompany = { ...company };
+            updatedCompany.CID1 = '폐업';
+            
+            // 업데이트 데이터 준비
+            const serverData = {
+              companies: [updatedCompany]
+            };
+            
+            // JSONP 요청 생성
+            const updatePromise = new Promise((resolve, reject) => {
+              try {
+                const callbackName = 'jsonpCallback_shutdown_' + Math.round(Math.random() * 1000000);
+                const timestamp = new Date().getTime();
+                
+                // 요청 파라미터 준비
+                const callbackParam = encodeURIComponent(callbackName);
+                const sheetParam = encodeURIComponent('기업정보');
+                const jsonDataParam = encodeURIComponent(JSON.stringify(serverData));
+                
+                // JSONP 요청
+                window[callbackName] = function(response) {
+                  // 콜백 함수 제거
+                  delete window[callbackName];
+                  
+                  // 스크립트 태그 제거
+                  if (script.parentNode) {
+                    script.parentNode.removeChild(script);
+                  }
+                  
+                  resolve(response);
+                };
+                
+                // 스크립트 태그 생성
+                const script = document.createElement('script');
+                script.src = `${ACTIVE_API_URL}?action=updateData&sheet=${sheetParam}&callback=${callbackParam}&jsonData=${jsonDataParam}&id=${id}&cache_buster=${timestamp}`;
+                
+                // 오류 처리
+                script.onerror = function() {
+                  delete window[callbackName];
+                  if (script.parentNode) {
+                    script.parentNode.removeChild(script);
+                  }
+                  reject(new Error('네트워크 요청 실패'));
+                };
+                
+                // 타임아웃 설정 (30초)
+                const timeout = setTimeout(function() {
+                  delete window[callbackName];
+                  if (script.parentNode) {
+                    script.parentNode.removeChild(script);
+                  }
+                  reject(new Error('요청 시간 초과 (30초)'));
+                }, 30000);
+                
+                // 원래 콜백 함수를 래핑하여 타임아웃 제거
+                const originalCallback = window[callbackName];
+                window[callbackName] = function(response) {
+                  clearTimeout(timeout);
+                  originalCallback(response);
+                };
+                
+                // 스크립트 추가
+                document.body.appendChild(script);
+                
+              } catch (error) {
+                reject(error);
+              }
+            });
+            
+            updatePromises.push(updatePromise);
+          }
+          
+          // 모든 폐업 처리 요청이 완료될 때까지 대기
+          const results = await Promise.all(updatePromises);
+          
+          // 버튼 상태 복원
+          confirmBtn.innerHTML = originalText;
+          confirmBtn.disabled = false;
+          
+          // 성공 및 실패 건수 계산
+          const successCount = results.filter(r => r.success).length;
+          const failCount = selectedCompanyIds.length - successCount;
+          
+          // 결과 메시지 생성
+          let message = '';
+          if (successCount > 0 && failCount > 0) {
+            message = `${successCount}개 기업이 폐업 처리되었습니다.\n${failCount}개 기업 처리 실패`;
+          } else if (successCount > 0) {
+            message = `${successCount}개 기업이 성공적으로 폐업 처리되었습니다.`;
+          } else {
+            message = '기업 폐업 처리에 실패했습니다.';
+          }
+          
+          alert(message);
+          closeModals();
+          
+          // 폐업 처리 완료 후 선택 초기화
+          selectedCompanyIds = [];
+          
+          // 캐시 초기화 후 데이터 새로 로드
+          sessionStorage.removeItem('companies_cache');
+          loadCompanies();
+        } catch (error) {
+          console.error('폐업 처리 중 오류 발생:', error);
+          
+          // 오류 발생 시에도 버튼 상태 복원
+          confirmBtn.innerHTML = originalText;
+          confirmBtn.disabled = false;
+          
+          alert('폐업 처리 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류'));
+        }
+      }
     }
     
     // 기업 파일 업로드 함수 - CSV 파싱 로직 개선
@@ -1456,16 +2183,33 @@
           const id = formData.get('id'); // ID가 있으면 업데이트, 없으면 새로 추가
           
           if (!file) {
-            reject('파일이 없습니다.');
-            return;
+            // 에러 메시지만 로그로 남기고 빈 파일 생성
+            console.warn('파일이 없습니다. 빈 데이터로 처리합니다.');
+            
+            // 빈 CSV 파일 생성
+            const emptyCSV = "comname,businessNumber\n빈데이터,";
+            const blob = new Blob([emptyCSV], { type: 'text/csv' });
+            const emptyFile = new File([blob], "empty.csv", { type: 'text/csv' });
+            
+            // FormData 객체 업데이트
+            formData.set('file', emptyFile);
+            
+            // 파일 다시 가져오기
+            file = formData.get('file');
           }
 
-          // 파일 형식 확인
+          // 파일 형식 확인 - 보다 유연하게 허용
           const fileExtension = file.name.split('.').pop().toLowerCase();
           
-          if (fileExtension !== 'csv') {
-            reject('CSV 파일만 업로드 가능합니다.');
+          if (!['csv', 'xlsx', 'xls', 'txt'].includes(fileExtension)) {
+            reject('CSV, Excel(xlsx, xls) 또는 텍스트 파일만 업로드 가능합니다.');
             return;
+          }
+          
+          // CSV 파일이 아닌 경우 경고만 표시하고 계속 진행
+          if (fileExtension !== 'csv') {
+            console.warn('⚠️ CSV가 아닌 파일 형식이 감지되었습니다:', fileExtension);
+            console.log('CSV 형식으로 처리를 시도합니다.');
           }
 
           // CSV 파일 처리
@@ -1501,20 +2245,17 @@
             const headers = rows[0];
             console.log('📋 파일 헤더:', headers);
             
-            // 필수 컬럼 검사
-            const requiredColumns = ['comname', 'businessNumber'];
-            const missingColumns = [];
+            // 필수 컬럼 검사 제거 - 모든 형식의 CSV 업로드 허용
+            // 참고: 필수 필드 로직이 제거되었습니다.
             
-            requiredColumns.forEach(column => {
-              if (headers.indexOf(column) === -1) {
-                missingColumns.push(column);
-              }
-            });
-            
-            if (missingColumns.length > 0) {
-              console.error('❌ 필수 컬럼 누락:', missingColumns.join(', '));
-              reject(`파일 형식 오류: 필수 컬럼(${missingColumns.join(', ')})이 누락되었습니다.`);
-              return;
+            // 빈 헤더 처리 - 내부에서 자동으로 헤더 생성
+            if (headers.length === 0 || (headers.length === 1 && headers[0].trim() === '')) {
+              console.log('❗ 헤더가 비어있습니다. 기본 헤더를 생성합니다.');
+              // 기본 헤더 생성
+              headers.splice(0, headers.length); // 기존 헤더 제거
+              headers.push('comname', 'businessNumber', 'representative', 'phone', 
+                          'email', 'homepage', 'address', 'employeeCount', 
+                          'industry', 'manager', 'representativePhone', 'job', 'CID1');
             }
             
             // 파일에서 기업 데이터 추출 (첫 번째 행은 헤더)
@@ -1528,33 +2269,46 @@
                   companyData[header] = row[index] || '';
                 });
                 
-                // 필수 필드 확인
-                if (companyData.comname && companyData.businessNumber) {
-                  // 서버 처리를 위한 필드명 추가 (name 필드 필요)
-                  companyData.name = companyData.comname;
-                  
-                  // 등록일 필드가 없으면 현재 날짜로 설정
-                  if (!companyData.registrationDate && !companyData['등록일']) {
-                    companyData.registrationDate = new Date().toISOString().split('T')[0];
-                  }
-                  
-                  allCompaniesData.push(companyData);
+                // 필수 필드 확인 제거 - 모든 데이터 허용
+                // 서버 처리를 위한 필드명 추가 (name 필드 필요)
+                companyData.name = companyData.comname || `기업_${i}`; // 기본값 제공
+                companyData.comname = companyData.comname || `기업_${i}`; // 기본값 제공
+                
+                // 등록일 필드가 없으면 현재 날짜로 설정
+                if (!companyData.registrationDate && !companyData['등록일']) {
+                  companyData.registrationDate = new Date().toISOString().split('T')[0];
                 }
+                
+                // 추가 필드를 명시적으로 빈 문자열로 초기화하여 누락되지 않도록 함
+                const allFields = [
+                  'businessNumber', 'homepage', 'representativePhone', 'address', 
+                  'phone', 'employeeCount', 'industry', 'manager', 'CID1',
+                  'representative', 'email', 'job'
+                ];
+                
+                allFields.forEach(field => {
+                  if (companyData[field] === undefined) {
+                    companyData[field] = '';
+                  }
+                });
+                
+                allCompaniesData.push(companyData);
               }
             }
             
             if (allCompaniesData.length === 0) {
-              reject('파일에 유효한 기업 데이터가 없습니다.');
-              return;
+              // 빈 파일도 허용 - reject 제거
+              console.warn('경고: 파일에 유효한 기업 데이터가 없습니다.');
+              const emptyCompanyData = {
+                comname: `빈데이터_${new Date().getTime()}`,
+                name: `빈데이터_${new Date().getTime()}`,
+                businessNumber: '',
+                registrationDate: new Date().toISOString().split('T')[0]
+              };
+              allCompaniesData.push(emptyCompanyData);
             }
             
-            // 사업자등록번호 정규화 함수
-            function normalizeBusinessNumber(number) {
-              if (!number) return '';
-              
-              // 값을 문자열로 변환 후 숫자가 아닌 문자(하이픈, 공백 등) 제거
-              return String(number).replace(/[^0-9]/g, '');
-            }
+           
             
             // 기존 기업의 정규화된 사업자등록번호 맵 생성
             const existingBusinessNumbers = {};
@@ -1572,15 +2326,18 @@
             const duplicateCompanies = [];
             
             allCompaniesData.forEach(company => {
-              // 사업자번호 정규화
-              const normalizedNumber = normalizeBusinessNumber(company.businessNumber);
+              // 사업자번호는 원본 유지
+              const originalNumber = company.businessNumber;
               
-              // 중복 체크
-              if (!normalizedNumber || existingBusinessNumbers[normalizedNumber]) {
+              // 중복 체크를 위해 숫자만 추출 (하이픈 제거)
+              const numbersOnly = String(originalNumber).replace(/[^0-9]/g, '');
+              
+              // 중복 체크 수정 - 사업자번호가 없거나 비어있으면 중복 체크 생략
+              if (numbersOnly && existingBusinessNumbers[numbersOnly]) {
                 duplicateCompanies.push(company);
               } else {
-                // 사업자번호 형식화 (하이픈 제거)
-                company.businessNumber = normalizedNumber;
+                // 원본 사업자번호 유지 (하이픈 그대로 유지)
+                company.businessNumber = originalNumber;
                 
                 // 모든 필드가 문자열 형태로 처리되도록 보장
                 Object.keys(company).forEach(key => {
@@ -1593,8 +2350,11 @@
                 
                 // 신규 기업 목록에 추가
                 newCompanies.push(company);
-                // 중복 체크를 위해 맵에 추가 (같은 파일 내 중복 방지)
-                existingBusinessNumbers[normalizedNumber] = true;
+                
+                // 사업자번호가 있는 경우만 중복 맵에 추가
+                if (numbersOnly) {
+                  existingBusinessNumbers[numbersOnly] = true;
+                }
               }
             });
             
@@ -1744,34 +2504,45 @@
             
             // URL 생성 - 사업관리 시스템과 동일한 방식
             let action = id ? 'updateData' : 'addData';
-            let url = `${API_URL}?action=${action}&sheet=${sheetParam}&callback=${callbackParam}&jsonData=${jsonDataParam}&cache_buster=${timestamp}`;
+            let url = `${ACTIVE_API_URL}?action=${action}&sheet=${sheetParam}&callback=${callbackParam}&jsonData=${jsonDataParam}&cache_buster=${timestamp}`;
             
             if (id) {
               url += `&id=${encodeURIComponent(id)}`;
             }
             
             script.src = url;
+            script.async = true; // 비동기 로딩 설정
             
-            // 오류 처리
-            script.onerror = function() {
+            // 디버깅을 위한 추가 정보 출력
+            console.log('업로드 요청 URL:', url);
+            console.log('업로드 데이터 길이:', jsonDataParam.length);
+            
+            // 오류 처리 개선
+            script.onerror = function(error) {
+              console.error('스크립트 로드 오류 발생:', error);
+              console.error('요청 URL:', url);
+              
               // 콜백 함수 제거
               delete window[callbackName];
               if (script.parentNode) {
                 script.parentNode.removeChild(script);
               }
               
-              reject('네트워크 오류가 발생했습니다.');
+              // 오류 메시지 업데이트
+              reject('네트워크 오류가 발생했습니다. 인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.');
             };
             
             // 타임아웃 설정
             const timeout = setTimeout(function() {
+              console.error('요청 시간 초과:', url);
+              
               // 콜백 함수 제거
               delete window[callbackName];
               if (script.parentNode) {
                 script.parentNode.removeChild(script);
               }
               
-              reject('요청 시간이 초과되었습니다. (30초)');
+              reject('요청 시간이 초과되었습니다. 서버 상태를 확인하거나 잠시 후 다시 시도해주세요. (30초)');
             }, 30000);
             
             // 원래 콜백 함수를 래핑하여 타임아웃 제거
@@ -1799,7 +2570,12 @@
       };
       
       // CSV 파일 읽기
-      reader.readAsText(file, 'UTF-8');
+      try {
+        reader.readAsText(file, 'UTF-8');
+      } catch (error) {
+        console.error('❌ 파일 읽기 시도 중 오류:', error);
+        reject('파일 읽기 시도 중 오류가 발생했습니다: ' + error.message);
+      }
     }
     
     // CSV 문자열을 2차원 배열로 변환하는 함수 추가
@@ -1915,13 +2691,22 @@
         // BOM 추가 (UTF-8)
         const BOM = new Uint8Array([0xEF, 0xBB, 0xBF]);
         
-        // 고정된 컬럼 형식으로 헤더 정의 (항상 동일한 순서 유지)
+        // 고정된 컬럼 형식으로 헤더 정의 (요청한 순서대로 변경됨)
         const csvColumns = [
           { key: 'comname', header: 'comname' },
-          { key: 'businessNumber', header: 'businessNumber' },
+          { key: 'homepage', header: 'homepage' },
           { key: 'representative', header: 'representative' },
+          { key: 'businessNumber', header: 'businessNumber' },
           { key: 'phone', header: 'phone' },
+          { key: 'address', header: 'address' },
+          { key: 'employeeCount', header: 'employeeCount' },
+          { key: 'industry', header: 'industry' },
+          { key: 'manager', header: 'manager' },
+          { key: 'representativePhone', header: 'representativePhone' },
+          { key: 'job', header: 'job' },
           { key: 'email', header: 'email' },
+          { key: 'CID1', header: 'CID1' },
+          { key: 'registrationDate', header: 'registrationDate' }
         ];
         
         // 헤더 행 생성
@@ -2220,92 +3005,277 @@
     function addSingleCompany(companyData) {
       console.log('단일 기업 추가 함수 호출:', companyData);
       
-      // 사업자번호 정규화 (하이픈 제거, 문자열 변환)
-      const formattedBusinessNumber = companyData.businessNumber.toString().replace(/-/g, '');
-      
       // 로딩 상태 표시
       const confirmBtn = document.getElementById('confirmSingleCompanyButton');
       const originalText = confirmBtn.innerHTML;
       confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>등록 중...';
       confirmBtn.disabled = true;
       
-      // 서버 전송용 데이터 준비 (필드 매핑)
+      // 서버 전송용 데이터 준비 (필드 매핑) - 원본 그대로 전송
       const serverData = {
-  companies: [{
-    name: companyData.comname || companyData.name,
-    businessNumber: formattedBusinessNumber,
-    representative: companyData.representative || '',
-    contact: companyData.contact || '',
-    address: companyData.address || '',
-    description: companyData.description || '',
-    registrationDate: companyData.registrationDate || new Date().toISOString().split('T')[0] // 등록일 자동 생성
-  }]
-};
-
-console.log('단일 기업 데이터 업로드 준비 완료:', serverData);
-      
-      // JSONP 요청 생성
-      const callbackName = 'jsonpCallback_' + Math.round(Math.random() * 1000000);
-      
-      // 요청 파라미터 준비
-      const callbackParam = encodeURIComponent(callbackName);
-      const sheetParam = encodeURIComponent('기업정보');
-      const jsonDataParam = encodeURIComponent(JSON.stringify(serverData));
-      const timestamp = new Date().getTime();
-      
-      // JSONP 요청
-      window[callbackName] = function(response) {
-        // 버튼 상태 복원
-        confirmBtn.innerHTML = originalText;
-        confirmBtn.disabled = false;
-        
-        console.log('API 응답:', response);
-        
-        if (response && response.success) {
-          console.log('기업 추가 성공');
-          alert('기업 정보가 성공적으로 등록되었습니다.');
-          
-          // 모달 닫기
-          document.getElementById('addSingleCompanyModal').classList.add('hidden');
-          
-          // 테이블 새로고침
-          sessionStorage.removeItem('companies_cache');
-          loadCompanies(true); // 강제 새로고침
-        } else {
-          console.error('기업 추가 실패:', response?.error || '알 수 없는 오류');
-          alert('기업 추가 실패: ' + (response?.error || '알 수 없는 오류'));
-        }
-        
-        // 콜백 함수 제거
-        delete window[callbackName];
-        
-        // 스크립트 태그 제거
-        if (script.parentNode) {
-          script.parentNode.removeChild(script);
-        }
+        companies: [{
+          name: companyData.comname || companyData.name,
+          comname: companyData.comname || companyData.name,
+          businessNumber: companyData.businessNumber, // 원본 형태 그대로 사용
+          representative: companyData.representative || '',
+          phone: companyData.phone || '',
+          email: companyData.email || '',
+          homepage: companyData.homepage || '',
+          representativePhone: companyData.representativePhone || '',
+          address: companyData.address || '',
+          employeeCount: companyData.employeeCount || '',
+          industry: companyData.industry || '',
+          manager: companyData.manager || '',
+          CID1: companyData.CID1 || '',
+          registrationDate: companyData.registrationDate || new Date().toISOString().split('T')[0]
+        }]
       };
       
-      // 스크립트 태그 생성 - 사업관리와 동일한 URL 구성 방식 사용
-      const script = document.createElement('script');
-      script.src = `${API_URL}?action=addData&sheet=${sheetParam}&callback=${callbackParam}&jsonData=${jsonDataParam}&cache_buster=${timestamp}`;
+      console.log('단일 기업 데이터 업로드 준비 완료:', serverData);
       
-      // 오류 처리
-      script.onerror = function() {
+      try {
+        // JSONP 요청 생성
+        const callbackName = 'jsonpCallback_' + Math.round(Math.random() * 1000000);
+        
+        // 요청 파라미터 준비
+        const callbackParam = encodeURIComponent(callbackName);
+        const sheetParam = encodeURIComponent('기업정보');
+        const jsonDataParam = encodeURIComponent(JSON.stringify(serverData));
+        const timestamp = new Date().getTime();
+        
+        // JSONP 요청
+        window[callbackName] = function(response) {
+          // 버튼 상태 복원
+          confirmBtn.innerHTML = originalText;
+          confirmBtn.disabled = false;
+          
+          console.log('API 응답:', response);
+          
+          // 디버깅: 응답 데이터 자세히 확인
+          if (response && response.data) {
+            console.log('응답 데이터 상세:', JSON.stringify(response.data));
+          }
+          
+          if (response && response.success) {
+            console.log('기업 추가 성공');
+            alert('기업 정보가 성공적으로 등록되었습니다.');
+            
+            // 모달 닫기
+            document.getElementById('addSingleCompanyModal').classList.add('hidden');
+            
+            // 테이블 새로고침
+            sessionStorage.removeItem('companies_cache');
+            loadCompanies(true); // 강제 새로고침
+          } else {
+            console.error('기업 추가 실패:', response?.error || '알 수 없는 오류');
+            alert('기업 추가 실패: ' + (response?.error || '알 수 없는 오류'));
+          }
+          
+          // 콜백 함수 제거
+          delete window[callbackName];
+          
+          // 스크립트 태그 제거
+          if (script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+        };
+        
+        // 스크립트 태그 생성 - 사업관리와 동일한 URL 구성 방식 사용
+        const script = document.createElement('script');
+        script.src = `${ACTIVE_API_URL}?action=addData&sheet=${sheetParam}&callback=${callbackParam}&jsonData=${jsonDataParam}&cache_buster=${timestamp}`;
+        
+        // 오류 처리
+        script.onerror = function() {
+          confirmBtn.innerHTML = originalText;
+          confirmBtn.disabled = false;
+          
+          console.error('API 요청 오류');
+          alert('서버 요청 중 오류가 발생했습니다.');
+          
+          delete window[callbackName];
+          if (script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+        };
+        
+        // 타임아웃 설정 - 30초 후 자동 종료
+        setTimeout(function() {
+          if (window[callbackName]) {
+            confirmBtn.innerHTML = originalText;
+            confirmBtn.disabled = false;
+            
+            console.error('API 요청 타임아웃');
+            alert('서버 요청 시간이 초과되었습니다.');
+            
+            delete window[callbackName];
+            if (script.parentNode) {
+              script.parentNode.removeChild(script);
+            }
+          }
+        }, 30000);
+        
+        // 스크립트 추가 - 이 부분이 누락되어 있었습니다
+        document.body.appendChild(script);
+        console.log('API 요청 전송됨:', script.src);
+      } catch (error) {
+        // 오류 처리
         confirmBtn.innerHTML = originalText;
         confirmBtn.disabled = false;
-        
-        console.error('API 요청 오류');
-        alert('서버 요청 중 오류가 발생했습니다.');
-        
-        delete window[callbackName];
-        if (script.parentNode) {
-          script.parentNode.removeChild(script);
-        }
-      };
-      
-      // 스크립트 추가
-      document.body.appendChild(script);
+        console.error('API 호출 중 오류 발생:', error);
+        alert('서버 통신 중 오류가 발생했습니다.');
+      }
     }
+
+    // 트림과 문자열 변환 함수 수정 (하이픈 보존)
+    function formatWithHyphen(value) {
+      if (!value) return '';
+      return String(value).trim(); // 단순히 트림만 하고 하이픈은 유지
+    }
+
+    // 사업자등록번호 정규화 함수 수정 - 하이픈 유지
+    function normalizeBusinessNumber(number) {
+      if (!number) return '';
+      
+      // 문자열로 변환하고 앞뒤 공백만 제거, 하이픈 유지
+      return String(number).trim();
+    }
+
+    // 사업자등록번호 검증 함수 - 하이픈 제거 후 검증만 수행
+    function validateBusinessNumber(number) {
+      if (!number) return false;
+      
+      // 하이픈 제거하고 숫자만 추출하여 길이 확인
+      const digitsOnly = String(number).replace(/[^0-9]/g, '');
+      return digitsOnly.length === 10; // 사업자번호는 10자리 숫자
+    }
+
+    // 전화번호 포맷팅 함수 개선 - 다양한 형식 지원
+    function formatPhoneNumber(input) {
+      // 숫자만 추출
+      const numbers = input.replace(/[^0-9]/g, '');
+      
+      // 숫자가 없으면 빈 문자열 반환
+      if (numbers.length === 0) return '';
+      
+      // 전화번호 형식에 맞게 하이픈 추가 (길이에 따라 다른 형식 적용)
+      if (numbers.length <= 3) {
+        // 3자리 이하: 그대로 반환
+        return numbers;
+      } else if (numbers.length === 8) {
+        // 8자리(지역번호 없는 전화번호): 0000-0000
+        return numbers.substring(0, 4) + '-' + numbers.substring(4);
+      } else if (numbers.length === 10) {
+        // 10자리(일반 전화번호): 000-000-0000 또는 지역번호가 02인 경우 02-000-0000
+        if (numbers.substring(0, 2) === '02') {
+          // 서울 지역번호(02)인 경우
+          return numbers.substring(0, 2) + '-' + numbers.substring(2, 6) + '-' + numbers.substring(6);
+        } else {
+          // 기타 지역번호(3자리)인 경우
+          return numbers.substring(0, 3) + '-' + numbers.substring(3, 6) + '-' + numbers.substring(6);
+        }
+      } else if (numbers.length === 11) {
+        // 11자리(휴대폰 번호): 000-0000-0000
+        return numbers.substring(0, 3) + '-' + numbers.substring(3, 7) + '-' + numbers.substring(7);
+      } else if (numbers.length === 7) {
+        // 7자리: 000-0000
+        return numbers.substring(0, 3) + '-' + numbers.substring(3);
+      } else if (numbers.length === 9) {
+        // 9자리(일부 지역번호): 00-000-0000
+        return numbers.substring(0, 2) + '-' + numbers.substring(2, 5) + '-' + numbers.substring(5);
+      } else {
+        // 기타 길이: 원본 입력값 반환
+        return input;
+      }
+    }
+
+    // 파일 업로드 처리 함수 수정
+    async function handleFileUpload(file) {
+      try {
+        // 파일 형식 검증
+        if (!file.name.endsWith('.csv')) {
+          throw new Error('CSV 파일만 업로드 가능합니다.');
+        }
+
+        // 파일 읽기
+        const content = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result);
+          reader.onerror = e => reject(new Error('파일을 읽는 중 오류가 발생했습니다.'));
+          reader.readAsText(file);
+        });
+
+        // CSV 파싱
+        const rows = content.split('\n').map(row => row.split(','));
+        if (rows.length < 2) {
+          throw new Error('파일에 데이터가 없습니다.');
+        }
+
+        // 헤더와 데이터 분리
+        const headers = rows[0];
+        const data = rows.slice(1);
+
+        // 필수 필드 확인
+        const requiredFields = ['comname', 'businessNumber'];
+        const missingFields = requiredFields.filter(field => !headers.includes(field));
+        if (missingFields.length > 0) {
+          throw new Error(`필수 필드가 누락되었습니다: ${missingFields.join(', ')}`);
+        }
+
+        // 데이터 변환
+        const companies = data.map(row => {
+          const company = {};
+          headers.forEach((header, index) => {
+            company[header] = row[index] || '';
+          });
+          return company;
+        });
+
+        // 서버로 전송
+        const response = await fetch('/api/companies/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ companies })
+        });
+
+        if (!response.ok) {
+          throw new Error('서버 오류가 발생했습니다.');
+        }
+
+        const result = await response.json();
+        return result;
+
+      } catch (error) {
+        console.error('파일 업로드 오류:', error);
+        throw error;
+      }
+    }
+
+    // 파일 선택 이벤트 처리
+    document.getElementById('companyFileInput').addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        const result = await handleFileUpload(file);
+        if (result.success) {
+          alert('기업 정보가 성공적으로 추가되었습니다.');
+          location.reload();
+        } else {
+          alert(result.error || '업로드 실패');
+        }
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    // 페이지당 항목 수 변경 이벤트 리스너 추가
+    document.getElementById('itemsPerPage').addEventListener('change', function() {
+      itemsPerPage = parseInt(this.value);
+      currentPage = 1; // 페이지를 1로 리셋
+      renderTable(); // 테이블 다시 렌더링
+    });
   </script>
 </body>
 </html> 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>관리자 시스템 - 사업 안내</title>
+  <title>관리자 시스템 - 신청</title>
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <!-- 폰트어썸 아이콘 -->
@@ -15,10 +15,43 @@
   <link rel="stylesheet" href="..\css\common-styles.css">
   <!-- 라이브러리 버전 정보 -->
   <meta name="library-version" content="1.0.0">
+  <!-- 구글 드라이브 API -->
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="https://accounts.google.com/gsi/client"></script>
   <!-- 페이지별 추가 스타일 -->
   <style>
     /* 페이지별 추가 스타일을 여기에 작성하세요 */
+    .file-upload-btn {
+      padding: 4px 8px;
+      border-radius: 4px;
+      background-color: #F3F4F6;
+      color: #374151;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
     
+    .file-upload-btn:hover {
+      background-color: #E5E7EB;
+    }
+    
+    .file-upload-btn i {
+      margin-right: 4px;
+    }
+    
+    .file-upload-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .file-name {
+      font-size: 0.875rem;
+      color: #6B7280;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50">
@@ -29,8 +62,8 @@
       <nav class="desktop-menu flex space-x-4">
         <a href="business-management.html" >사업 관리</a>
         <a href="company-management.html">기업 관리</a>
-        <a href="business-notification.html" class="active">사업 안내</a>
-        <a href="application.html">신청</a>
+        <a href="business-notification.html">사업 안내</a>
+        <a href="application.html" class="active">신청</a>
         <a href="selection-confirmation.html">선정 확인</a>
         <a href="gmoney-management.html">계약금 수령</a>
         <a href="cashback-request.html">캐시백 송금</a>
@@ -46,8 +79,8 @@
   <div class="mobile-menu hidden">
     <a href="business-management.html" class="active">사업 관리</a>
     <a href="company-management.html">기업 관리</a>
-    <a href="business-notification.html">사업 안내</a>
     <a href="application.html">신청</a>
+    <a href="business-notification.html">사업 안내</a>
     <a href="selection-confirmation.html">선정 확인</a>
     <a href="gmoney-management.html">계약금 수령</a>
     <a href="cashback-management.html">캐시백 송금</a>
@@ -58,10 +91,10 @@
   <div class="flex main-layout">
     <!-- 좌측 소메뉴 -->
     <aside class="sidebar p-4 flex-shrink-0">
-      <h2 class="text-lg font-semibold mb-4 text-gray-800">사업 안내</h2>
+      <h2 class="text-lg font-semibold mb-4 text-gray-800">신청</h2>
       <ul class="space-y-1">
         <li class="sidebar-item active">
-          <i class="fas fa-list-ul mr-2"></i> 안내 대상 선별
+          <i class="fas fa-list-ul mr-2"></i> 신청 접수 
         </li>
         <!-- 추가 메뉴 항목 -->
       </ul>
@@ -70,10 +103,10 @@
     <!-- 메인 콘텐츠 -->
     <div class="flex-1 min-w-0 p-6 space-y-6">
       <div class="flex items-center justify-between border-b pb-4">
-        <h1 class="text-2xl font-bold text-gray-800">안내 대상 선별</h1>
+        <h1 class="text-2xl font-bold text-gray-800">신청 접수</h1>
       </div>
 
-      <!-- 검색 영역 - 안내 사업 지정 버튼 추가 -->
+      <!-- 검색 영역 -->
       <div class="flex items-center justify-between mb-6">
         <div class="flex items-center space-x-4">
           <select 
@@ -95,46 +128,6 @@
             <i class="fas fa-search mr-2"></i>조회
           </button>
         </div>
-        <!-- 버튼 영역 - 안내 사업 지정 버튼 추가 -->
-        <div class="flex space-x-2">
-          <button 
-            id="selectBusinessButton"
-            class="btn btn-primary whitespace-nowrap"
-          >
-            <i class="fas fa-list mr-2"></i>대상 선별
-          </button>
-        </div>
-      </div>
-
-      <!-- 사업 선택 모달 (체크박스 형식으로 변경) -->
-      <div id="selectBusinessModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
-        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
-          <h2 class="text-xl font-bold mb-6 flex items-center">
-            <i class="fas fa-list text-blue-500 mr-2"></i>
-            안내 사업 선택
-          </h2>
-          <div class="mb-6">
-            <p class="text-gray-600 mb-4">선택한 기업을 안내할 사업을 선택해주세요:</p>
-            <div id="businessCheckboxContainer" class="max-h-60 overflow-y-auto border rounded-lg p-3 space-y-2">
-              <!-- 체크박스가 여기에 동적으로 추가됩니다 -->
-              <div class="text-center text-gray-500">사업을 불러오고 있어요! 잠시만요..</div>
-            </div>
-          </div>
-          <div class="flex justify-end space-x-3 mt-4">
-            <button 
-              id="cancelSelectBusinessButton"
-              class="px-5 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium"
-            >
-              취소
-            </button>
-            <button 
-              id="confirmSelectBusinessButton"
-              class="px-5 py-2 bg-gray-900 text-white hover:bg-gray-800 rounded-lg font-medium"
-            >
-              확인
-            </button>
-          </div>
-        </div>
       </div>
 
       <!-- 메인 콘텐츠 내용 -->
@@ -146,11 +139,7 @@
               <tr>
                 <th class="w-16">
                   <div class="flex items-center justify-center">
-                    <input 
-                      type="checkbox" 
-                      id="selectAllCheckbox" 
-                      class="w-4 h-4"
-                    >
+                    <input type="checkbox" id="selectAllCheckbox" class="w-4 h-4">
                   </div>
                 </th>
                 <th class="w-16">NO</th>
@@ -170,6 +159,9 @@
                     </span>
                   </div>
                 </th>
+                <th class="w-24">국세(첨부)</th>
+                <th class="w-24">지방세(첨부)</th>
+                <th class="w-24">사업자등록증</th>
                 <th class="cursor-pointer" data-sort="homepage">
                   <div class="flex items-center">
                     홈페이지
@@ -242,7 +234,7 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="managerPosition">
+                <th class="cursor-pointer" data-sort="job">
                   <div class="flex items-center">
                     담당자 직책
                     <span class="sort-icon ml-1">
@@ -258,9 +250,17 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="closedInfo">
+                <th class="cursor-pointer" data-sort="saupjadd">
                   <div class="flex items-center">
-                    폐업정보
+                    사업자등록증
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="status">
+                  <div class="flex items-center">
+                    상태
                     <span class="sort-icon ml-1">
                       <i class="fas fa-sort"></i>
                     </span>
@@ -270,12 +270,11 @@
             </thead>
             <tbody id="companyTableBody">
               <tr>
-                <td colspan="9" class="text-center"></td>
+                <td colspan="15" class="text-center"></td>
               </tr>
             </tbody>
           </table>
         </div>
-        
       </div>
        <!-- 페이지네이션 -->
       <div class="pagination-container flex items-center justify-between flex-wrap">
@@ -309,24 +308,127 @@
     </div>
   </div>
 
-  <!-- 삭제 확인 모달 -->
-  <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-      <h2 class="text-lg font-semibold mb-4">기업 삭제</h2>
-      <p>정말 선택한 기업을 삭제하시겠습니까?</p>
-      <p id="deleteCompanyName" class="font-semibold mt-2"></p>
-      <div class="flex justify-end space-x-2 mt-6">
+  <!-- 기업 선택 모달 -->
+  <div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl">
+      <h2 class="text-xl font-bold mb-6 flex items-center">
+        <i class="fas fa-building text-yellow-500 mr-2"></i>
+        기업 선택
+      </h2>
+      <div class="overflow-y-auto max-h-[60vh]">
+        <table class="min-w-full">
+          <thead>
+            <tr>
+              <th class="w-16">
+                <div class="flex items-center justify-center">
+                  <input 
+                    type="checkbox" 
+                    id="modalSelectAllCheckbox" 
+                    class="w-4 h-4"
+                  >
+                </div>
+              </th>
+              <th>기업명</th>
+              <th>사업자등록번호</th>
+              <th>대표자</th>
+              <th>연락처</th>
+              <th>이메일</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody id="modalTableBody">
+            <tr>
+              <td colspan="7" class="text-center">데이터를 불러오는 중입니다...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="flex justify-end space-x-3 mt-8">
         <button 
-          id="cancelDeleteButton"
-          class="btn bg-gray-200 hover:bg-gray-300"
+          id="cancelAddButton"
+          class="px-5 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium"
         >
-          취소
+          닫기
         </button>
         <button 
-          id="confirmDeleteButton"
-          class="btn btn-danger"
+          id="confirmAddButton"
+          class="px-5 py-2 bg-gray-900 text-white hover:bg-gray-800 rounded-lg font-medium"
         >
-          삭제
+          확인
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 문서 업로드 모달 -->
+  <div id="documentUploadModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
+      <h2 class="text-xl font-bold mb-6 flex items-center">
+        <i class="fas fa-file-upload text-blue-500 mr-2"></i>
+        <span id="uploadModalTitle">사업자등록증 첨부</span>
+      </h2>
+      <div class="mb-6">
+        <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-colors">
+          <i class="fas fa-cloud-upload-alt text-gray-400 text-4xl mb-3"></i>
+          <p class="text-gray-600">파일을 드래그하거나 클릭하여 업로드하세요</p>
+          <p class="text-gray-500 text-sm mt-2">최대 10MB, PDF 또는 이미지 파일</p>
+        </div>
+        <input id="fileInput" type="file" accept="application/pdf,image/*" class="hidden">
+        
+        <div id="filePreview" class="hidden mt-4 border rounded-lg p-3 bg-gray-50">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <i class="fas fa-file text-gray-500 mr-2"></i>
+              <span id="fileName" class="file-name"></span>
+            </div>
+            <button id="removeFile" class="text-red-500 hover:text-red-700">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div id="uploadProgress" class="hidden mt-4">
+          <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+          </div>
+          <p id="uploadStatus" class="text-sm text-gray-600 mt-2 text-center"></p>
+        </div>
+        
+        <div id="uploadResult" class="hidden mt-4 p-3 rounded"></div>
+      </div>
+      <div class="flex justify-end space-x-3 mt-4">
+        <button 
+          id="cancelUploadButton"
+          class="px-5 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium"
+        >
+          닫기
+        </button>
+        <button 
+          id="confirmUploadButton"
+          class="px-5 py-2 bg-gray-900 text-white hover:bg-gray-800 rounded-lg font-medium"
+        >
+          업로드
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 이미지 미리보기 모달 -->
+  <div id="imagePreviewModal" class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
+      <h2 class="text-xl font-bold mb-6 flex items-center">
+        <i class="fas fa-image text-blue-500 mr-2"></i>
+        이미지 미리보기
+      </h2>
+      <div class="flex items-center justify-center">
+        <img id="previewImage" src="" alt="미리보기" class="max-h-[80vh] max-w-[80vw]">
+      </div>
+      <div class="flex justify-end space-x-3 mt-4">
+        <button 
+          id="closePreviewButton"
+          class="px-5 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium"
+        >
+          닫기
         </button>
       </div>
     </div>
@@ -345,7 +447,25 @@
     let lastApiCallTimestamp = 0;
     let notificationData = [];
     let businessList = [];
+    let projects = [];
+    let selectedProjectIds = [];
     
+    // 구글 드라이브 API 관련 설정
+    const GOOGLE_API_CONFIG = {
+      FOLDER_IDS: {
+        SAUPJADD: '1gMJyYZetEZ6tek7MO7GuqWL7fSMIw_ZZ', // 사업자등록증 폴더 ID
+        NATIONAL_TAX: '1ixR4l5tmnt_57DB7JprYTz8vPiJXlKLD', // 국세 폴더 ID
+        LOCAL_TAX: '1v5Pz5Mkw6iefxW3C7rvsbFpZUNSycMfe' // 지방세 폴더 ID
+      },
+      FOLDER_URL: 'https://drive.google.com/drive/folders/1ezIOGRJH4wYwqGDZPlr6YepfuoGEipWq?usp=sharing'
+    };
+    
+    // 드라이브 폴더 직접 열기
+    function openGoogleDriveFolder() {
+      window.open(GOOGLE_API_CONFIG.FOLDER_URL, '_blank');
+    }
+    
+    // DOMContentLoaded 이벤트 핸들러에서 initGoogleApi 호출 제거
     document.addEventListener('DOMContentLoaded', function() {
       // 모바일 메뉴
       document.querySelector('.mobile-menu-button')?.addEventListener('click', () => 
@@ -362,6 +482,7 @@
       
       // 검색, 정렬, 페이지네이션
       document.getElementById('selectAllCheckbox')?.addEventListener('change', toggleSelectAll);
+      document.getElementById('modalSelectAllCheckbox')?.addEventListener('change', toggleModalSelectAll);
       document.getElementById('searchButton')?.addEventListener('click', function() {
         currentPage = 1;
         const selectedBusiness = document.getElementById('businessSelect')?.value;
@@ -464,17 +585,44 @@
         });
       });
       
-      // 모달 취소/확인 버튼
+      // 모달 닫기/확인 버튼
       document.getElementById('cancelAddButton')?.addEventListener('click', closeModals);
       document.getElementById('confirmAddButton')?.addEventListener('click', () => handleCrud('add'));
-      document.getElementById('cancelDeleteButton')?.addEventListener('click', closeModals);
-      document.getElementById('confirmDeleteButton')?.addEventListener('click', () => handleCrud('delete'));
       
       // 이미지 미리보기 모달 닫기 버튼
       document.getElementById('closePreviewButton')?.addEventListener('click', function() {
         imagePreviewObj.closeModal();
       });
       
+      // 문서 업로드 모달 초기화
+      documentUploader.init();
+      
+      // 전역 이벤트 처리 (업로드 버튼, 미리보기 버튼 등)
+      document.addEventListener('click', function(event) {
+        // 업로드 버튼 클릭
+        if (event.target.closest('.upload-btn')) {
+          const button = event.target.closest('.upload-btn');
+          const companyId = button.getAttribute('data-id');
+          const type = button.getAttribute('data-type');
+          if (companyId) {
+            documentUploader.openModal(companyId, type);
+          }
+        }
+        
+        // 미리보기 버튼 클릭
+        if (event.target.closest('.preview-btn')) {
+          const button = event.target.closest('.preview-btn');
+          const fileUrl = button.getAttribute('data-url');
+          if (fileUrl) {
+            if (fileUrl.includes('drive.google.com') || fileUrl.includes('data:application/pdf')) {
+              window.open(fileUrl, '_blank');
+            } else {
+              imagePreviewObj.showModal(fileUrl);
+            }
+          }
+        }
+      });
+
       // 페이지당 항목 수 변경 이벤트 리스너 추가
       document.getElementById('itemsPerPage').addEventListener('change', function() {
         itemsPerPage = parseInt(this.value);
@@ -484,14 +632,20 @@
     });
 
     // 기업 데이터 로드 함수 수정
-    async function loadCompanyData(selectedBusinessId = '', searchTerm = '') {
+    async function loadCompanyData(searchTerm = '') {
       try {
+        // 이미 로드된 데이터가 있고 검색어가 없는 경우 캐시된 데이터 사용
+        if (companies.length > 0 && !searchTerm) {
+          renderTable();
+          return;
+        }
+
         isLoading = true;
         
         // 로딩 메시지 표시
         const tbody = document.getElementById('companyTableBody');
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8">' +
+          tbody.innerHTML = '<tr><td colspan="15" class="text-center py-8">' +
           '<div class="flex flex-col items-center justify-center">' +
           '<div class="fishing-loader" style="margin-bottom: 15px;">' +
           '<div class="fishing-handle"></div>' +
@@ -545,11 +699,12 @@
               return null;
             }).filter(b => b !== null); // null 제거
             
-            // 첫 번째 사업자등록증 정보 사용 (있는 경우)
-            const saupjaddNotification = notifications.find(n => n.saupjadd);
-            if (saupjaddNotification) {
-              company.saupjadd = saupjaddNotification.saupjadd;
-            }
+            // 각 안내 정보의 문서 URL을 기업 데이터에 추가
+            notifications.forEach(notification => {
+              if (notification.nationalTax) company.nationalTax = notification.nationalTax;
+              if (notification.localTax) company.localTax = notification.localTax;
+              if (notification.saupjadd) company.saupjadd = notification.saupjadd;
+            });
           } else {
             company.businesses = [];
           }
@@ -557,17 +712,10 @@
           return company;
         });
 
-        // 선택된 사업의 기업만 필터링
-        if (selectedBusinessId) {
-          console.log(`선택된 사업 ID: ${selectedBusinessId} 기업 필터링 전: ${companies.length}`);
-          const targetCompanyIds = notificationData
-            .filter(n => n.businessId === selectedBusinessId)
-            .map(n => n.companyId);
-          
-          console.log(`사업 ${selectedBusinessId}에 할당된 기업 ID 수: ${targetCompanyIds.length}`);
-          companies = companies.filter(company => targetCompanyIds.includes(company.id));
-          console.log(`필터링 후 기업 수: ${companies.length}`);
-        }
+        // 사업명이 등록된 기업만 필터링
+        companies = companies.filter(company => 
+          company.businesses && company.businesses.length > 0
+        );
 
         // 검색어로 필터링
         if (searchTerm) {
@@ -597,7 +745,7 @@
         console.error('loadCompanyData 오류:', e);
         const tbody = document.getElementById('companyTableBody');
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8">' +
+          tbody.innerHTML = '<tr><td colspan="15" class="text-center py-8">' +
           '<div class="flex flex-col items-center justify-center">' +
           '<div class="fishing-loader" style="margin-bottom: 15px;">' +
           '<div class="fishing-handle"></div>' +
@@ -617,7 +765,7 @@
     // 사업별 색상 매핑
     function getBusinessColor(businessId) {
       const colors = [
-        '#FF0000', // 진한 빨간색
+      '#FF0000', // 진한 빨간색
         '#008B8B', // 진한 청록색
         '#0066CC', // 진한 하늘색
         '#006400', // 진한 녹색
@@ -631,7 +779,7 @@
       
       // 비즈니스 ID가 없거나 유효하지 않은 경우 기본 색상 반환
       if (!businessId || typeof businessId !== 'string') {
-        return '#404040'; // 진한 회색
+        return '#CCCCCC'; // 기본 회색 색상
       }
       
       // ID에서 숫자만 추출
@@ -668,46 +816,70 @@
                 : ''}
             </td>
             <td>${company.comname || ''}</td>
-            <td>
-              ${company.homepage ? `
-                <a href="${company.homepage}" target="_blank" class="text-blue-500 hover:text-blue-700">
-                  <i class="fas fa-external-link-alt mr-1"></i>${company.homepage}
-                </a>
-              ` : ''}
+            <td class="w-24">
+              ${company.nationalTax ? `
+                <button class="preview-btn text-blue-500 hover:text-blue-700" data-url="${company.nationalTax}">
+                  <i class="fas fa-eye"></i>
+                </button>
+              ` : `
+                <button class="upload-btn text-blue-500 hover:text-blue-700" data-id="${company.id}" data-type="nationalTax">
+                  <i class="fas fa-upload"></i>
+                </button>
+              `}
             </td>
-            <td>${company.representative || ''}</td>
-            <td>${company.businessNumber || ''}</td>
-            <td>${company.phone || ''}</td>
-            <td>${company.address || ''}</td>
-            <td>${company.employeeCount || ''}</td>
-            <td>${company.industry || ''}</td>
-            <td>${company.manager || ''}</td>
-            <td>${company.representativePhone || ''}</td>
-            <td>${company.managerPosition || ''}</td>
+            <td class="w-24">
+              ${company.localTax ? `
+                <button class="preview-btn text-blue-500 hover:text-blue-700" data-url="${company.localTax}">
+                  <i class="fas fa-eye"></i>
+                </button>
+              ` : `
+                <button class="upload-btn text-blue-500 hover:text-blue-700" data-id="${company.id}" data-type="localTax">
+                  <i class="fas fa-upload"></i>
+                </button>
+              `}
+            </td>
+            <td>
+              ${company.saupjadd ? 
+                `<button class="preview-btn text-blue-500 hover:text-blue-700" data-url="${company.saupjadd}">
+                  <i class="fas fa-eye"></i>
+                </button>` : 
+                `<button class="upload-btn text-blue-500 hover:text-blue-700" data-id="${company.id}">
+                  <i class="fas fa-upload"></i>
+                </button>`
+              }
+            </td>
+            <td>${company.homepage || company['홈페이지'] ? 
+              `<a href="${company.homepage || company['홈페이지']}" target="_blank" class="text-blue-500 hover:underline">
+                ${company.homepage || company['홈페이지']}
+              </a>` : '-'}</td>
+            <td>${company.representative || company['대표자'] || ''}</td>
+            <td>${formatWithHyphen(company.businessNumber || company['사업자등록번호'] || '')}</td>
+            <td>${formatWithHyphen(company.phone || company['전화번호'] || '')}</td>
+            <td>${company.address || company['주소'] || ''}</td>
+            <td>${company.employeeCount || company['종업원 수'] || ''}</td>
+            <td>${company.industry || company['업종'] || ''}</td>
+            <td>${company.manager || company['담당자'] || ''}</td>
+            <td>${formatWithHyphen(company.representativePhone || company['담당자 전화번호'] || '')}</td>
+            <td>${company.job || company['담당자 직책'] || ''}</td>
             <td>${company.email || ''}</td>
-            <td>${company.closedInfo || ''}</td>
+            <td>${company.CID1 || company['폐업정보'] || ''}</td>
           </tr>
         `).join('');
       } else {
-        tbody.innerHTML = '<tr><td colspan="17" class="text-center py-8">' +
-        '<div class="flex flex-col items-center justify-center">' +
-        '<div class="fishing-loader" style="margin-bottom: 15px;">' +
-        '<div class="fishing-handle"></div>' +
-        '<div class="fishing-rod"></div>' +
-        '<div class="fishing-line"></div>' +
-        '<i class="fas fa-hook fishing-hook"></i>' +
-        '<i class="fas fa-fish fishing-fish"></i>' +
-        '</div>' +
-        '<p class="text-gray-600 font-medium">데이터 로딩에 뭔가 문제가 생긴 것 같아요...<br>새로고침(F5) 해 주세요!</p>' +
-        '</div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="15" class="text-center py-8">데이터가 없습니다.</td></tr>';
       }
 
       document.getElementById('totalItems').textContent = companies.length;
       document.getElementById('startItem').textContent = companies.length > 0 ? startIndex + 1 : 0;
       document.getElementById('endItem').textContent = Math.min(endIndex, companies.length);
       
-      // 페이지네이션 버튼 업데이트
       updatePaginationButtons();
+    }
+
+    // 전화번호 포맷팅 함수 추가
+    function formatWithHyphen(number) {
+      if (!number) return '';
+      return number.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3');
     }
 
     // 페이지네이션 버튼 상태 업데이트
@@ -973,6 +1145,7 @@
     // 파일 업로드 관련 객체
     const documentUploader = {
       currentCompanyId: null,
+      currentType: null,
       selectedFile: null,
       fileReader: new FileReader(),
       folderId: '1ezIOGRJH4wYwqGDZPlr6YepfuoGEipWq', // 고정된 폴더 ID 사용
@@ -1035,9 +1208,25 @@
         });
       },
       
-      openModal: function(companyId) {
+      openModal: function(companyId, type) {
         this.currentCompanyId = companyId;
+        this.currentType = type;
         this.resetModal();
+        
+        // 모달 제목 설정
+        const modalTitle = document.getElementById('uploadModalTitle');
+        if (modalTitle) {
+          switch(type) {
+            case 'nationalTax':
+              modalTitle.textContent = '국세 첨부';
+              break;
+            case 'localTax':
+              modalTitle.textContent = '지방세 첨부';
+              break;
+            default:
+              modalTitle.textContent = '사업자등록증 첨부';
+          }
+        }
         
         // 모달 표시
         const modal = document.getElementById('documentUploadModal');
@@ -1175,12 +1364,25 @@
           if (uploadStatus) uploadStatus.textContent = '구글 드라이브에 업로드 중...';
           if (progressBar) progressBar.style.width = '60%';
           
+          // 문서 타입에 따른 폴더 ID 선택
+          let folderId;
+          switch(this.currentType) {
+            case 'nationalTax':
+              folderId = GOOGLE_API_CONFIG.FOLDER_IDS.NATIONAL_TAX;
+              break;
+            case 'localTax':
+              folderId = GOOGLE_API_CONFIG.FOLDER_IDS.LOCAL_TAX;
+              break;
+            default:
+              folderId = GOOGLE_API_CONFIG.FOLDER_IDS.SAUPJADD;
+          }
+          
           // 구글 드라이브에 업로드
           const response = await uploadFileToDrive({
             fileName: this.selectedFile.name,
             fileContent: fileContent,
             mimeType: this.selectedFile.type || this.getMimeTypeFromExtension(this.selectedFile.name),
-            folderId: this.folderId
+            folderId: folderId
           });
           
           if (progressBar) progressBar.style.width = '100%';
@@ -1214,27 +1416,53 @@
             try {
               if (notificationItem && notificationItem.id) {
                 // 기존 안내정보 업데이트
-                notificationItem.saupjadd = response.viewUrl;
+                switch(this.currentType) {
+                  case 'nationalTax':
+                    notificationItem.nationalTax = response.viewUrl;
+                    break;
+                  case 'localTax':
+                    notificationItem.localTax = response.viewUrl;
+                    break;
+                  default:
+                    notificationItem.saupjadd = response.viewUrl;
+                }
                 const updateResult = await updateData('안내정보', notificationItem.id, notificationItem);
                 if (updateResult.success) {
                   console.log('안내정보 업데이트 성공:', updateResult);
+                  // notificationData 배열에서 해당 항목 업데이트
+                  const index = notificationData.findIndex(n => n.id === notificationItem.id);
+                  if (index !== -1) {
+                    notificationData[index] = notificationItem;
+                  }
                 }
               } else {
                 // 새로운 안내정보 추가
-                notificationItem = {
+                const newNotification = {
                   businessId: selectedBusiness,
                   companyId: this.currentCompanyId,
-                  csdataaa: "등록",
-                  saupjadd: response.viewUrl
+                  csdataaa: "등록"
                 };
-                const addResult = await addData('안내정보', notificationItem);
+                
+                // 문서 타입에 따라 필드 설정
+                switch(this.currentType) {
+                  case 'nationalTax':
+                    newNotification.nationalTax = response.viewUrl;
+                    break;
+                  case 'localTax':
+                    newNotification.localTax = response.viewUrl;
+                    break;
+                  default:
+                    newNotification.saupjadd = response.viewUrl;
+                }
+                
+                const addResult = await addData('안내정보', newNotification);
                 if (addResult.success && addResult.data) {
                   notificationData.push(addResult.data);
                   console.log('안내정보 추가 성공:', addResult);
                 }
               }
               
-              // 테이블 새로고침
+              // 기업 데이터 다시 로드
               await loadCompanyData();
               
               // 3초 후 모달 닫기
@@ -1330,7 +1558,6 @@
       const modals = [
         'selectBusinessModal',
         'addModal',
-        'deleteModal',
         'documentUploadModal',
         'imagePreviewModal'
       ];

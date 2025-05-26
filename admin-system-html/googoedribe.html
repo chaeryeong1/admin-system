@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>구글 드라이브 파일 업로더</title>
+  <script src="../js/api.js"></script>
+  <style>
+    body {
+      font-family: 'Malgun Gothic', Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #3c4043;
+      margin-top: 0;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: bold;
+      color: #3c4043;
+    }
+    input[type="file"] {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+      background-color: #f8f9fa;
+    }
+    button {
+      background-color: #1a73e8;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #1765cc;
+    }
+    button:disabled {
+      background-color: #dadce0;
+      cursor: not-allowed;
+    }
+    .progress {
+      height: 20px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      background-color: #e9ecef;
+      border-radius: 4px;
+      display: none;
+    }
+    .progress-bar {
+      height: 100%;
+      background-color: #1a73e8;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 4px;
+      display: none;
+    }
+    .success {
+      background-color: #e6f4ea;
+      color: #137333;
+      border: 1px solid #137333;
+    }
+    .error {
+      background-color: #fce8e6;
+      color: #c5221f;
+      border: 1px solid #c5221f;
+    }
+    .file-info {
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #dadce0;
+    }
+    .file-preview {
+      max-width: 100%;
+      max-height: 300px;
+      margin-top: 15px;
+      display: none;
+    }
+    .settings-panel {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #dadce0;
+    }
+    .folder-id-input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 8px;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>구글 드라이브 파일 업로더</h1>
+    
+    <div class="settings-panel">
+      <label for="folder-id">구글 드라이브 폴더 ID:</label>
+      <input type="text" id="folder-id" class="folder-id-input" 
+             value="1ezIOGRJH4wYwqGDZPlr6YepfuoGEipWq" 
+             placeholder="구글 드라이브 폴더 ID를 입력하세요">
+      <p>폴더 ID는 구글 드라이브 URL에서 찾을 수 있습니다: <code>https://drive.google.com/drive/folders/[폴더ID]</code></p>
+    </div>
+    
+    <div class="form-group">
+      <label for="file-input">업로드할 파일 선택:</label>
+      <input type="file" id="file-input">
+      <div id="file-info" class="file-info" style="display: none;"></div>
+      <img id="image-preview" class="file-preview">
+    </div>
+    
+    <div class="progress">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    
+    <button id="upload-btn" disabled>구글 드라이브에 업로드</button>
+    
+    <div id="result"></div>
+  </div>
+
+  <script>
+    // 전역 변수
+    let selectedFile = null;
+    
+    // DOM 요소
+    const fileInput = document.getElementById('file-input');
+    const fileInfo = document.getElementById('file-info');
+    const imagePreview = document.getElementById('image-preview');
+    const uploadBtn = document.getElementById('upload-btn');
+    const progress = document.querySelector('.progress');
+    const progressBar = document.getElementById('progress-bar');
+    const result = document.getElementById('result');
+    const folderIdInput = document.getElementById('folder-id');
+    
+    // 파일 선택 이벤트 처리
+    fileInput.addEventListener('change', function(e) {
+      selectedFile = e.target.files[0];
+      
+      if (selectedFile) {
+        // 파일 정보 표시
+        fileInfo.style.display = 'block';
+        fileInfo.innerHTML = `
+          <strong>파일명:</strong> ${selectedFile.name}<br>
+          <strong>파일 크기:</strong> ${formatFileSize(selectedFile.size)}<br>
+          <strong>파일 타입:</strong> ${selectedFile.type || '알 수 없음'}
+        `;
+        
+        // 이미지 파일인 경우 미리보기 표시
+        if (selectedFile.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            imagePreview.src = e.target.result;
+            imagePreview.style.display = 'block';
+          };
+          reader.readAsDataURL(selectedFile);
+        } else {
+          imagePreview.style.display = 'none';
+        }
+        
+        // 업로드 버튼 활성화
+        uploadBtn.disabled = false;
+      } else {
+        // 파일 선택 취소 시 리셋
+        resetUI();
+      }
+    });
+    
+    // 업로드 버튼 클릭 이벤트
+    uploadBtn.addEventListener('click', async function() {
+      if (!selectedFile) {
+        showResult('파일을 선택해주세요.', false);
+        return;
+      }
+      
+      const folderId = folderIdInput.value.trim();
+      if (!folderId) {
+        showResult('구글 드라이브 폴더 ID를 입력해주세요.', false);
+        return;
+      }
+      
+      // UI 업데이트
+      uploadBtn.disabled = true;
+      progress.style.display = 'block';
+      result.style.display = 'none';
+      
+      try {
+        // 파일을 Base64로 인코딩
+        const fileContent = await readFileAsBase64(selectedFile);
+        
+        // 진행 상태 표시 (50%)
+        updateProgress(50);
+        
+        // 구글 드라이브에 업로드
+        const response = await uploadFileToDrive({
+          fileName: selectedFile.name,
+          fileContent: fileContent,
+          mimeType: selectedFile.type || getMimeTypeFromExtension(selectedFile.name),
+          folderId: folderId
+        });
+        
+        // 진행 상태 표시 (100%)
+        updateProgress(100);
+        
+        // 결과 처리
+        if (response.success) {
+          showResult(`
+            <strong>업로드 성공!</strong><br>
+            파일명: ${response.fileName}<br>
+            파일 ID: ${response.fileId}<br>
+            파일 유형: ${selectedFile.type || getMimeTypeFromExtension(selectedFile.name)}<br>
+            파일 크기: ${formatFileSize(selectedFile.size)}<br>
+            <br>
+            <strong>파일 확인 방법:</strong><br>
+            1. <a href="${response.viewUrl}" target="_blank">파일 직접 보기</a><br>
+            2. <a href="${response.downloadUrl}" target="_blank">파일 다운로드</a><br>
+            3. <a href="https://drive.google.com/drive/folders/${folderId}" target="_blank">
+              구글 드라이브 폴더 열기
+            </a><br>
+            <br>
+            <strong>폴더 정보:</strong><br>
+            사용된 폴더 ID: ${folderId}<br>
+            <small>파일이 구글 드라이브의 지정된 폴더에 성공적으로 저장되었습니다.</small>
+          `, true);
+        } else {
+          showResult(`업로드 실패: ${response.error || '알 수 없는 오류가 발생했습니다.'}`, false);
+        }
+      } catch (error) {
+        console.error('파일 업로드 오류:', error);
+        showResult(`업로드 실패: ${error.message || '알 수 없는 오류가 발생했습니다.'}`, false);
+      } finally {
+        // 업로드 버튼 다시 활성화
+        uploadBtn.disabled = false;
+        
+        // 3초 후 프로그레스 바 숨기기
+        setTimeout(() => {
+          progress.style.display = 'none';
+          progressBar.style.width = '0%';
+        }, 3000);
+      }
+    });
+    
+    // 파일을 Base64로 읽기
+    function readFileAsBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          // Base64 문자열에서 'data:image/jpeg;base64,' 같은 prefix 제거
+          const base64String = reader.result.split(',')[1];
+          resolve(base64String);
+        };
+        reader.onerror = () => {
+          reject(new Error('파일을 읽는 중 오류가 발생했습니다.'));
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    
+    // 결과 메시지 표시
+    function showResult(message, isSuccess) {
+      result.innerHTML = message;
+      result.style.display = 'block';
+      
+      if (isSuccess) {
+        result.className = 'success';
+      } else {
+        result.className = 'error';
+      }
+      
+      // 결과 영역으로 스크롤
+      result.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // 진행 상태 업데이트
+    function updateProgress(percent) {
+      progressBar.style.width = `${percent}%`;
+    }
+    
+    // 파일 크기 포맷팅
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // UI 리셋
+    function resetUI() {
+      fileInfo.style.display = 'none';
+      imagePreview.style.display = 'none';
+      uploadBtn.disabled = true;
+      result.style.display = 'none';
+    }
+    
+    // 파일 확장자로부터 MIME 타입 추출
+    function getMimeTypeFromExtension(fileName) {
+      const extension = fileName.split('.').pop().toLowerCase();
+      
+      const mimeTypes = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'pdf': 'application/pdf',
+        'doc': 'application/msword',
+        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls': 'application/vnd.ms-excel',
+        'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'txt': 'text/plain',
+        'csv': 'text/csv',
+        'html': 'text/html',
+        'htm': 'text/html',
+        'zip': 'application/zip'
+      };
+      
+      return mimeTypes[extension] || 'application/octet-stream';
+    }
+  </script>
+</body>
+</html> 
