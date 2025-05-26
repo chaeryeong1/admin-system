@@ -30,8 +30,8 @@ jobs:
       - name: Build
         run: |
           ./node_modules/.bin/vite build
-          mkdir -p dist/admin-system-html
-          cp -r admin-system-html/* dist/admin-system-html/
+          mkdir -p dist
+          cp -r admin-system-html/* dist/
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
