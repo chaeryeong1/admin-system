@@ -5,7 +5,12 @@ export default defineConfig({
   build: {
     outDir: '../dist',
     emptyOutDir: true,
-    assetsDir: 'assets'
+    assetsDir: 'assets',
+    rollupOptions: {
+      input: {
+        main: 'admin-system-html/index.html'
+      }
+    }
   },
   base: '/'
 }); 
