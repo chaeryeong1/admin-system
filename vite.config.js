@@ -8,7 +8,14 @@ export default defineConfig({
     emptyOutDir: true,
     copyPublicDir: true,
     rollupOptions: {
-      input: resolve(__dirname, 'admin-system-html/index.html')
+      input: {
+        main: resolve(__dirname, 'admin-system-html/html/index.html'),
+        business: resolve(__dirname, 'admin-system-html/html/business-management.html'),
+        company: resolve(__dirname, 'admin-system-html/html/company-management.html'),
+        gmoney: resolve(__dirname, 'admin-system-html/html/gmoney-management.html'),
+        cashback: resolve(__dirname, 'admin-system-html/html/cashback-management.html'),
+        notice: resolve(__dirname, 'admin-system-html/html/notice-management.html')
+      }
     }
   },
   publicDir: 'admin-system-html',
