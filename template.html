@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 시스템</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- 폰트어썸 아이콘 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+  <!-- Flatpickr 캘린더 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+  <!-- 공통 스타일 -->
+  <link rel="stylesheet" href="css/common-styles.css">
+  <!-- 라이브러리 버전 정보 -->
+  <meta name="library-version" content="1.0.0">
+  <!-- 페이지별 추가 스타일 -->
+  <style>
+    /* 페이지별 추가 스타일을 여기에 작성하세요 */
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+  <!-- 상단 대메뉴 -->
+  <header class="main-header flex items-center justify-between">
+    <div class="flex items-center">
+      <img src="https://placehold.co/120x40/4285F4/ffffff?text=ADMIN" alt="로고" class="logo">
+      <nav class="desktop-menu flex space-x-4">
+        <a href="business-management.html">사업 관리</a>
+        <a href="company-management.html">기업 관리</a>
+        <a href="business-notification.html">사업 안내</a>
+        <a href="application.html">신청</a>
+        <a href="selection-confirmation.html">선정 확인</a>
+        <a href="gmoney-management.html">계약금 수령</a>
+        <a href="cashback-request.html">캐시백 송금</a>
+      </nav>
+    </div>
+    <!-- 모바일 메뉴 버튼 -->
+    <button class="mobile-menu-button text-white">
+      <i class="fas fa-bars text-xl"></i>
+    </button>
+  </header>
+  
+  <!-- 모바일 메뉴 (기본적으로 숨김) -->
+  <div class="mobile-menu hidden">
+    <a href="business-management.html">사업 관리</a>
+    <a href="company-management.html">기업 관리</a>
+    <a href="business-notification.html">사업 안내</a>
+    <a href="application.html">신청</a>
+    <a href="selection-confirmation.html">선정 확인</a>
+    <a href="gmoney-management.html">계약금 수령</a>
+    <a href="cashback-request.html">캐시백 송금</a>
+  </div>
+
+  <div class="flex main-layout">
+    <!-- 좌측 소메뉴 -->
+    <aside class="sidebar p-4 flex-shrink-0">
+      <h2 class="text-lg font-semibold mb-4 text-gray-800">메뉴 제목</h2>
+      <ul class="space-y-1">
+        <li class="sidebar-item active">
+          <i class="fas fa-list-ul mr-2"></i> 메뉴 항목
+        </li>
+      </ul>
+    </aside>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="flex-1 min-w-0 p-6 space-y-6">
+      <!-- 페이지별 콘텐츠가 여기에 들어갑니다 -->
+    </div>
+  </div>
+
+  <!-- 공통 스크립트 -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+  <script src="js/api.js"></script>
+  <!-- 페이지별 스크립트 -->
+  <script>
+    // 페이지별 스크립트가 여기에 들어갑니다
+  </script>
+</body>
+</html> 
