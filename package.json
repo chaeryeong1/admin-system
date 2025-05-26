@@ -1,12 +1,14 @@
 {
   "name": "admin-system",
   "version": "1.0.0",
-  "description": "사업관리 시스템",
-  "type": "module",
+  "description": "Admin System",
   "scripts": {
     "dev": "vite",
-    "build": "node build.js",
+    "build": "vite build",
     "preview": "vite preview"
+  },
+  "dependencies": {
+    "vite": "^5.0.0"
   },
   "devDependencies": {
     "vite": "^5.1.0"
