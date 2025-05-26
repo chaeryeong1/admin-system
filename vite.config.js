@@ -1,21 +1,16 @@
 import { defineConfig } from 'vite';
+import { resolve } from 'path';
 
 export default defineConfig({
   root: 'admin-system-html',
   build: {
-    outDir: 'admin-system-html',
+    outDir: '../dist',
     emptyOutDir: true,
-    assetsDir: 'assets',
+    copyPublicDir: true,
     rollupOptions: {
-      input: {
-        main: 'index.html',
-        business: 'html/business-management.html',
-        company: 'html/company-management.html',
-        gmoney: 'html/gmoney-management.html',
-        cashback: 'html/cashback-management.html',
-        notice: 'html/notice-management.html'
-      }
+      input: resolve(__dirname, 'admin-system-html/index.html')
     }
   },
+  publicDir: 'admin-system-html',
   base: '/'
 }); 
