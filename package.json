@@ -2,6 +2,7 @@
   "name": "admin-system",
   "version": "1.0.0",
   "description": "사업관리 시스템",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

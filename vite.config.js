@@ -1,13 +1,18 @@
 import { defineConfig } from 'vite';
+import { resolve } from 'path';
 
 export default defineConfig({
-  server: {
-    port: 3000,
-  },
-  base: '/',
+  root: 'admin-system-html',
   build: {
-    outDir: 'admin-system-html',
-    assetsDir: 'assets',
-    emptyOutDir: true
+    outDir: '../dist',
+    emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'admin-system-html/template.html')
+      }
+    }
+  },
+  server: {
+    port: 3000
   }
 }); 
