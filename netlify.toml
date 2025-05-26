@@ -3,14 +3,10 @@
   publish = "dist"
 
 [[redirects]]
-  from = "/"
+  from = "/*"
   to = "/index.html"
   status = 200
-
-[[redirects]]
-  from = "/html/*"
-  to = "/html/:splat"
-  status = 200
+  force = true
 
 [[headers]]
   for = "/*"
