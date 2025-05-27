@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>관리자 시스템 - 캐시백 요청</title>
+  <title>관리자 시스템 - 계약금 수령</title>
   <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <!-- 폰트어썸 아이콘 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+  <!-- Flatpickr 캘린더 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
   <!-- 공통 스타일 -->
-  <link rel="stylesheet" href="../css/common-styles.css">
+  <link rel="stylesheet" href="..\css\common-styles.css">
   <!-- 라이브러리 버전 정보 -->
   <meta name="library-version" content="1.0.0">
   <!-- 페이지별 추가 스타일 -->
@@ -88,6 +91,28 @@
     .save-amount-btn:hover {
       background-color: #F3F4F6;
     }
+
+    /* 테이블 관련 스타일 */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .table-container table {
+      width: 100%;
+      min-width: 1000px;
+    }
+
+    /* 로딩 메시지 관련 스타일 */
+    .loading-message {
+      width: 100%;
+      padding: 40px 0;
+      text-align: center;
+    }
+
+    .loading-message td {
+      padding: 40px 0;
+    }
   </style>
 </head>
 <body class="min-h-screen bg-gray-50">
@@ -96,7 +121,7 @@
     <div class="flex items-center">
       <img src="https://placehold.co/120x40/4285F4/ffffff?text=ADMIN" alt="로고" class="logo">
       <nav class="desktop-menu flex space-x-4">
-        <a href="business-management.html">사업 관리</a>
+        <a href="business-management.html" >사업 관리</a>
         <a href="company-management.html">기업 관리</a>
         <a href="business-notification.html">사업 안내</a>
         <a href="application.html">신청</a>
@@ -119,19 +144,22 @@
     <a href="application.html">신청</a>
     <a href="selection-confirmation.html">선정 확인</a>
     <a href="gmoney-management.html">계약금 수령</a>
-    <a href="cashback-request.html">캐시백 송금</a>
+    <a href="cashback-request.html" class="active">캐시백 송금</a>
   </div>
+
 
   <div class="flex main-layout">
     <!-- 좌측 소메뉴 -->
     <aside class="sidebar p-4 flex-shrink-0">
       <h2 class="text-lg font-semibold mb-4 text-gray-800">캐시백 송금</h2>
       <ul class="space-y-1">
-        <li class="sidebar-item active">
-          <i class="fas fa-list-ul mr-2"></i> 송금 요청
-        </li>
         <li class="sidebar-item">
-          <a href="cashback-approval.html" class="text-gray-600 hover:text-gray-800">
+          <a href="cashback-request.html" class="text-gray-600 hover:text-gray-800">
+            <i class="fas fa-list-ul mr-2"></i> 송금 요청
+          </a>
+        </li>
+        <li class="sidebar-item active">
+          <a href="cashback-approval.html" >
             <i class="fas fa-list-ul mr-2"></i> 송금 승인
           </a>
         </li>
@@ -657,20 +685,14 @@
     });
 
     // 기업 데이터 로드 함수 수정
-    async function loadCompanyData(searchTerm = '') {
+    async function loadCompanyData(selectedBusinessId = '', searchTerm = '') {
       try {
-        // 이미 로드된 데이터가 있고 검색어가 없는 경우 캐시된 데이터 사용
-        if (companies.length > 0 && !searchTerm) {
-          renderTable();
-          return;
-        }
-
         isLoading = true;
         
         // 로딩 메시지 표시
         const tbody = document.getElementById('companyTableBody');
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="15" class="text-center py-8">' +
+          tbody.innerHTML = '<tr class="loading-message"><td colspan="8" class="text-center py-8">' +
           '<div class="flex flex-col items-center justify-center">' +
           '<div class="fishing-loader" style="margin-bottom: 15px;">' +
           '<div class="fishing-handle"></div>' +
@@ -679,17 +701,16 @@
           '<i class="fas fa-hook fishing-hook"></i>' +
           '<i class="fas fa-fish fishing-fish"></i>' +
           '</div>' +
-          `<p class="text-gray-600 font-medium">데이터 낚시 중... 곧 데이터가 잡힐 것 같아요! 🎣</p>` +
+          '<p class="text-gray-600 font-medium">데이터 낚시 중... 곧 데이터가 잡힐 것 같아요! 🎣</p>' +
           '</div></td></tr>';
         }
         
         // 기업정보, 사업정보, 계약정보를 한 번에 병렬로 로드
-        const [companyRes, businessRes, contractRes, remittanceRes, selectionRes] = await Promise.all([
+        const [companyRes, businessRes, contractRes, remittanceRes] = await Promise.all([
           fetchData('기업정보'),
           fetchData('사업정보'),
           fetchData('계약정보'),
-          fetchData('송금정보'),
-          fetchData('선정정보')
+          fetchData('송금정보')
         ]);
 
         if (!companyRes.success || !businessRes.success) {
@@ -701,7 +722,6 @@
         businessList = businessRes.data || [];
         const contractData = contractRes.success ? contractRes.data || [] : [];
         const remittanceData = remittanceRes.success ? remittanceRes.data || [] : [];
-        const selectionData = selectionRes.success ? selectionRes.data || [] : [];
         
         // 안내정보 로드
         const notificationRes = await fetchData('안내정보');
@@ -721,9 +741,6 @@
           
           // 해당 기업의 송금 정보 찾기
           const remittance = remittanceData.find(r => r.companyId === company.id);
-          
-          // 해당 기업의 선정 정보 찾기
-          const selection = selectionData.find(s => s.id === company.id);
           
           if (notifications.length > 0) {
             // 기업에 할당된 사업 정보 배열 생성
@@ -762,32 +779,67 @@
             company.bankStatement = remittance.bankImageUrl;
           }
           
-          // 선정 정보 추가
-          if (selection) {
-            company.selectionConfirmation = selection['selection-confirmation'];
-            company.selectionDate = selection['selection-date'];
-          }
-          
           return company;
         });
 
-        // 선정된 기업만 필터링
-        companies = companies.filter(company => company.selectionConfirmation === '선정');
+        // 사업이 등록된 기업만 필터링
+        companies = companies.filter(company => company.businesses && company.businesses.length > 0);
 
-        // 검색어가 있는 경우 필터링
+        // 사업자등록증이 있는 기업만 필터링
+        companies = companies.filter(company => company.saupjadd);
+
+        // 선택된 사업의 기업만 필터링
+        if (selectedBusinessId) {
+          console.log(`선택된 사업 ID: ${selectedBusinessId} 기업 필터링 전: ${companies.length}`);
+          const targetCompanyIds = notificationData
+            .filter(n => n.businessId === selectedBusinessId)
+            .map(n => n.companyId);
+          
+          console.log(`사업 ${selectedBusinessId}에 할당된 기업 ID 수: ${targetCompanyIds.length}`);
+          companies = companies.filter(company => targetCompanyIds.includes(company.id));
+          console.log(`필터링 후 기업 수: ${companies.length}`);
+        }
+
+        // 검색어로 필터링
         if (searchTerm) {
-          const searchLower = searchTerm.toLowerCase();
-          companies = companies.filter(company => 
-            company.comname?.toLowerCase().includes(searchLower) ||
-            company.businessNumber?.toLowerCase().includes(searchLower) ||
-            company.representative?.toLowerCase().includes(searchLower)
+          companies = companies.filter(c =>
+            Object.values(c).some(val => {
+              if (val === null || val === undefined) return false;
+              if (typeof val === 'string') return val.toLowerCase().includes(searchTerm.toLowerCase());
+              if (Array.isArray(val) && val.length > 0 && typeof val[0] === 'object') {
+                return val.some(item => 
+                  Object.values(item).some(subVal => 
+                    subVal && typeof subVal === 'string' && subVal.toLowerCase().includes(searchTerm.toLowerCase())
+                  )
+                );
+              }
+              return String(val).toLowerCase().includes(searchTerm.toLowerCase());
+            })
           );
         }
 
-        renderTable();
-      } catch (error) {
-        console.error('데이터 로딩 중 오류:', error);
-        alert('데이터를 불러오는 중 오류가 발생했습니다.');
+        // 정렬 적용
+        if (currentSortColumn && currentSortDirection) {
+          sortTable(currentSortColumn, currentSortDirection);
+        } else {
+          renderTable();
+        }
+      } catch (e) {
+        console.error('loadCompanyData 오류:', e);
+        const tbody = document.getElementById('companyTableBody');
+        if (tbody) {
+          tbody.innerHTML = '<tr class="loading-message"><td colspan="8" class="text-center py-8">' +
+          '<div class="flex flex-col items-center justify-center">' +
+          '<div class="fishing-loader" style="margin-bottom: 15px;">' +
+          '<div class="fishing-handle"></div>' +
+          '<div class="fishing-rod"></div>' +
+          '<div class="fishing-line"></div>' +
+          '<i class="fas fa-hook fishing-hook"></i>' +
+          '<i class="fas fa-fish fishing-fish"></i>' +
+          '</div>' +
+          '<p class="text-gray-600 font-medium">데이터 로딩에 뭔가 문제가 생긴 것 같아요...<br>새로고침(F5) 해 주세요!</p>' +
+          '</div></td></tr>';
+        }
       } finally {
         isLoading = false;
       }
@@ -901,7 +953,7 @@
           </tr>
         `}).join('');
       } else {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8">' +
+        tbody.innerHTML = '<tr class="loading-message"><td colspan="8" class="text-center py-8">' +
         '<div class="flex flex-col items-center justify-center">' +
         '<div class="fishing-loader" style="margin-bottom: 15px;">' +
         '<div class="fishing-handle"></div>' +
