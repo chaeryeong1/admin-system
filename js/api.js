@@ -785,3 +785,27 @@ async function deleteData(sheet, id) {
     };
   }
 }
+
+async function getGmoneyManagementData(params = {}) {
+  try {
+    const response = await fetch('/api/gmoney-management?' + new URLSearchParams(params));
+    if (!response.ok) throw new Error('데이터를 불러오는데 실패했습니다.');
+    const data = await response.json();
+    return {
+      companies: data.companies.map(company => ({
+        ...company,
+        representativeName: company.representativeName || '',
+        saupjadd: company.saupjadd || '',
+        contact: company.contact || '',
+        email: company.email || '',
+        selectionDate: company.selectionDate || '',
+        depositDate: company.depositDate || '',
+        note: company.note || ''
+      })),
+      total: data.total
+    };
+  } catch (error) {
+    console.error('Error fetching gmoney management data:', error);
+    throw error;
+  }
+}

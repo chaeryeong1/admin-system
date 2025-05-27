@@ -185,10 +185,17 @@
                 </th>
                 <th>사업명</th>
                 <th class="sortable" data-sort="comname">기업명</th>
+                <th>대표자명</th>
+                <th>사업자등록번호</th>
+                <th>연락처</th>
+                <th>이메일</th>
                 <th>사업자등록증</th>
                 <th>계약금 입금확인증</th>
                 <th class="sortable" data-sort="cashbackAmount">캐시백 금액</th>
                 <th class="sortable" data-sort="status">상태</th>
+                <th>선정일자</th>
+                <th>계약금 입금일</th>
+                <th>비고</th>
               </tr>
             </thead>
             <tbody id="companyTableBody">
@@ -781,6 +788,10 @@
                 : ''}
             </td>
             <td>${company.comname || ''}</td>
+            <td>${company.representativeName || ''}</td>
+            <td>${company.saupjadd || ''}</td>
+            <td>${company.contact || ''}</td>
+            <td>${company.email || ''}</td>
             <td>
               ${company.saupjadd ? `
                 <button class="preview-btn text-blue-500 hover:text-blue-700 font-medium" data-url="${company.saupjadd}">
@@ -817,6 +828,9 @@
                 company.depositReceipt ? '<span class="status-badge status-approved">수령</span>' :
                 '<span class="status-badge status-waiting">대기</span>'}
             </td>
+            <td>${company.selectionDate ? new Date(company.selectionDate).toLocaleDateString() : ''}</td>
+            <td>${company.depositDate ? new Date(company.depositDate).toLocaleDateString() : ''}</td>
+            <td>${company.note || ''}</td>
           </tr>
         `}).join('');
       } else {
