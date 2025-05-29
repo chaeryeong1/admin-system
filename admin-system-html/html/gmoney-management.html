@@ -183,24 +183,135 @@
                     >
                   </div>
                 </th>
-                <th>사업명</th>
-                <th class="sortable" data-sort="comname">기업명</th>
-                <th>대표자명</th>
-                <th>사업자등록번호</th>
-                <th>연락처</th>
-                <th>이메일</th>
+                <th class="w-16">NO</th>
+                <th class="cursor-pointer" data-sort="businessName">
+                  <div class="flex items-center">
+                    사업명
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="comname">
+                  <div class="flex items-center">
+                    기업명
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="selection-confirmation">
+                  <div class="flex items-center">
+                    상태
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
                 <th>사업자등록증</th>
-                <th>계약금 입금확인증</th>
-                <th class="sortable" data-sort="cashbackAmount">캐시백 금액</th>
-                <th class="sortable" data-sort="status">상태</th>
-                <th>선정일자</th>
-                <th>계약금 입금일</th>
-                <th>비고</th>
+                <th>국세(첨부)</th>
+                <th>지방세(첨부)</th>
+                <th class="cursor-pointer" data-sort="homepage">
+                  <div class="flex items-center">
+                    홈페이지
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="representative">
+                  <div class="flex items-center">
+                    대표자
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="businessNumber">
+                  <div class="flex items-center">
+                    사업자등록번호
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="phone">
+                  <div class="flex items-center">
+                    전화번호
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="address">
+                  <div class="flex items-center">
+                    주소
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="employeeCount">
+                  <div class="flex items-center">
+                    종업원 수
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="industry">
+                  <div class="flex items-center">
+                    업종
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="manager">
+                  <div class="flex items-center">
+                    담당자
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="representativePhone">
+                  <div class="flex items-center">
+                    담당자 전화번호
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="job">
+                  <div class="flex items-center">
+                    담당자 직책
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="email">
+                  <div class="flex items-center">
+                    이메일
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
+                <th class="cursor-pointer" data-sort="CID1">
+                  <div class="flex items-center">
+                    폐업정보
+                    <span class="sort-icon ml-1">
+                      <i class="fas fa-sort"></i>
+                    </span>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody id="companyTableBody">
               <tr>
-                <td colspan="6" class="text-center"></td>
+                <td colspan="18" class="text-center"></td>
               </tr>
             </tbody>
           </table>
@@ -592,11 +703,12 @@
     async function loadCompanyData(selectedBusinessId = '', searchTerm = '') {
       try {
         isLoading = true;
+        console.log('데이터 로딩 시작...');
         
         // 로딩 메시지 표시
         const tbody = document.getElementById('companyTableBody');
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8">' +
+          tbody.innerHTML = '<tr><td colspan="18" class="text-center py-8">' +
           '<div class="flex flex-col items-center justify-center">' +
           '<div class="fishing-loader" style="margin-bottom: 15px;">' +
           '<div class="fishing-handle"></div>' +
@@ -610,14 +722,20 @@
         }
         
         // 기업정보, 사업정보, 선정정보를 한 번에 병렬로 로드
+        console.log('API 호출 시작...');
         const [companyRes, businessRes, selectionRes] = await Promise.all([
           fetchData('기업정보'),
           fetchData('사업정보'),
           fetchData('선정정보')
         ]);
+        console.log('API 응답:', { companyRes, businessRes, selectionRes });
 
         if (!companyRes.success || !businessRes.success || !selectionRes.success) {
-          console.error('데이터 로딩 실패:', companyRes.error || businessRes.error || selectionRes.error);
+          console.error('데이터 로딩 실패:', {
+            companyError: companyRes.error,
+            businessError: businessRes.error,
+            selectionError: selectionRes.error
+          });
           return;
         }
 
@@ -625,13 +743,26 @@
         businessList = businessRes.data || [];
         const selectionData = selectionRes.data || [];
         
+        console.log('초기 데이터 로드 완료:', {
+          companiesCount: companies.length,
+          businessListCount: businessList.length,
+          selectionDataCount: selectionData.length
+        });
+        
         // 안내정보 로드
+        console.log('안내정보 로드 시작...');
         const notificationRes = await fetchData('안내정보');
+        console.log('안내정보 응답:', notificationRes);
+        
         if (!notificationRes.success) {
           console.error('안내정보 로딩 실패:', notificationRes.error);
           return;
         }
         notificationData = notificationRes.data || [];
+        
+        console.log('안내정보 로드 완료:', {
+          notificationDataCount: notificationData.length
+        });
         
         // 기업 데이터에 안내 정보 연결 - 여러 사업 할당 지원
         companies = companies.map(company => {
@@ -652,25 +783,37 @@
               return null;
             }).filter(b => b !== null); // null 제거
             
-            // 각 안내 정보의 문서 URL을 기업 데이터에 추가
-            notifications.forEach(notification => {
-              if (notification.nationalTax) company.nationalTax = notification.nationalTax;
-              if (notification.localTax) company.localTax = notification.localTax;
-              if (notification.saupjadd) company.saupjadd = notification.saupjadd;
-            });
+            // 필수 서류 정보 연결
+            const saupjaddNotification = notifications.find(n => n.saupjadd);
+            const nationalTaxNotification = notifications.find(n => n.nationalTax);
+            const localTaxNotification = notifications.find(n => n.localTax);
+            
+            if (saupjaddNotification) company.saupjadd = saupjaddNotification.saupjadd;
+            if (nationalTaxNotification) company.nationalTax = nationalTaxNotification.nationalTax;
+            if (localTaxNotification) company.localTax = localTaxNotification.localTax;
+            
+            // 상태 설정 (안내정보의 selection-confirmation 컬럼 값 사용)
+            const selectionNotification = notifications.find(n => n['selection-confirmation']);
+            company['selection-confirmation'] = selectionNotification ? selectionNotification['selection-confirmation'] : '대기';
           } else {
             company.businesses = [];
+            company['selection-confirmation'] = '대기'; // 기본값으로 '대기' 설정
           }
           
           return company;
         });
 
-        // 선정된 기업만 필터링 (selection-confirmation 컬럼이 '선정'인 경우)
-        companies = companies.filter(company => {
-          const selection = selectionData.find(s => s.companyId === company.id);
-          return selection && selection['selection-confirmation'] === '선정';
-        });
+        // 필수 서류가 모두 등록된 기업만 필터링
+        companies = companies.filter(company => 
+          company.saupjadd && company.nationalTax && company.localTax
+        );
 
+        // '대기' 상태인 기업은 제외
+        companies = companies.filter(company => company['selection-confirmation'] !== '대기');
+
+        console.log('안내정보 매핑 후 기업 수:', companies.length);
+
+        
         // 선택된 사업의 기업만 필터링
         if (selectedBusinessId) {
           console.log(`선택된 사업 ID: ${selectedBusinessId} 기업 필터링 전: ${companies.length}`);
@@ -701,6 +844,8 @@
           );
         }
 
+        console.log('최종 필터링 후 기업 수:', companies.length);
+
         // 정렬 적용
         if (currentSortColumn && currentSortDirection) {
           sortTable(currentSortColumn, currentSortDirection);
@@ -711,7 +856,7 @@
         console.error('loadCompanyData 오류:', e);
         const tbody = document.getElementById('companyTableBody');
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8">' +
+          tbody.innerHTML = '<tr><td colspan="18" class="text-center py-8">' +
           '<div class="flex flex-col items-center justify-center">' +
           '<div class="fishing-loader" style="margin-bottom: 15px;">' +
           '<div class="fishing-handle"></div>' +
@@ -757,26 +902,12 @@
       const paginated = companies.slice(startIndex, endIndex);
 
       if (paginated.length) {
-        tbody.innerHTML = paginated.map(company => {
-          // 상태 결정 로직
-          let status = "대기";
-          let statusClass = "status-waiting";
-          
-          if (company.depositStatus === "요청") {
-            status = "요청";
-            statusClass = "status-request";
-          } else if (company.depositStatus === "승인") {
-            status = "승인";
-            statusClass = "status-approved";
-          } else if (company.depositStatus === "송금") {
-            status = "송금";
-            statusClass = "status-sent";
-          }
-          
-          return `
-          <tr data-id="${company.id}">
+        tbody.innerHTML = paginated.map((company, index) => `
+          <tr>
             <td class="text-center"><input type="checkbox" class="company-checkbox" value="${company.id}"></td>
-            <td>${company.businesses && company.businesses.length > 0 
+            <td class="text-center">${startIndex + index + 1}</td>
+            <td>
+              ${company.businesses && company.businesses.length > 0 
                 ? `<div class="business-badges-container">
                     ${company.businesses.map(business => `
                       <span class="business-badge" style="background-color: ${business.color}; color: white; border-color: ${business.color};" 
@@ -788,10 +919,11 @@
                 : ''}
             </td>
             <td>${company.comname || ''}</td>
-            <td>${company.representativeName || ''}</td>
-            <td>${company.saupjadd || ''}</td>
-            <td>${company.contact || ''}</td>
-            <td>${company.email || ''}</td>
+            <td class="text-center">
+              ${company['selection-confirmation'] === '선정' ? 
+                '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">선정</span>' : 
+                '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">대기</span>'}
+            </td>
             <td>
               ${company.saupjadd ? `
                 <button class="preview-btn text-blue-500 hover:text-blue-700 font-medium" data-url="${company.saupjadd}">
@@ -800,58 +932,44 @@
               ` : '없음'}
             </td>
             <td>
-              ${company.depositReceipt ? `
-                <button class="preview-btn text-blue-500 hover:text-blue-700 font-medium" data-url="${company.depositReceipt}">
+              ${company.nationalTax ? `
+                <button class="preview-btn text-blue-500 hover:text-blue-700 font-medium" data-url="${company.nationalTax}">
                   <i class="fas fa-eye mr-1"></i>보기
                 </button>
-              ` : `
-                <button class="deposit-btn" data-id="${company.id}">
-                  <i class="fas fa-upload mr-1"></i>입금확인증 첨부
-                </button>
-              `}
+              ` : '없음'}
             </td>
             <td>
-              <div class="amount-input-container">
-                <input type="text" 
-                  class="cashback-amount-input px-2 py-1 border rounded w-24 text-right mr-2" 
-                  value="${company.cashbackAmount ? addCommas(company.cashbackAmount) : ''}" 
-                  placeholder="캐시백 금액 입력"
-                  oninput="applyNumberFormat(this)"
-                >
-                <button class="save-amount-btn text-green-600 hover:text-green-800" data-id="${company.id}" data-type="cashback">
-                  <i class="fas fa-save"></i>
+              ${company.localTax ? `
+                <button class="preview-btn text-blue-500 hover:text-blue-700 font-medium" data-url="${company.localTax}">
+                  <i class="fas fa-eye mr-1"></i>보기
                 </button>
-              </div>
+              ` : '없음'}
             </td>
-            <td>
-              ${!company.cashbackAmount ? '<span class="text-red-500">캐시백 금액 입력 필요</span>' : 
-                company.depositReceipt ? '<span class="status-badge status-approved">수령</span>' :
-                '<span class="status-badge status-waiting">대기</span>'}
-            </td>
-            <td>${company.selectionDate ? new Date(company.selectionDate).toLocaleDateString() : ''}</td>
-            <td>${company.depositDate ? new Date(company.depositDate).toLocaleDateString() : ''}</td>
-            <td>${company.note || ''}</td>
+            <td>${company.homepage || company['홈페이지'] ? 
+              `<a href="${company.homepage || company['홈페이지']}" target="_blank" class="text-blue-500 hover:underline">
+                ${company.homepage || company['홈페이지']}
+              </a>` : '-'}</td>
+            <td>${company.representative || company['대표자'] || ''}</td>
+            <td>${formatWithHyphen(company.businessNumber || company['사업자등록번호'] || '')}</td>
+            <td>${formatWithHyphen(company.phone || company['전화번호'] || '')}</td>
+            <td>${company.address || company['주소'] || ''}</td>
+            <td>${company.employeeCount || company['종업원 수'] || ''}</td>
+            <td>${company.industry || company['업종'] || ''}</td>
+            <td>${company.manager || company['담당자'] || ''}</td>
+            <td>${formatWithHyphen(company.representativePhone || company['담당자 전화번호'] || '')}</td>
+            <td>${company.job || company['담당자 직책'] || ''}</td>
+            <td>${company.email || ''}</td>
+            <td>${company.CID1 || company['폐업정보'] || ''}</td>
           </tr>
-        `}).join('');
+        `).join('');
       } else {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8">' +
-        '<div class="flex flex-col items-center justify-center">' +
-        '<div class="fishing-loader" style="margin-bottom: 15px;">' +
-        '<div class="fishing-handle"></div>' +
-        '<div class="fishing-rod"></div>' +
-        '<div class="fishing-line"></div>' +
-        '<i class="fas fa-hook fishing-hook"></i>' +
-        '<i class="fas fa-fish fishing-fish"></i>' +
-        '</div>' +
-        '<p class="text-gray-600 font-medium">데이터 로딩에 뭔가 문제가 생긴 것 같아요...<br>새로고침(F5) 해 주세요!</p>' +
-        '</div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="18" class="text-center py-8">데이터가 없습니다.</td></tr>';
       }
 
       document.getElementById('totalItems').textContent = companies.length;
       document.getElementById('startItem').textContent = companies.length > 0 ? startIndex + 1 : 0;
       document.getElementById('endItem').textContent = Math.min(endIndex, companies.length);
       
-      // 페이지네이션 버튼 업데이트
       updatePaginationButtons();
     }
 
@@ -1692,6 +1810,19 @@
         alert('금액 저장 중 오류가 발생했습니다.');
         return false;
       }
+    }
+
+    // 하이픈 포맷 함수 (예: 01012345678 → 010-1234-5678, 1234567890 → 123-45-67890)
+    function formatWithHyphen(value) {
+      if (!value) return '';
+      const str = value.toString().replace(/[^0-9]/g, '');
+      // 사업자등록번호(10자리) 예시: 1234567890 → 123-45-67890
+      if (str.length === 10) return str.replace(/(\d{3})(\d{2})(\d{5})/, '$1-$2-$3');
+      // 휴대폰번호(11자리) 예시: 01012345678 → 010-1234-5678
+      if (str.length === 11) return str.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+      // 전화번호(10자리) 예시: 0212345678 → 02-1234-5678
+      if (str.length === 10) return str.replace(/(\d{2,3})(\d{3,4})(\d{4})/, '$1-$2-$3');
+      return value;
     }
   </script>
 </body>

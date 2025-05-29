@@ -298,9 +298,17 @@ function handleRequest(e) {
             }
             
             try {
-              const postData = JSON.parse(decodeURIComponent(jsonData));
+              // URL 디코딩 후 JSON 파싱
+              const decodedData = decodeURIComponent(jsonData);
+              const postData = JSON.parse(decodedData);
               Logger.log('데이터 추가 요청 - 파싱됨: ' + JSON.stringify(postData));
-              result = ACTION_FUNCTIONS[action](sheet, postData);
+              
+              // 데이터가 배열인 경우와 단일 객체인 경우 모두 처리
+              if (Array.isArray(postData)) {
+                result = ACTION_FUNCTIONS[action](sheet, { companies: postData });
+              } else {
+                result = ACTION_FUNCTIONS[action](sheet, postData);
+              }
             } catch (parseError) {
               Logger.log("JSON 파싱 오류: " + parseError);
               return { success: false, error: "데이터 형식이 잘못되었습니다: " + parseError.message };
@@ -1178,22 +1186,11 @@ function uploadCompanies(data) {
     
     // 배치로 데이터 추가
     if (mappedData.length > 0) {
-      const batchSize = 100; // 한 번에 추가할 최대 행 수
+      const lastRow = sheet.getLastRow();
       
-      for (let i = 0; i < mappedData.length; i += batchSize) {
-        const batch = mappedData.slice(i, i + batchSize);
-        const lastRow = sheet.getLastRow();
-        
-        if (batch.length > 0) {
-          sheet.getRange(lastRow + 1, 1, batch.length, sheetHeaders.length)
-               .setValues(batch);
-        }
-        
-        // 대용량 처리 시 잠시 대기
-        if (i + batchSize < mappedData.length) {
-          Utilities.sleep(100);
-        }
-      }
+      // 한 번에 모든 데이터 추가
+      sheet.getRange(lastRow + 1, 1, mappedData.length, sheetHeaders.length)
+           .setValues(mappedData);
     }
     
     Logger.log('추가된 행 수: ' + mappedData.length);
@@ -1206,11 +1203,11 @@ function uploadCompanies(data) {
       totalHeaders: sheetHeaders.length
     };
     
-  } catch (e) {
-    Logger.log('오류 발생: ' + e.message);
+  } catch (error) {
+    Logger.log('업로드 중 오류 발생: ' + error.toString());
     return {
       success: false,
-      error: '처리 중 오류가 발생했습니다: ' + e.message
+      error: '업로드 중 오류가 발생했습니다: ' + error.toString()
     };
   }
 }

@@ -421,7 +421,7 @@
       
       // 안내 사업 선택 모달 이벤트
       document.getElementById('cancelSelectBusinessButton')?.addEventListener('click', closeModals);
-      document.getElementById('confirmSelectBusinessButton')?.addEventListener('click', function() {
+      document.getElementById('confirmSelectBusinessButton')?.addEventListener('click', async function() {
         const selectedBusinessIds = Array.from(
           document.querySelectorAll('.business-checkbox:checked')
         ).map(checkbox => checkbox.value);
@@ -436,32 +436,85 @@
         if (modalContent) {
           // 전체 모달에 로딩 표시
           const loadingDiv = document.createElement('div');
-          loadingDiv.className = 'absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-10';
+          loadingDiv.className = 'absolute inset-0 bg-white bg-opacity-90 flex flex-col items-center justify-center z-10';
           loadingDiv.id = 'modal-loading';
           loadingDiv.innerHTML = `
-            <div class="loading-message">
+            <div class="loading-message mb-4">
               <div class="loading-icon">
                 <div class="fishing-handle"></div>
                 <div class="fishing-rod"></div>
                 <div class="fishing-line"></div>
                 <div class="fishing-fish">🐟</div>
               </div>
-              <div>처리 중입니다... 잠시만 기다려주세요.</div>
+            </div>
+            <div class="text-center">
+              <div class="text-lg font-medium mb-2">기업 할당 중...</div>
+              <div class="text-sm text-gray-600 mb-4">선택한 기업들을 사업에 할당하고 있습니다.</div>
+              <div class="w-64 bg-gray-200 rounded-full h-2.5 mb-2">
+                <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+              </div>
+              <div id="progressText" class="text-sm text-gray-600">0%</div>
             </div>
           `;
           modalContent.style.position = 'relative';
           modalContent.appendChild(loadingDiv);
         }
         
-        // 각 선택된 사업에 대해 기업 할당
-        Promise.all(selectedBusinessIds.map(businessId => 
-          assignCompaniesToBusiness(businessId)
-        ))
-        .finally(() => {
-          // 로딩 제거 및 모달 닫기
-          document.getElementById('modal-loading')?.remove();
-          closeModals();
-        });
+        try {
+          // 각 선택된 사업에 대해 기업 할당
+          const totalAssignments = selectedBusinessIds.length;
+          let completedAssignments = 0;
+          
+          for (const businessId of selectedBusinessIds) {
+            const result = await assignCompaniesToBusiness(businessId);
+            completedAssignments++;
+            
+            // 진행률 업데이트
+            const progress = Math.round((completedAssignments / totalAssignments) * 100);
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
+            if (progressBar) progressBar.style.width = `${progress}%`;
+            if (progressText) progressText.textContent = `${progress}%`;
+          }
+          
+          // 성공 메시지 표시
+          const loadingDiv = document.getElementById('modal-loading');
+          if (loadingDiv) {
+            loadingDiv.innerHTML = `
+              <div class="text-center">
+                <div class="text-green-500 text-4xl mb-4">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="text-lg font-medium mb-2">할당 완료!</div>
+                <div class="text-sm text-gray-600">선택한 기업들이 성공적으로 할당되었습니다.</div>
+              </div>
+            `;
+          }
+          
+          // 2초 후 모달 닫기
+          setTimeout(() => {
+            closeModals();
+          }, 2000);
+          
+        } catch (error) {
+          console.error('할당 중 오류 발생:', error);
+          const loadingDiv = document.getElementById('modal-loading');
+          if (loadingDiv) {
+            loadingDiv.innerHTML = `
+              <div class="text-center">
+                <div class="text-red-500 text-4xl mb-4">
+                  <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="text-lg font-medium mb-2">오류 발생</div>
+                <div class="text-sm text-gray-600">기업 할당 중 오류가 발생했습니다.</div>
+                <button class="mt-4 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300" onclick="closeModals()">
+                  닫기
+                </button>
+              </div>
+            `;
+          }
+        }
       });
       
       // 모달 취소/확인 버튼
@@ -787,6 +840,18 @@
       // 드롭다운 초기화
       select.innerHTML = '<option value="">사업 선택</option>';
       
+      // 사업 할당 안된 기업 옵션 추가
+      const unassignedOption = document.createElement('option');
+      unassignedOption.value = 'unassigned';
+      unassignedOption.textContent = '사업 할당 안된 기업';
+      select.appendChild(unassignedOption);
+
+      // 사업 없음 옵션 추가
+      const noBusinessOption = document.createElement('option');
+      noBusinessOption.value = 'no_business';
+      noBusinessOption.textContent = '사업 없음';
+      select.appendChild(noBusinessOption);
+      
       // 사업 목록 추가
       businessList.forEach(business => {
         const option = document.createElement('option');
@@ -811,7 +876,24 @@
       // 드롭다운에도 선택된 사업 반영
       document.getElementById('businessSelect').value = businessId;
       console.log('사업 필터링:', businessId, '검색어:', searchTerm);
-      loadCompanyData(businessId, searchTerm);
+      
+      if (businessId === 'unassigned') {
+        // 사업 할당 안된 기업만 필터링
+        const assignedCompanyIds = notificationData.map(n => n.companyId);
+        companies = companies.filter(company => !assignedCompanyIds.includes(company.id));
+      } else if (businessId === 'no_business') {
+        // 사업이 없는 기업만 필터링 (사업 목록이 비어있는 기업)
+        companies = companies.filter(company => !company.businesses || company.businesses.length === 0);
+      } else {
+        // 특정 사업에 할당된 기업만 필터링
+        const targetCompanyIds = notificationData
+          .filter(n => n.businessId === businessId)
+          .map(n => n.companyId);
+        companies = companies.filter(company => targetCompanyIds.includes(company.id));
+      }
+      
+      renderTable();
+      updatePaginationButtons();
     }
 
     // 안내 사업 선택 모달 열기
@@ -1353,73 +1435,67 @@
       const selectedCompanies = document.querySelectorAll('.company-checkbox:checked');
       const selectedCompanyIds = Array.from(selectedCompanies).map(cb => cb.value);
       
-      let successCount = 0;
-      let failCount = 0;
-      
       try {
-        // 각 기업에 대해 순차적으로 처리
-        for (const companyId of selectedCompanyIds) {
-          try {
-            // 이미 해당 사업에 할당되어 있는지 확인
-            const existingNotification = notificationData.find(n => 
-              n.companyId === companyId && n.businessId === businessId
-            );
-            
-            if (existingNotification) {
-              console.log(`기업 ${companyId}는 이미 사업 ${businessId}에 할당되어 있습니다.`);
-              successCount++;
-              continue;
-            }
-            
-            // 새로운 안내 정보 추가
-            const notificationItem = {
-              businessId: businessId,
-              companyId: companyId,
-              csdataaa: "등록"
-            };
-            
-            const result = await addData('안내정보', notificationItem);
-            if (result && result.success) {
-              // 성공한 경우 notificationData 배열에 추가
-              if (result.data) {
-                notificationData.push(result.data);
-              } else if (result.id) {
-                // id만 반환된 경우 객체 생성
-                notificationData.push({
-                  id: result.id,
-                  businessId: businessId,
-                  companyId: companyId,
-                  csdataaa: "등록"
-                });
-              }
-              console.log(`기업 ${companyId}를 사업 ${businessId}에 할당했습니다.`);
-              successCount++;
-            } else {
-              console.error(`기업 ${companyId} 할당 실패:`, result ? result.error || '알 수 없는 오류' : '응답 없음');
-              failCount++;
-            }
-          } catch (error) {
-            console.error(`기업 ${companyId} 할당 중 오류:`, error);
-            failCount++;
-          }
+        // 사업 ID 유효성 검사
+        const businessExists = businessList.some(b => b.id === businessId);
+        if (!businessExists) {
+          console.error(`사업 ID ${businessId}가 존재하지 않습니다.`);
+          return { success: false, error: "존재하지 않는 사업입니다." };
         }
-        
-        // 결과 메시지 표시
-        if (successCount > 0 || failCount > 0) {
-          let message = '';
-          if (successCount > 0) {
-            message += `${successCount}개의 기업이 성공적으로 할당되었습니다.\n`;
-          }
-          if (failCount > 0) {
-            message += `${failCount}개의 기업 할당에 실패했습니다.`;
-          }
-          console.log(message);
+
+        // 이미 할당된 기업 ID 목록 생성
+        const existingAssignments = notificationData
+          .filter(n => n.businessId === businessId)
+          .map(n => n.companyId);
+
+        // 새로 할당할 기업 ID 목록 생성 (중복 제거)
+        const newCompanyIds = selectedCompanyIds.filter(id => !existingAssignments.includes(id));
+
+        if (newCompanyIds.length === 0) {
+          alert('선택한 기업들이 이미 해당 사업에 할당되어 있습니다.');
+          return { success: true, successCount: 0, failCount: 0 };
         }
+
+        // 한 번에 처리할 안내 정보 배열 생성
+        const notificationItems = newCompanyIds.map(companyId => ({
+          businessId: businessId,
+          companyId: companyId,
+          csdataaa: "등록"
+        }));
+
+        // 한 번에 데이터 추가
+        const result = await addData('안내정보', notificationItems);
         
-        return { success: successCount > 0, successCount, failCount };
+        if (result && result.success) {
+          // 성공한 경우 notificationData 배열에 추가
+          if (Array.isArray(result.data)) {
+            notificationData.push(...result.data);
+          } else if (result.data) {
+            notificationData.push(result.data);
+          }
+          
+          alert(`${newCompanyIds.length}개의 기업이 성공적으로 할당되었습니다.`);
+          return { 
+            success: true, 
+            successCount: newCompanyIds.length, 
+            failCount: 0 
+          };
+        } else {
+          console.error('기업 할당 실패:', result ? result.error || '알 수 없는 오류' : '응답 없음');
+          alert('기업 할당에 실패했습니다.');
+          return { 
+            success: false, 
+            successCount: 0, 
+            failCount: newCompanyIds.length 
+          };
+        }
       } catch (error) {
         console.error('할당 프로세스 오류:', error);
-        return { success: false, error: error.message };
+        alert('기업 할당 중 오류가 발생했습니다.');
+        return { 
+          success: false, 
+          error: error.message 
+        };
       }
     }
 
