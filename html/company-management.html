@@ -804,7 +804,7 @@
         
         // JSONP 호출
         return new Promise((resolve, reject) => {
-          // 콜백 함수 등록
+          // 콜백 함수를 먼저 등록
           window[callbackName] = function(response) {
             // 콜백 함수 제거
             delete window[callbackName];
@@ -820,7 +820,7 @@
           // 스크립트 태그 생성 및 추가
           const script = document.createElement('script');
           script.src = url;
-          script.async = true; // 비동기 로딩 설정
+          script.async = true;
           
           // 오류 처리
           script.onerror = function() {
@@ -832,15 +832,15 @@
             reject(new Error('네트워크 요청 실패'));
           };
           
-          // 타임아웃 설정 (30초)
+          // 타임아웃 설정 (60초로 증가)
           const timeout = setTimeout(function() {
             delete window[callbackName];
             if (script.parentNode) {
               script.parentNode.removeChild(script);
             }
             console.error('삭제 API 요청 시간 초과:', url);
-            reject(new Error('요청 시간 초과 (30초)'));
-          }, 30000);
+            reject(new Error('요청 시간 초과 (60초)'));
+          }, 60000);
           
           // 원래 콜백 함수를 래핑하여 타임아웃 제거
           const originalCallback = window[callbackName];
@@ -973,48 +973,20 @@
       document.getElementById('confirmSingleCompanyButton').addEventListener('click', () => {
         // 필수 입력값 검증 완화
         const companyName = document.getElementById('singleCompanyName').value.trim();
-        const businessNumber = document.getElementById('singleBusinessNumber').value.trim();
         
         // 기업명이 없으면 기본값 할당
         const finalCompanyName = companyName || `기업_${new Date().getTime()}`;
         
-        // 사업자번호 정규화 (하이픈 제거)
-        const normalizedBusinessNumber = businessNumber.replace(/-/g, '');
+        // 중복 체크
+        const normalizedName = finalCompanyName.toLowerCase();
+        const isDuplicate = companies.some(company => 
+          (company.comname || '').toLowerCase() === normalizedName
+        );
         
-        // 중복 체크는 유효한 사업자번호가 있는 경우에만 수행
-        let isDuplicate = false;
-        
-        if (normalizedBusinessNumber) {
-          // 기존 기업의 정규화된 사업자등록번호 맵 생성
-          const existingBusinessNumbers = {};
-          companies.forEach(company => {
-            if (company && company.businessNumber) {
-              // 중복 체크를 위해 숫자만 추출
-              const normalized = String(company.businessNumber).replace(/[^0-9]/g, '');
-              if (normalized) {
-                // 중복 체크용 맵에는 숫자만 저장하되
-                // 실제 사업자번호 반환시에는 원본 형태 유지를 위해 객체로 저장
-                existingBusinessNumbers[normalized] = {
-                  id: company.id,
-                  originalNumber: company.businessNumber // 원본 형태 유지
-                };
-              }
-            }
-          });
-          
-          // 중복 검사용으로는 숫자만, 표시용으로는 원본 형태 사용
-          isDuplicate = companies.some(company => {
-            // 숫자만 추출해서 비교
-            const existingNumber = String(company.businessNumber || '').replace(/[^0-9]/g, '');
-            const inputNumberDigits = String(normalizedBusinessNumber).replace(/[^0-9]/g, '');
-            return existingNumber === inputNumberDigits && inputNumberDigits.length > 0;
-          });
-          
-          if (isDuplicate) {
-            const continueAnyway = confirm('이미 등록된 사업자등록번호입니다. 그래도 등록하시겠습니까?');
-            if (!continueAnyway) {
-              return;
-            }
+        if (isDuplicate) {
+          const continueAnyway = confirm('이미 등록된 기업명입니다. 그래도 등록하시겠습니까?');
+          if (!continueAnyway) {
+            return;
           }
         }
         
@@ -1024,7 +996,7 @@
           name: finalCompanyName, // name 필드 명시적 추가
           homepage: document.getElementById('singleHomepage').value.trim() || '',
           representative: document.getElementById('singleRepresentative').value.trim() || '',
-          businessNumber: businessNumber || '', // 원본 형식 유지
+          businessNumber: document.getElementById('singleBusinessNumber').value.trim() || '',
           phone: document.getElementById('singlePhone').value.trim() || '',
           address: document.getElementById('singleAddress').value.trim() || '',
           employeeCount: document.getElementById('singleEmployeeCount').value.trim() || '',
@@ -1867,57 +1839,122 @@
           confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>처리 중...';
           confirmBtn.disabled = true;
           
-          // FormData 생성 및 파일 추가
-          const formData = new FormData();
-          formData.append('file', file);
+          // FileReader를 사용하여 파일 내용 읽기
+          const reader = new FileReader();
           
-          // API 호출하여 파일 업로드
-          const response = await uploadCompanyFile(formData);
-          console.log('API 응답:', response);
-          console.log('API 응답 상세:', JSON.stringify(response, null, 2));
+          reader.onload = async function(e) {
+            try {
+              const content = e.target.result;
+              console.log('파일 내용:', content);
+              
+              // CSV 파싱
+              const rows = CSVToArray(content);
+              console.log('파싱된 행:', rows);
+              
+              if (rows.length < 2) {
+                throw new Error('CSV 파일에 데이터가 없습니다.');
+              }
+              
+              const headers = rows[0];
+              const dataRows = rows.slice(1).filter(row => row.some(cell => cell.trim() !== ''));
+              
+              if (dataRows.length === 0) {
+                throw new Error('CSV 파일에 유효한 데이터가 없습니다.');
+              }
+              
+              // 기존 기업명 목록 생성 (중복 확인용)
+              const existingCompanyMap = {};
+              companies.forEach(company => {
+                if (!company) return;
+                const companyName = (company.comname || '').trim().toLowerCase();
+                if (companyName) {
+                  existingCompanyMap[companyName] = true;
+                }
+              });
+              
+              // 중복되지 않은 기업만 필터링
+              const newCompanies = [];
+              const duplicateCompanies = [];
+              
+              dataRows.forEach((row, index) => {
+                const companyName = row[headers.indexOf('comname')]?.trim();
+                if (!companyName) return;
+                
+                const normalizedName = companyName.toLowerCase();
+                if (existingCompanyMap[normalizedName]) {
+                  duplicateCompanies.push({
+                    name: companyName,
+                    row: index + 2 // 헤더 행을 고려하여 +2
+                  });
+                } else {
+                  const company = {};
+                  headers.forEach((header, i) => {
+                    company[header] = row[i] || '';
+                  });
+                  newCompanies.push(company);
+                  existingCompanyMap[normalizedName] = true; // 파일 내 중복 방지
+                }
+              });
+              
+              if (newCompanies.length === 0) {
+                throw new Error('추가할 수 있는 새로운 기업이 없습니다.');
+              }
+              
+              // 중복된 기업이 있는 경우 알림
+              if (duplicateCompanies.length > 0) {
+                const duplicateMessage = duplicateCompanies
+                  .map(d => `- ${d.name} (${d.row}행)`)
+                  .join('\n');
+                alert(`다음 기업들은 이미 등록되어 있어 추가되지 않습니다:\n\n${duplicateMessage}`);
+              }
+              
+              // API 호출 - application/x-www-form-urlencoded 방식으로 전송
+              const params = new URLSearchParams();
+              params.append('action', 'addData');
+              params.append('sheet', '기업정보');
+              params.append('jsonData', JSON.stringify({ companies: newCompanies }));
+              
+              const response = await fetch(ACTIVE_API_URL, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: params
+              });
+              
+              const result = await response.json();
+              console.log('API 응답:', result);
+              
+              // 버튼 상태 복원
+              confirmBtn.innerHTML = originalText;
+              confirmBtn.disabled = false;
+              
+              if (result.success) {
+                alert(`기업 정보 추가 완료\n성공: ${newCompanies.length}개\n중복: ${duplicateCompanies.length}개`);
+                closeModals();
+                sessionStorage.removeItem('companies_cache');
+                loadCompanies(true);
+              } else {
+                throw new Error(result.error || '기업 추가에 실패했습니다.');
+              }
+            } catch (error) {
+              console.error('파일 처리 중 오류:', error);
+              alert('파일 처리 중 오류가 발생했습니다: ' + error.message);
+              confirmBtn.innerHTML = originalText;
+              confirmBtn.disabled = false;
+            }
+          };
           
-          // 버튼 상태 복원
-          confirmBtn.innerHTML = originalText;
-          confirmBtn.disabled = false;
+          reader.onerror = function() {
+            alert('파일을 읽는 중 오류가 발생했습니다.');
+            confirmBtn.innerHTML = originalText;
+            confirmBtn.disabled = false;
+          };
           
-          // 응답 처리
-         // ✅ 응답 처리: 서버에서 파일 업로드 후 받은 응답을 기반으로 처리
-        if (response.success) {
-          // 🟢 1. 모달 닫기
-          closeModals();
-
-          // 🟢 2. 서버에서 직접 받은 신규 기업 수와 중복 수 사용
-          // ❗ 기존에는 companies.length로 신규 수를 추정했지만 정확하지 않음
-          const addedCount = response.ids ? response.ids.length : (response.addedCount || 0);  // ✅ 서버에서 넘긴 신규 기업 수
-          const duplicateCount = response.duplicateCount || 0; // ✅ 서버에서 넘긴 중복 기업 수
-
-          // 🟢 3. 신규 기업이 1개 이상일 때
-          if (addedCount > 0) {
-            alert(`기업 정보가 성공적으로 추가되었습니다.\n신규: ${addedCount}개, 중복: ${duplicateCount}개`);
-            console.log("CSV 업로드 성공. 페이지를 새로고침합니다.");
-
-            // 🟢 4. 캐시 삭제 후 강제로 새로고침
-            sessionStorage.removeItem('companies_cache');
-            setTimeout(() => {
-              loadCompanies(true);
-              location.reload(); // 페이지 강제 새로고침
-            }, 500);
-          } else if (duplicateCount > 0) {
-            // 🟠 중복 기업만 있는 경우
-            alert(`추가된 기업이 없습니다. 모든 기업(${duplicateCount}개)이 이미 등록되어 있습니다.`);
-          } else {
-            // 🔴 기업이 없는 경우
-            alert('추가할 기업이 없습니다.');
-          }
-        } else {
-          // 🔴 업로드 실패 시
-          console.error('업로드 실패:', response.error || '알 수 없는 오류');
-          alert('기업 추가 실패: ' + (response.error || '알 수 없는 오류'));
-        }
-
+          reader.readAsText(file);
         } catch (error) {
           console.error('기업 추가 중 오류 발생:', error);
-          alert('기업 추가 중 오류가 발생했습니다: ' + (error.message || '알 수 없는 오류'));
+          alert('기업 추가 중 오류가 발생했습니다: ' + error.message);
           document.getElementById('confirmAddButton').disabled = false;
         }
       }
@@ -1996,17 +2033,24 @@
         try {
           console.log(`총 ${selectedCompanyIds.length}개 기업 삭제 진행 중...`);
           
-          const results = await Promise.all(
-            selectedCompanyIds.map(id => deleteData('기업정보', id))
-          );
+          // 순차적으로 삭제 처리
+          let successCount = 0;
+          let failCount = 0;
           
-          // 버튼 상태 복원
-          confirmBtn.innerHTML = originalText;
-          confirmBtn.disabled = false;
-          
-          // 성공 및 실패 건수 계산
-          const successCount = results.filter(r => r.success).length;
-          const failCount = selectedCompanyIds.length - successCount;
+          for (const id of selectedCompanyIds) {
+            try {
+              const result = await deleteData('기업정보', id);
+              if (result.success) {
+                successCount++;
+              } else {
+                failCount++;
+                console.error(`기업 삭제 실패 (ID: ${id}):`, result.error);
+              }
+            } catch (error) {
+              failCount++;
+              console.error(`기업 삭제 중 오류 발생 (ID: ${id}):`, error);
+            }
+          }
           
           // 결과 메시지 생성
           let message = '';
@@ -2018,15 +2062,19 @@
             message = '기업 삭제에 실패했습니다.';
           }
           
-          alert(message);
-          closeModals();
+          // 2초 후 모달 닫기
+          setTimeout(() => {
+            closeModals();
+            alert(message);
+            
+            // 삭제 완료 후 선택 초기화
+            selectedCompanyIds = [];
+            
+            // 캐시 초기화 후 데이터 새로 로드
+            sessionStorage.removeItem('companies_cache');
+            loadCompanies();
+          }, 2000);
           
-          // 삭제 완료 후 선택 초기화
-          selectedCompanyIds = [];
-          
-          // 캐시 초기화 후 데이터 새로 로드
-          sessionStorage.removeItem('companies_cache');
-          loadCompanies();
         } catch (error) {
           console.error('삭제 중 오류 발생:', error);
           
@@ -2231,7 +2279,7 @@
       // FileReader를 사용하여 파일을 텍스트로 읽기
       const reader = new FileReader();
       
-      reader.onload = function(e) {
+      reader.onload = async function(e) {
         try {
           // 디버깅: 파일 내용 확인
           const content = e.target.result;
@@ -2241,341 +2289,190 @@
           const rows = CSVToArray(content);
           console.log('📋 파싱된 CSV 행 개수:', rows.length);
           
-          if (rows.length > 0) {
-            const headers = rows[0];
-            console.log('📋 파일 헤더:', headers);
-            
-            // 필수 컬럼 검사 제거 - 모든 형식의 CSV 업로드 허용
-            // 참고: 필수 필드 로직이 제거되었습니다.
-            
-            // 빈 헤더 처리 - 내부에서 자동으로 헤더 생성
-            if (headers.length === 0 || (headers.length === 1 && headers[0].trim() === '')) {
-              console.log('❗ 헤더가 비어있습니다. 기본 헤더를 생성합니다.');
-              // 기본 헤더 생성
-              headers.splice(0, headers.length); // 기존 헤더 제거
-              headers.push('comname', 'businessNumber', 'representative', 'phone', 
-                          'email', 'homepage', 'address', 'employeeCount', 
-                          'industry', 'manager', 'representativePhone', 'job', 'CID1');
-            }
-            
-            // 파일에서 기업 데이터 추출 (첫 번째 행은 헤더)
-            const allCompaniesData = [];
-            for (let i = 1; i < rows.length; i++) {
-              if (rows[i].length > 1) { // 빈 행 스킵
-                const row = rows[i];
-                const companyData = {};
-                
-                headers.forEach((header, index) => {
-                  companyData[header] = row[index] || '';
-                });
-                
-                // 필수 필드 확인 제거 - 모든 데이터 허용
-                // 서버 처리를 위한 필드명 추가 (name 필드 필요)
-                companyData.name = companyData.comname || `기업_${i}`; // 기본값 제공
-                companyData.comname = companyData.comname || `기업_${i}`; // 기본값 제공
-                
-                // 등록일 필드가 없으면 현재 날짜로 설정
-                if (!companyData.registrationDate && !companyData['등록일']) {
-                  companyData.registrationDate = new Date().toISOString().split('T')[0];
-                }
-                
-                // 추가 필드를 명시적으로 빈 문자열로 초기화하여 누락되지 않도록 함
-                const allFields = [
-                  'businessNumber', 'homepage', 'representativePhone', 'address', 
-                  'phone', 'employeeCount', 'industry', 'manager', 'CID1',
-                  'representative', 'email', 'job'
-                ];
-                
-                allFields.forEach(field => {
-                  if (companyData[field] === undefined) {
-                    companyData[field] = '';
-                  }
-                });
-                
-                allCompaniesData.push(companyData);
+          if (rows.length <= 1) {
+            throw new Error('CSV 파일에 데이터가 없습니다.');
+          }
+          
+          const headers = rows[0];
+          console.log('📋 파일 헤더:', headers);
+          
+          // 데이터 행 추출 (헤더 제외)
+          const dataRows = rows.slice(1).filter(row => row.some(cell => cell.trim() !== ''));
+          
+          if (dataRows.length === 0) {
+            throw new Error('CSV 파일에 유효한 데이터가 없습니다.');
+          }
+          
+          // 5개씩 나누어 처리
+          const batchSize = 5;
+          const totalBatches = Math.ceil(dataRows.length / batchSize);
+          
+          console.log(`총 ${dataRows.length}개의 데이터를 ${batchSize}개씩 ${totalBatches}번 나누어 처리합니다.`);
+          
+          let successCount = 0;
+          let errorCount = 0;
+          let processedIds = [];
+          let failedRows = [];
+          
+          // 진행 상황 표시 함수
+          function updateProgress(currentBatch, totalBatches, success, error) {
+            const progress = Math.round((currentBatch / totalBatches) * 100);
+            console.log(`진행률: ${progress}% (${currentBatch}/${totalBatches} 배치)`);
+            console.log(`성공: ${success}, 실패: ${error}`);
+          }
+          
+          // 재시도 로직
+          async function retryOperation(operation, maxRetries = 3) {
+            for (let i = 0; i < maxRetries; i++) {
+              try {
+                return await operation();
+              } catch (error) {
+                if (i === maxRetries - 1) throw error;
+                console.log(`재시도 ${i + 1}/${maxRetries}...`);
+                await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
               }
             }
+          }
+          
+          for (let i = 0; i < totalBatches; i++) {
+            const start = i * batchSize;
+            const end = Math.min(start + batchSize, dataRows.length);
+            const batchRows = dataRows.slice(start, end);
             
-            if (allCompaniesData.length === 0) {
-              // 빈 파일도 허용 - reject 제거
-              console.warn('경고: 파일에 유효한 기업 데이터가 없습니다.');
-              const emptyCompanyData = {
-                comname: `빈데이터_${new Date().getTime()}`,
-                name: `빈데이터_${new Date().getTime()}`,
-                businessNumber: '',
-                registrationDate: new Date().toISOString().split('T')[0]
-              };
-              allCompaniesData.push(emptyCompanyData);
-            }
+            console.log(`${i + 1}/${totalBatches} 배치 처리 중... (${start + 1}~${end}행)`);
             
-           
-            
-            // 기존 기업의 정규화된 사업자등록번호 맵 생성
-            const existingBusinessNumbers = {};
-            companies.forEach(company => {
-              if (company && company.businessNumber) {
-                const normalized = normalizeBusinessNumber(company.businessNumber);
-                if (normalized) {
-                  existingBusinessNumbers[normalized] = true;
-                }
-              }
+            // 배치 데이터 준비
+            const batchData = batchRows.map(row => {
+              const companyData = {};
+              headers.forEach((header, index) => {
+                companyData[header] = row[index] || '';
+              });
+              return companyData;
             });
             
-            // 중복 기업 필터링 (신규 기업만 선택)
-            const newCompanies = [];
-            const duplicateCompanies = [];
+            // 유효한 데이터만 필터링 (기업명이 있는 데이터만)
+            const validBatchRows = batchData.filter(data => data.comname && data.comname.trim() !== '');
             
-            allCompaniesData.forEach(company => {
-              // 사업자번호는 원본 유지
-              const originalNumber = company.businessNumber;
-              
-              // 중복 체크를 위해 숫자만 추출 (하이픈 제거)
-              const numbersOnly = String(originalNumber).replace(/[^0-9]/g, '');
-              
-              // 중복 체크 수정 - 사업자번호가 없거나 비어있으면 중복 체크 생략
-              if (numbersOnly && existingBusinessNumbers[numbersOnly]) {
-                duplicateCompanies.push(company);
-              } else {
-                // 원본 사업자번호 유지 (하이픈 그대로 유지)
-                company.businessNumber = originalNumber;
-                
-                // 모든 필드가 문자열 형태로 처리되도록 보장
-                Object.keys(company).forEach(key => {
-                  if (company[key] !== null && company[key] !== undefined) {
-                    company[key] = String(company[key]);
-                  } else {
-                    company[key] = '';
-                  }
-                });
-                
-                // 신규 기업 목록에 추가
-                newCompanies.push(company);
-                
-                // 사업자번호가 있는 경우만 중복 맵에 추가
-                if (numbersOnly) {
-                  existingBusinessNumbers[numbersOnly] = true;
-                }
-              }
-            });
-            
-            console.log('신규 기업 수:', newCompanies.length, '중복 기업 수:', duplicateCompanies.length);
-            
-            if (newCompanies.length === 0) {
-              if (duplicateCompanies.length > 0) {
-                alert('추가할 신규 기업이 없습니다. 모든 기업이 이미 등록되어 있습니다.');
-              } else {
-                alert('유효한 기업 정보가 없습니다.');
-              }
-              // 확인 버튼 비활성화
-              const confirmButton = document.getElementById('confirmAddButton');
-              if (confirmButton) {
-                confirmButton.disabled = true;
-                confirmButton.classList.add('opacity-50', 'cursor-not-allowed');
-              }
-              clearFileInput();
-              return Promise.reject('추가할 신규 기업이 없습니다.');
+            if (validBatchRows.length === 0) {
+              console.warn(`${i + 1}/${totalBatches} 배치에 유효한 데이터가 없습니다.`);
+              continue;
             }
             
-            // 서버로 전송할 데이터 준비 (신규 기업만)
-            const serverData = { companies: newCompanies };  // 모든기업정보전송
-            
-            console.log('파일 데이터 업로드 준비 완료 - 선택된 기업:', serverData);
-            
-            // JSONP 요청 생성
-            const callbackName = 'jsonpCallback_upload_' + Math.round(Math.random() * 1000000);
-            const timestamp = new Date().getTime();
-            
-            // 요청 파라미터 준비 - 사업관리 방식과 동일
-            const callbackParam = encodeURIComponent(callbackName);
-            const sheetParam = encodeURIComponent('기업정보');
-            const jsonDataParam = encodeURIComponent(JSON.stringify(serverData));
-            
-            // JSONP 요청 생성
-            window[callbackName] = function(response) {
-              console.log('서버 응답:', response);
+            try {
+              // API 호출 (재시도 로직 포함)
+              const response = await retryOperation(async () => {
+                const result = await fetch(API_URL, {
+                  method: 'POST',
+                  body: formData  // FormData를 직접 전송
+                });
+                
+                if (!result.ok) {
+                  throw new Error(`HTTP 오류: ${result.status}`);
+                }
+                
+                const responseData = await result.json();
+                console.log('API 응답 데이터:', responseData);  // 응답 데이터 로깅 추가
+                
+                return responseData;
+              });
               
-              // 콜백 함수 제거
-              delete window[callbackName];
-              if (script.parentNode) {
-                script.parentNode.removeChild(script);
-              }
-              
-              if (response && response.success) {
-                // 정상적으로 companies 배열이 반환된 경우
-                if (response.data && response.data.companies && response.data.companies.length > 0) {
-                  console.log("서버가 companies 배열을 반환했습니다. 테이블에 반영합니다.");
+              if (response.success) {
+                // 시트 데이터 확인 - 검증 로직 개선
+                const verifyResponse = await retryOperation(async () => {
+                  const verifyResult = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/x-www-form-urlencoded',
+                      'Accept': 'application/json'
+                    },
+                    body: Object.entries({ 
+                      action: 'getData',
+                      sheet: '기업정보',
+                      ids: JSON.stringify(response.ids || [])
+                    })
+                    .map(([key, val]) => `${encodeURIComponent(key)}=${encodeURIComponent(val)}`)
+                    .join('&')
+                  });
                   
-                  const newCompaniesData = response.data.companies;
+                  if (!verifyResult.ok) {
+                    throw new Error(`검증 HTTP 오류: ${verifyResult.status}`);
+                  }
                   
-                  // 캐시에서 기존 기업 데이터 가져오기
-                  let cachedCompanies = [];
-                  try {
-                    const cachedData = sessionStorage.getItem('companies_cache');
-                    if (cachedData) {
-                      cachedCompanies = JSON.parse(cachedData);
+                  const verifyData = await verifyResult.json();
+                  console.log('검증 응답 데이터:', verifyData);  // 검증 응답 데이터 로깅 추가
+                  
+                  return verifyData;
+                });
+                
+                // 검증 로직 개선
+                if (verifyResponse.success) {
+                  // 응답된 데이터가 있는지 확인
+                  if (verifyResponse.data && verifyResponse.data.length > 0) {
+                    // 각 배치 데이터가 성공적으로 추가되었는지 확인
+                    const addedCompanies = verifyResponse.data.filter(company => 
+                      validBatchRows.some(row => 
+                        (row.comname || '').toLowerCase() === (company.comname || '').toLowerCase()
+                      )
+                    );
+                    
+                    if (addedCompanies.length > 0) {
+                      successCount += addedCompanies.length;
+                      if (response.ids) {
+                        processedIds = processedIds.concat(response.ids);
+                      }
+                      console.log(`${i + 1}/${totalBatches} 배치 처리 성공: ${addedCompanies.length}개 기업 추가됨`);
+                    } else {
+                      errorCount += validBatchRows.length;
+                      failedRows = failedRows.concat(validBatchRows);
+                      console.error(`${i + 1}/${totalBatches} 배치 검증 실패: 추가된 기업이 없습니다.`);
                     }
-                  } catch (e) {
-                    console.error('캐시 데이터 불러오기 오류:', e);
-                    cachedCompanies = [];
-                  }
-                  
-                  // 메모리에 있는 기업 데이터 업데이트
-                  const updatedCompanies = [...cachedCompanies, ...newCompaniesData];
-                  companies = updatedCompanies; // 전역 companies 변수 업데이트
-                  
-                  console.log(`메모리에 총 ${companies.length}개 기업 데이터 업데이트 완료`);
-                  
-                  // 캐시 업데이트
-                  try {
-                    sessionStorage.setItem('companies_cache', JSON.stringify(updatedCompanies));
-                    console.log('캐시 데이터 업데이트됨, 총 기업 수:', updatedCompanies.length);
-                  } catch (e) {
-                    console.error('캐시 데이터 저장 오류:', e);
-                  }
-                  
-                  // 테이블 다시 렌더링
-                  console.log('CSV 업로드 후 테이블 렌더링');
-                  try {
-                    renderTable(); 
-                    console.log('테이블 렌더링 성공');
-                    
-                    // 성공적으로 처리했으므로 서버에서 데이터 다시 로드
-                    console.log('ID 기반으로 데이터 처리 완료. 데이터를 강제로 새로 불러옵니다.');
-                    sessionStorage.removeItem('companies_cache');
-                    // 잠시 대기 후 데이터 로드 (UI 반영을 위한 지연)
-                    setTimeout(() => {
-                      loadCompanies(true);
-                    }, 500);
-                  } catch (e) {
-                    console.error('테이블 렌더링 오류:', e);
-                    alert('테이블 업데이트 중 오류가 발생했습니다. 페이지를 새로고침하세요.');
-                  }
-                  
-                  // 성공 메시지 표시
-                  alert(response.message || `${newCompaniesData.length}개 기업이 성공적으로 등록되었습니다.`);
-                  // 모달 닫기
-                  closeModals();
-                  
-                  // 정상 응답 반환
-                  resolve(response);
-                }
-                // 서버가 ID만 반환하는 경우 (서버 구현에 따라 다름)
-                else if (response.ids && response.ids.length > 0) {
-                  console.log("서버가 ID만 반환했습니다. 데이터를 새로 불러옵니다.");
-                  
-                  // 모달 닫기
-                  closeModals();
-                  
-                  // 캐시 삭제 후 데이터 새로 로드
-                  sessionStorage.removeItem('companies_cache');
-                  setTimeout(() => {
-                    loadCompanies(true);
-                  }, 500);
-                  
-                  resolve(response);
-                } else {
-                  // 기존 서버 응답 형식이지만 데이터가 없는 경우
-                  console.warn("서버 응답에 companies 배열이 없습니다:", response);
-                  
-                  // 그래도 성공으로 처리해야 한다면
-                  if (response.message) {
-                    alert(response.message);
-                    closeModals();
-                    
-                    // 캐시 삭제 후 데이터 새로 로드
-                    sessionStorage.removeItem('companies_cache');
-                    setTimeout(() => {
-                      loadCompanies(true);
-                    }, 500);
                   } else {
-                    alert("등록된 기업이 없습니다.");
+                    errorCount += validBatchRows.length;
+                    failedRows = failedRows.concat(validBatchRows);
+                    console.error(`${i + 1}/${totalBatches} 배치 검증 실패: 응답 데이터가 없습니다.`);
                   }
-                  
-                  resolve(response);
+                } else {
+                  errorCount += validBatchRows.length;
+                  failedRows = failedRows.concat(validBatchRows);
+                  console.error(`${i + 1}/${totalBatches} 배치 검증 실패:`, verifyResponse.error);
                 }
               } else {
-                alert(response && response.error ? response.error : '업로드 실패');
-                reject(response && response.error ? response.error : '업로드 실패');
+                errorCount += validBatchRows.length;
+                failedRows = failedRows.concat(validBatchRows);
+                console.error(`${i + 1}/${totalBatches} 배치 처리 실패:`, response.error);
               }
-            };
-            
-            // 스크립트 태그 생성
-            const script = document.createElement('script');
-            
-            // URL 생성 - 사업관리 시스템과 동일한 방식
-            let action = id ? 'updateData' : 'addData';
-            let url = `${ACTIVE_API_URL}?action=${action}&sheet=${sheetParam}&callback=${callbackParam}&jsonData=${jsonDataParam}&cache_buster=${timestamp}`;
-            
-            if (id) {
-              url += `&id=${encodeURIComponent(id)}`;
+            } catch (error) {
+              errorCount += validBatchRows.length;
+              failedRows = failedRows.concat(validBatchRows);
+              console.error(`${i + 1}/${totalBatches} 배치 처리 중 오류:`, error);
             }
             
-            script.src = url;
-            script.async = true; // 비동기 로딩 설정
-            
-            // 디버깅을 위한 추가 정보 출력
-            console.log('업로드 요청 URL:', url);
-            console.log('업로드 데이터 길이:', jsonDataParam.length);
-            
-            // 오류 처리 개선
-            script.onerror = function(error) {
-              console.error('스크립트 로드 오류 발생:', error);
-              console.error('요청 URL:', url);
-              
-              // 콜백 함수 제거
-              delete window[callbackName];
-              if (script.parentNode) {
-                script.parentNode.removeChild(script);
-              }
-              
-              // 오류 메시지 업데이트
-              reject('네트워크 오류가 발생했습니다. 인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.');
-            };
-            
-            // 타임아웃 설정
-            const timeout = setTimeout(function() {
-              console.error('요청 시간 초과:', url);
-              
-              // 콜백 함수 제거
-              delete window[callbackName];
-              if (script.parentNode) {
-                script.parentNode.removeChild(script);
-              }
-              
-              reject('요청 시간이 초과되었습니다. 서버 상태를 확인하거나 잠시 후 다시 시도해주세요. (30초)');
-            }, 30000);
-            
-            // 원래 콜백 함수를 래핑하여 타임아웃 제거
-            const originalCallback = window[callbackName];
-            window[callbackName] = function(response) {
-              clearTimeout(timeout);
-              originalCallback(response);
-            };
-            
-            // 스크립트 추가
-            document.body.appendChild(script);
-            console.log('CSV 업로드 요청 전송 완료');
+            // 진행 상황 업데이트
+            updateProgress(i + 1, totalBatches, successCount, errorCount);
+          }
+          
+          if (successCount > 0) {
+            resolve({
+              success: true,
+              addedCount: successCount,
+              errorCount: errorCount,
+              ids: processedIds,
+              failedRows: failedRows
+            });
           } else {
-            reject('파일이 비어있거나 올바른 CSV 형식이 아닙니다.');
+            reject(new Error('모든 배치 처리에 실패했습니다.'));
           }
         } catch (error) {
-          console.error('❌ 파일 처리 오류:', error);
-          reject('파일 처리 중 오류가 발생했습니다: ' + error.message);
+          console.error('파일 처리 중 오류:', error);
+          reject(error);
         }
-      }; // reader.onload 함수 끝
-      
-      reader.onerror = function(error) {
-        console.error('❌ 파일 읽기 오류:', error);
-        reject('파일을 읽는 중 오류가 발생했습니다.');
       };
       
-      // CSV 파일 읽기
-      try {
-        reader.readAsText(file, 'UTF-8');
-      } catch (error) {
-        console.error('❌ 파일 읽기 시도 중 오류:', error);
-        reject('파일 읽기 시도 중 오류가 발생했습니다: ' + error.message);
-      }
+      reader.onerror = function() {
+        reject(new Error('파일을 읽는 중 오류가 발생했습니다.'));
+      };
+      
+      reader.readAsText(file);
     }
     
     // CSV 문자열을 2차원 배열로 변환하는 함수 추가
@@ -2794,7 +2691,7 @@
           console.log('📋 헤더:', headers);
           
           // 필수 컬럼 확인
-          const requiredColumns = ['comname', 'businessNumber'];
+          const requiredColumns = ['comname'];
           const missingColumns = [];
           
           requiredColumns.forEach(column => {
@@ -2818,50 +2715,35 @@
           
           // 데이터 행의 내용 확인
           const companyNameIndex = headers.indexOf('comname');
-          const businessNumberIndex = headers.indexOf('businessNumber');
           let emptyDataCount = 0;
           let existingCompanies = 0;
           let newCompanies = 0;
           
-          // 사업자등록번호 정규화 함수 (하이픈 등 특수문자 제거)
-          function normalizeBusinessNumber(number) {
-            if (!number) return '';
-            
-            // 숫자가 아닌 모든 문자(하이픈, 공백 등) 제거
-            const normalized = String(number).replace(/[^0-9]/g, '');
-            
-            // 숫자가 하나도 없으면 빈 문자열 반환
-            return normalized;
-          }
-          
-          // 기존 사업자등록번호 목록 생성 (중복 확인용)
-          // ID와 사업자등록번호를 함께 저장해 로깅 목적으로 사용
-          const existingBusinessMap = {};
+          // 기존 기업명 목록 생성 (중복 확인용)
+          const existingCompanyMap = {};
           
           companies.forEach(company => {
             if (!company) return;
             
-            // 숫자만 추출하여 정규화
-            const normalized = normalizeBusinessNumber(company.businessNumber || '');
+            const companyName = (company.comname || '').trim().toLowerCase();
             
-            // 정규화된 사업자등록번호가 유효한 경우만 맵에 추가
-            if (normalized && normalized.length > 0) {
-              existingBusinessMap[normalized] = {
+            if (companyName) {
+              existingCompanyMap[companyName] = {
                 id: company.id,
-                name: company.comname || '',
-                original: company.businessNumber || ''
+                name: company.comname || ''
               };
             }
           });
           
-          // 사업자등록번호 배열 (유효한 것만)
-          const existingBusinessNumbers = Object.keys(existingBusinessMap);
+          // 기존 기업명 배열
+          const existingCompanyNames = Object.keys(existingCompanyMap);
           
-          console.log('기존 사업자등록번호 수:', existingBusinessNumbers.length);
+          console.log('기존 기업명 수:', existingCompanyNames.length);
           
           // 파일 내 유효한 데이터 행 배열
           const validRows = [];
           const duplicateDetails = []; // 중복 상세 정보
+          const processedNames = new Set(); // 이미 처리된 기업명 추적
           
           for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
@@ -2871,101 +2753,73 @@
               continue;
             }
             
-            // 필수 값 확인
-            if (!row[companyNameIndex] || row[companyNameIndex].trim() === '' || 
-                !row[businessNumberIndex] || row[businessNumberIndex].trim() === '') {
-              alert(`${i}번째 행에 comname 또는 businessNumber가 누락되었습니다.`);
-              return; // 입력은 유지
+            // 필수 값 확인 (기업명만 필수)
+            if (!row[companyNameIndex] || row[companyNameIndex].trim() === '') {
+              console.warn(`${i}번째 행에 comname이 누락되었습니다.`);
+              continue; // 해당 행만 건너뛰고 계속 진행
             }
             
             // 현재 행 데이터
             const companyName = row[companyNameIndex].trim();
-            const originalNum = row[businessNumberIndex].trim();
-            const businessNumber = normalizeBusinessNumber(originalNum);
+            const normalizedName = companyName.toLowerCase();
             
-            // 유효한 행 추가
-            validRows.push({
-              index: i,
-              name: companyName,
-              businessNumber: businessNumber,
-              originalNum: originalNum,
-              row: row
-            });
-            
-            // 사업자등록번호가 숫자가 아닌 경우 경고
-            if (!businessNumber) {
-              console.warn(`⚠️ ${i}행의 사업자등록번호가 유효하지 않습니다:`, originalNum);
+            // 파일 내 중복 체크
+            if (processedNames.has(normalizedName)) {
+              console.log(`⚠️ ${i}행: 파일 내 중복 기업명 발견 - ${companyName}`);
+              continue; // 파일 내 중복은 건너뛰기
             }
             
-            // 기존 데이터인지 확인 (정규화된 번호로 비교)
-            if (businessNumber && existingBusinessNumbers.includes(businessNumber)) {
+            processedNames.add(normalizedName);
+            
+            // 기존 데이터인지 확인 (기업명으로 비교)
+            if (existingCompanyNames.includes(normalizedName)) {
               existingCompanies++;
               
               // 중복 상세 정보 저장
-              const existingInfo = existingBusinessMap[businessNumber];
+              const existingInfo = existingCompanyMap[normalizedName];
               duplicateDetails.push({
                 rowIndex: i,
                 newName: companyName,
-                newNumber: originalNum,
                 existingId: existingInfo.id,
-                existingName: existingInfo.name,
-                existingNumber: existingInfo.original
+                existingName: existingInfo.name
               });
               
-              console.log(`✓ ${i}행: 기존 기업 "${existingInfo.name}" (${existingInfo.original})와 일치`);
+              console.log(`✓ ${i}행: 기존 기업 "${existingInfo.name}"와 일치`);
             } else {
               newCompanies++;
-              console.log(`+ ${i}행: 신규 기업 - ${companyName} (${originalNum})`);
+              validRows.push({
+                index: i,
+                name: companyName,
+                row: row
+              });
+              console.log(`+ ${i}행: 신규 기업 - ${companyName}`);
             }
           }
           
-          console.log('-------------- 검증 결과 --------------');
-          console.log(`총 ${validRows.length}개 기업 중 신규: ${newCompanies}개, 기존: ${existingCompanies}개`);
-          
-          if (duplicateDetails.length > 0) {
-            console.log('---------- 중복 기업 상세 정보 ----------');
-            duplicateDetails.forEach((detail, idx) => {
-              console.log(`${idx+1}. ${detail.rowIndex}행: "${detail.newName}" (${detail.newNumber}) ↔ 기존: "${detail.existingName}" (${detail.existingNumber})`);
-            });
-          }
-          
-          // 모든 행이 비어있는 경우
+          // 유효한 행이 있는 경우에만 처리 계속
           if (validRows.length === 0) {
+            alert('처리할 수 있는 유효한 데이터가 없습니다.');
             clearFileInput();
             return;
           }
           
-          // 신규 기업이 없는 경우
-          if (newCompanies.length === 0) {
-            // 확인 버튼 비활성화
-            const confirmButton = document.getElementById('confirmAddButton');
-            if (confirmButton) {
-              confirmButton.disabled = true;
-              confirmButton.classList.add('opacity-50', 'cursor-not-allowed');
-            }
-            // 파일 정보와 신규 기업 수 표시 (노란색)
-            const messageElement = document.getElementById('selectedFileName');
-            if (messageElement) {
-              messageElement.innerHTML = 
-                `<span class="text-gray-500">${file.name} (${formatFileSize(file.size)})</span><br>` +
-                `<span class="text-sm">신규 기업: <span class="text-yellow-500 font-bold">0개</span></span>`;
-            }
+          // 중복 데이터가 있는 경우 사용자에게 알림
+          if (duplicateDetails.length > 0) {
+            const duplicateMessage = duplicateDetails.map(detail => 
+              `- ${detail.newName} (${detail.rowIndex}행)는 이미 등록된 기업 "${detail.existingName}"과 중복됩니다.`
+            ).join('\n');
             
-            // 중복 기업이 있는 경우 메시지 표시
-            if (duplicateDetails.length > 0) {
-              alert('추가할 신규 기업이 없습니다. 모든 기업이 이미 등록되어 있습니다.');
-            } else {
-              alert('추가할 유효한 기업 정보가 없습니다.');
-            }
-            
-            clearFileInput();
-            return;
+            alert(`다음 기업들은 이미 등록되어 있어 추가되지 않습니다:\n\n${duplicateMessage}`);
           }
           
           // 검증 통과 시 표시 (신규 기업만)
           let fileInfoHTML = `<span class="text-green-500">${file.name} (${formatFileSize(file.size)})</span><br>` +
             `<span class="text-sm">신규 기업: ` + 
             `<span class="text-blue-500 font-bold">${newCompanies}개</span></span>`;
+          
+          if (duplicateDetails.length > 0) {
+            fileInfoHTML += `<br><span class="text-sm text-yellow-600">중복 기업: ${duplicateDetails.length}개</span>`;
+          }
           
           document.getElementById('selectedFileName').innerHTML = fileInfoHTML;
           
@@ -3011,50 +2865,31 @@
       confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>등록 중...';
       confirmBtn.disabled = true;
       
-      // 서버 전송용 데이터 준비 (필드 매핑) - 원본 그대로 전송
+      // 서버 전송용 데이터 준비 - 원본 데이터 그대로 전송
       const serverData = {
-        companies: [{
-          name: companyData.comname || companyData.name,
-          comname: companyData.comname || companyData.name,
-          businessNumber: companyData.businessNumber, // 원본 형태 그대로 사용
-          representative: companyData.representative || '',
-          phone: companyData.phone || '',
-          email: companyData.email || '',
-          homepage: companyData.homepage || '',
-          representativePhone: companyData.representativePhone || '',
-          address: companyData.address || '',
-          employeeCount: companyData.employeeCount || '',
-          industry: companyData.industry || '',
-          manager: companyData.manager || '',
-          CID1: companyData.CID1 || '',
-          registrationDate: companyData.registrationDate || new Date().toISOString().split('T')[0]
-        }]
+        companies: [companyData] // 원본 데이터를 그대로 전송
       };
       
       console.log('단일 기업 데이터 업로드 준비 완료:', serverData);
       
       try {
-        // JSONP 요청 생성
-        const callbackName = 'jsonpCallback_' + Math.round(Math.random() * 1000000);
+        // fetch API를 사용하여 데이터 전송
+        const formData = new FormData();
+        formData.append('action', 'addData');
+        formData.append('sheet', '기업정보');
+        formData.append('jsonData', JSON.stringify(serverData));
         
-        // 요청 파라미터 준비
-        const callbackParam = encodeURIComponent(callbackName);
-        const sheetParam = encodeURIComponent('기업정보');
-        const jsonDataParam = encodeURIComponent(JSON.stringify(serverData));
-        const timestamp = new Date().getTime();
-        
-        // JSONP 요청
-        window[callbackName] = function(response) {
+        fetch(ACTIVE_API_URL, {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(response => {
           // 버튼 상태 복원
           confirmBtn.innerHTML = originalText;
           confirmBtn.disabled = false;
           
           console.log('API 응답:', response);
-          
-          // 디버깅: 응답 데이터 자세히 확인
-          if (response && response.data) {
-            console.log('응답 데이터 상세:', JSON.stringify(response.data));
-          }
           
           if (response && response.success) {
             console.log('기업 추가 성공');
@@ -3070,53 +2905,14 @@
             console.error('기업 추가 실패:', response?.error || '알 수 없는 오류');
             alert('기업 추가 실패: ' + (response?.error || '알 수 없는 오류'));
           }
-          
-          // 콜백 함수 제거
-          delete window[callbackName];
-          
-          // 스크립트 태그 제거
-          if (script.parentNode) {
-            script.parentNode.removeChild(script);
-          }
-        };
-        
-        // 스크립트 태그 생성 - 사업관리와 동일한 URL 구성 방식 사용
-        const script = document.createElement('script');
-        script.src = `${ACTIVE_API_URL}?action=addData&sheet=${sheetParam}&callback=${callbackParam}&jsonData=${jsonDataParam}&cache_buster=${timestamp}`;
-        
-        // 오류 처리
-        script.onerror = function() {
+        })
+        .catch(error => {
+          // 오류 처리
           confirmBtn.innerHTML = originalText;
           confirmBtn.disabled = false;
-          
-          console.error('API 요청 오류');
-          alert('서버 요청 중 오류가 발생했습니다.');
-          
-          delete window[callbackName];
-          if (script.parentNode) {
-            script.parentNode.removeChild(script);
-          }
-        };
-        
-        // 타임아웃 설정 - 30초 후 자동 종료
-        setTimeout(function() {
-          if (window[callbackName]) {
-            confirmBtn.innerHTML = originalText;
-            confirmBtn.disabled = false;
-            
-            console.error('API 요청 타임아웃');
-            alert('서버 요청 시간이 초과되었습니다.');
-            
-            delete window[callbackName];
-            if (script.parentNode) {
-              script.parentNode.removeChild(script);
-            }
-          }
-        }, 30000);
-        
-        // 스크립트 추가 - 이 부분이 누락되어 있었습니다
-        document.body.appendChild(script);
-        console.log('API 요청 전송됨:', script.src);
+          console.error('API 호출 중 오류 발생:', error);
+          alert('서버 통신 중 오류가 발생했습니다.');
+        });
       } catch (error) {
         // 오류 처리
         confirmBtn.innerHTML = originalText;

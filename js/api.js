@@ -355,7 +355,7 @@ async function addData(sheet, data) {
     // POST 요청 준비
     const requestData = {
       action: 'addData',
-      sheet: encodeURIComponent(actualSheet),
+      sheet: actualSheet,
       jsonData: encodeURIComponent(jsonData)
     };
     
