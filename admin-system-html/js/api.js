@@ -277,7 +277,9 @@ async function fetchData(sheet = 'all') {
             'Accept': 'application/json'
           },
           body: formBody,
-          signal: AbortSignal.timeout ? AbortSignal.timeout(CONFIG.DEFAULT_TIMEOUT) : undefined
+          signal: (typeof AbortSignal !== 'undefined' && AbortSignal.timeout)
+            ? AbortSignal.timeout(CONFIG.DEFAULT_TIMEOUT)
+            : undefined
         });
         
         if (!response.ok) {
