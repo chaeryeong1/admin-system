@@ -3,7 +3,8 @@
  */
 
 // API 기본 URL
-const BASE_API_URL = 'https://script.google.com/macros/s/AKfycby-9fAUMpLbkN7ISysznuKXeI9lo3NB7xN1ssv6gq3Zj5L2CLKThTyut88VwxM1ImQ/exec';
+const BASE_API_URL = 'https://script.google.com/macros/s/AKfycbyD031lOEQn_RKGDrwVmaQF_QssOSEqwSx1_Wp9UuHsykCqfJgLESTVIVHzCjv1PBE0/exec';
+
 
 /**
  * 이메일 인증 코드 전송 API
@@ -352,16 +353,12 @@ async function addData(sheet, data) {
       };
     }
     
-    // POST 요청 준비
-    const requestData = {
+    // POST 요청 준비 (URLSearchParams 사용)
+    const requestBody = new URLSearchParams({
       action: 'addData',
       sheet: actualSheet,
-      jsonData: encodeURIComponent(jsonData)
-    };
-    
-    const formBody = Object.entries(requestData)
-      .map(([key, val]) => `${encodeURIComponent(key)}=${val}`)
-      .join('&');
+      jsonData: jsonData // 이미 JSON 문자열이므로 추가 인코딩 불필요
+    });
     
     try {
       console.log('addData fetch 요청 전송');
@@ -369,10 +366,9 @@ async function addData(sheet, data) {
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json'
+          'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: formBody
+        body: requestBody
       });
       
       if (!response.ok) {
@@ -386,12 +382,16 @@ async function addData(sheet, data) {
     } catch (fetchError) {
       console.error('addData fetch 요청 실패:', fetchError);
       
-      // 대체 처리 - JSONP 방식 시도
-      console.log('addData JSONP 방식으로 재시도');
-      const callbackName = 'add_' + Math.floor(Math.random() * 1000000);
-      const apiUrl = `${API_URL}?action=addData&sheet=${encodeURIComponent(actualSheet)}&jsonData=${encodeURIComponent(jsonData)}&callback=${encodeURIComponent(callbackName)}&nocache=${Date.now()}`;
-      
-      return createJSONPRequest(apiUrl, callbackName);
+      // fetch 실패 시 JSONP 방식 재시도는 POST 본문 문제와 관련 없음
+      // JSONP는 GET 요청이므로 여기서는 사용하지 않음
+      // return createJSONPRequest(...); // JSONP 폴백 제거 또는 검토 필요
+
+      // 오류 객체 반환
+      return {
+        success: false,
+        error: fetchError.message || '데이터 추가 요청에 실패했습니다.',
+        data: null
+      };
     }
   } catch (error) {
     console.error('addData 함수 오류:', error);

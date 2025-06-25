@@ -1248,11 +1248,22 @@
       const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
       if (!searchTerm) return companies;
       
-      return companies.filter(c => 
-        (c.comname && c.comname.toLowerCase().includes(searchTerm)) || 
-        (c.businessNumber && c.businessNumber.toLowerCase().includes(searchTerm)) ||
-        (c.representative && c.representative.toLowerCase().includes(searchTerm))
-      );
+      return companies.filter(c => {
+        if (!c) return false;
+        
+        // 검색 대상 필드들
+        const searchFields = [
+          'comname', 'name', 'homepage', 'representative', 'businessNumber',
+          'phone', 'address', 'employeeCount', 'industry', 'manager',
+          'representativePhone', 'job', 'email', 'CID1'
+        ];
+        
+        // 모든 필드를 검색
+        return searchFields.some(field => {
+          const value = c[field];
+          return value && String(value).toLowerCase().includes(searchTerm);
+        });
+      });
     }
     
     function renderTable() {

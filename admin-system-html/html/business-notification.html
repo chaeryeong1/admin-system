@@ -154,7 +154,7 @@
                   </div>
                 </th>
                 <th class="w-16">NO</th>
-                <th class="cursor-pointer" data-sort="businessName">
+                <th class="cursor-pointer sortable" data-sort="businessName">
                   <div class="flex items-center">
                     사업명
                     <span class="sort-icon ml-1">
@@ -162,7 +162,7 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="comname">
+                <th class="cursor-pointer sortable" data-sort="comname">
                   <div class="flex items-center">
                     기업명
                     <span class="sort-icon ml-1">
@@ -170,7 +170,7 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="homepage">
+                <th class="cursor-pointer sortable" data-sort="homepage">
                   <div class="flex items-center">
                     홈페이지
                     <span class="sort-icon ml-1">
@@ -178,7 +178,7 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="representative">
+                <th class="cursor-pointer sortable" data-sort="representative">
                   <div class="flex items-center">
                     대표자
                     <span class="sort-icon ml-1">
@@ -186,7 +186,7 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="businessNumber">
+                <th class="cursor-pointer sortable" data-sort="businessNumber">
                   <div class="flex items-center">
                     사업자등록번호
                     <span class="sort-icon ml-1">
@@ -194,7 +194,7 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="phone">
+                <th class="cursor-pointer sortable" data-sort="phone">
                   <div class="flex items-center">
                     전화번호
                     <span class="sort-icon ml-1">
@@ -202,7 +202,7 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="address">
+                <th class="cursor-pointer sortable" data-sort="address">
                   <div class="flex items-center">
                     주소
                     <span class="sort-icon ml-1">
@@ -210,7 +210,7 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="employeeCount">
+                <th class="cursor-pointer sortable" data-sort="employeeCount">
                   <div class="flex items-center">
                     종업원 수
                     <span class="sort-icon ml-1">
@@ -218,7 +218,7 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="industry">
+                <th class="cursor-pointer sortable" data-sort="industry">
                   <div class="flex items-center">
                     업종
                     <span class="sort-icon ml-1">
@@ -226,7 +226,7 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="manager">
+                <th class="cursor-pointer sortable" data-sort="manager">
                   <div class="flex items-center">
                     담당자
                     <span class="sort-icon ml-1">
@@ -234,7 +234,7 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="representativePhone">
+                <th class="cursor-pointer sortable" data-sort="representativePhone">
                   <div class="flex items-center">
                     담당자 전화번호
                     <span class="sort-icon ml-1">
@@ -242,7 +242,7 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="managerPosition">
+                <th class="cursor-pointer sortable" data-sort="managerPosition">
                   <div class="flex items-center">
                     담당자 직책
                     <span class="sort-icon ml-1">
@@ -250,7 +250,7 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="email">
+                <th class="cursor-pointer sortable" data-sort="email">
                   <div class="flex items-center">
                     이메일
                     <span class="sort-icon ml-1">
@@ -258,7 +258,7 @@
                     </span>
                   </div>
                 </th>
-                <th class="cursor-pointer" data-sort="closedInfo">
+                <th class="cursor-pointer sortable" data-sort="closedInfo">
                   <div class="flex items-center">
                     폐업정보
                     <span class="sort-icon ml-1">
@@ -337,7 +337,9 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
   <!-- API 스크립트 먼저 로드 -->
   <script src="../js/api.js"></script>
+  
   <script>
+    
     // 기본 설정
     let companies = [], selectedCompanyIds = [], currentPage = 1;
     let itemsPerPage = 10; // 기본값 설정
@@ -345,6 +347,7 @@
     let lastApiCallTimestamp = 0;
     let notificationData = [];
     let businessList = [];
+    let allCompanies = []; // 전체 기업 데이터를 저장할 변수
     
     document.addEventListener('DOMContentLoaded', function() {
       // 모바일 메뉴
@@ -356,6 +359,9 @@
       
       // 페이지 초기화 시 기업정보 데이터 로드
       loadCompanyData();
+      
+      // 페이지 로딩 후 기본 필터링 적용 (사업 선택)
+      filterByBusiness('');
       
       // 테이블 정렬 버튼 설정
       setupSortButtons();
@@ -378,6 +384,8 @@
       
       document.getElementById('businessSelect')?.addEventListener('change', function() {
         const selectedBusinessId = this.value;
+        console.log('선택된 사업 ID:', selectedBusinessId);
+        
         if (!selectedBusinessId) {
           // 전체 기업 선택 시
           loadCompanyData('', document.getElementById('searchInput')?.value.trim() || '');
@@ -581,13 +589,17 @@
         
         // 기업 데이터에 안내 정보 연결 - 여러 사업 할당 지원
         companies = companies.map(company => {
+          if (!company || !company.id) return null;
+          
           // 해당 기업에 할당된 모든 안내 정보 찾기
-          const notifications = notificationData.filter(n => n.companyId === company.id);
+          const notifications = notificationData.filter(n => n && n.companyId === company.id);
           
           if (notifications.length > 0) {
             // 기업에 할당된 사업 정보 배열 생성
             company.businesses = notifications.map(notification => {
-              const business = businessList.find(b => b.id === notification.businessId);
+              if (!notification || !notification.businessId) return null;
+              
+              const business = businessList.find(b => b && b.id === notification.businessId);
               if (business) {
                 return {
                   id: business.id,
@@ -599,7 +611,7 @@
             }).filter(b => b !== null); // null 제거
             
             // 첫 번째 사업자등록증 정보 사용 (있는 경우)
-            const saupjaddNotification = notifications.find(n => n.saupjadd);
+            const saupjaddNotification = notifications.find(n => n && n.saupjadd);
             if (saupjaddNotification) {
               company.saupjadd = saupjaddNotification.saupjadd;
             }
@@ -608,37 +620,12 @@
           }
           
           return company;
-        });
+        }).filter(company => company !== null); // null 제거
 
-        // 선택된 사업의 기업만 필터링
-        if (selectedBusinessId) {
-          console.log(`선택된 사업 ID: ${selectedBusinessId} 기업 필터링 전: ${companies.length}`);
-          const targetCompanyIds = notificationData
-            .filter(n => n.businessId === selectedBusinessId)
-            .map(n => n.companyId);
-          
-          console.log(`사업 ${selectedBusinessId}에 할당된 기업 ID 수: ${targetCompanyIds.length}`);
-          companies = companies.filter(company => targetCompanyIds.includes(company.id));
-          console.log(`필터링 후 기업 수: ${companies.length}`);
-        }
-
-        // 검색어로 필터링
-        if (searchTerm) {
-          companies = companies.filter(c =>
-            Object.values(c).some(val => {
-              if (val === null || val === undefined) return false;
-              if (typeof val === 'string') return val.toLowerCase().includes(searchTerm.toLowerCase());
-              if (Array.isArray(val) && val.length > 0 && typeof val[0] === 'object') {
-                return val.some(item => 
-                  Object.values(item).some(subVal => 
-                    subVal && typeof subVal === 'string' && subVal.toLowerCase().includes(searchTerm.toLowerCase())
-                  )
-                );
-              }
-              return String(val).toLowerCase().includes(searchTerm.toLowerCase());
-            })
-          );
-        }
+        // 전체 데이터 저장 및 표시
+        allCompanies = [...companies]; // 로드된 전체 데이터를 allCompanies에 저장
+        companies = [...allCompanies]; // 표시할 데이터에 전체 데이터 복사
+        renderTable(); // 필터링 없이 전체 데이터 렌더링
 
         // 정렬 적용
         if (currentSortColumn && currentSortDirection) {
@@ -712,8 +699,9 @@
               ${company.businesses && company.businesses.length > 0 
                 ? `<div class="business-badges-container">
                     ${company.businesses.map(business => `
-                      <span class="business-badge" style="background-color: ${business.color}; color: white; border-color: ${business.color};" 
-                            onclick="filterByBusiness('${business.id}')">
+                      <span class="business-badge" 
+                            style="background-color: ${business.color}; color: white; border-color: ${business.color};" 
+                            data-business-id="${business.id}">
                         ${business.name}
                       </span>
                     `).join('')}
@@ -741,6 +729,10 @@
             <td>${company.closedInfo || ''}</td>
           </tr>
         `).join('');
+        
+        // 테이블 렌더링 후 사업 뱃지에 이벤트 리스너 추가
+        addBusinessBadgeEventListeners();
+
       } else {
         tbody.innerHTML = '<tr><td colspan="17" class="text-center py-8">' +
         '<div class="flex flex-col items-center justify-center">' +
@@ -761,6 +753,27 @@
       
       // 페이지네이션 버튼 업데이트
       updatePaginationButtons();
+    }
+
+    // 테이블 렌더링 후 사업 뱃지에 이벤트 리스너 추가
+    function addBusinessBadgeEventListeners() {
+      console.log('addBusinessBadgeEventListeners 호출됨.');
+      const badges = document.querySelectorAll('.business-badge');
+      console.log('찾은 사업 뱃지 개수:', badges.length);
+
+      if (badges.length === 0) {
+        console.warn('경고: renderTable 후 사업 뱃지 요소가 발견되지 않았습니다.');
+      }
+
+      document.querySelectorAll('.business-badge').forEach(badge => {
+        badge.addEventListener('click', function() {
+          const businessId = this.getAttribute('data-business-id');
+          if (businessId) {
+            console.log('사업 뱃지 클릭됨 (addEventListener):', businessId);
+            filterByBusiness(businessId);
+          }
+        });
+      });
     }
 
     // 페이지네이션 버튼 상태 업데이트
@@ -863,37 +876,79 @@
 
     // 사업으로 필터링 함수 수정
     function filterByBusiness(businessId) {
+      console.log('filterByBusiness 호출됨. 사업 ID:', businessId);
+      console.log('현재 allCompanies 길이:', allCompanies.length);
+      console.log('현재 notificationData 길이:', notificationData.length);
+
       currentPage = 1;
       const searchTerm = document.getElementById('searchInput')?.value.trim() || '';
-      
+
+      // 전체 기업 데이터에서 필터링 시작
+      let filteredCompanies = allCompanies;
+
       if (!businessId) {
-        // 사업 선택 선택 시 필터 제거
-        document.getElementById('businessSelect').value = '';
-        loadCompanyData('', searchTerm);
-        return;
-      }
-      
-      // 드롭다운에도 선택된 사업 반영
-      document.getElementById('businessSelect').value = businessId;
-      console.log('사업 필터링:', businessId, '검색어:', searchTerm);
-      
-      if (businessId === 'unassigned') {
-        // 사업 할당 안된 기업만 필터링
-        const assignedCompanyIds = notificationData.map(n => n.companyId);
-        companies = companies.filter(company => !assignedCompanyIds.includes(company.id));
-      } else if (businessId === 'no_business') {
-        // 사업이 없는 기업만 필터링 (사업 목록이 비어있는 기업)
-        companies = companies.filter(company => !company.businesses || company.businesses.length === 0);
+        // 사업 선택 선택 시 필터 제거 - allCompanies 전체 사용
+        filteredCompanies = [...allCompanies];
+        document.getElementById('businessSelect').value = ''; // 드롭다운 초기화 유지
       } else {
-        // 특정 사업에 할당된 기업만 필터링
-        const targetCompanyIds = notificationData
-          .filter(n => n.businessId === businessId)
-          .map(n => n.companyId);
-        companies = companies.filter(company => targetCompanyIds.includes(company.id));
+         // 드롭다운에도 선택된 사업 반영
+        document.getElementById('businessSelect').value = businessId;
+        console.log('사업 필터링:', businessId, '검색어:', searchTerm);
+
+        if (businessId === 'unassigned') {
+            // 사업 할당 안된 기업만 필터링
+            const assignedCompanyIds = notificationData.map(n => n.companyId);
+            filteredCompanies = allCompanies.filter(company => !assignedCompanyIds.includes(company.id));
+        } else if (businessId === 'no_business') {
+            // 사업이 없는 기업만 필터링 (사업 목록이 비어있는 기업)
+            filteredCompanies = allCompanies.filter(company => !company.businesses || company.businesses.length === 0);
+        } else {
+            // 특정 사업에 할당된 기업만 필터링
+            const targetCompanyIds = notificationData
+              .filter(n => n && n.businessId === businessId)
+              .map(n => n.companyId);
+            filteredCompanies = allCompanies.filter(company => targetCompanyIds.includes(company.id));
+        }
       }
-      
-      renderTable();
+
+
+      // 검색어로 필터링 (필터링된 결과에 추가 적용)
+      if (searchTerm) {
+        const searchTermLower = searchTerm.toLowerCase();
+        filteredCompanies = filteredCompanies.filter(c => {
+          if (!c) return false;
+          return Object.entries(c).some(([key, val]) => {
+            if (val === null || val === undefined) return false;
+            if (typeof val === 'string') {
+              return val.toLowerCase().includes(searchTermLower);
+            }
+             if (Array.isArray(val) && val.length > 0) { // 배열 내 객체/값 검색 추가
+                if (typeof val[0] === 'object') {
+                  return val.some(item =>
+                    item && Object.values(item).some(subVal =>
+                      subVal && typeof subVal === 'string' && subVal.toLowerCase().includes(searchTermLower)
+                    )
+                  );
+                }
+                return val.some(v => String(v).toLowerCase().includes(searchTermLower));
+              }
+            return String(val).toLowerCase().includes(searchTermLower);
+          });
+        });
+      }
+
+      // 필터링된 결과로 companies 배열을 교체
+      companies = filteredCompanies;
+
+      // 정렬 적용
+      if (currentSortColumn && currentSortDirection) {
+         sortTable(currentSortColumn, currentSortDirection);
+      } else {
+         renderTable();
+      }
+
       updatePaginationButtons();
+
     }
 
     // 안내 사업 선택 모달 열기
@@ -1456,39 +1511,49 @@
           return { success: true, successCount: 0, failCount: 0 };
         }
 
-        // 한 번에 처리할 안내 정보 배열 생성
-        const notificationItems = newCompanyIds.map(companyId => ({
-          businessId: businessId,
-          companyId: companyId,
-          csdataaa: "등록"
-        }));
+        let successCount = 0;
+        let failCount = 0;
 
-        // 한 번에 데이터 추가
-        const result = await addData('안내정보', notificationItems);
-        
-        if (result && result.success) {
-          // 성공한 경우 notificationData 배열에 추가
-          if (Array.isArray(result.data)) {
-            notificationData.push(...result.data);
-          } else if (result.data) {
-            notificationData.push(result.data);
+        // 각 기업별로 개별적으로 처리
+        for (const companyId of newCompanyIds) {
+          try {
+            // 단일 안내 정보 객체 생성
+            const notificationItem = {
+              businessId: businessId,
+              companyId: companyId,
+              csdataaa: "등록"
+            };
+
+            // 데이터 추가
+            const result = await addData('안내정보', notificationItem);
+            
+            if (result && result.success) {
+              // 성공한 경우 notificationData 배열에 추가
+              if (result.data) {
+                notificationData.push(result.data);
+              }
+              successCount++;
+            } else {
+              console.error('기업 할당 실패:', result ? result.error || '알 수 없는 오류' : '응답 없음');
+              failCount++;
+            }
+          } catch (error) {
+            console.error('개별 기업 할당 중 오류:', error);
+            failCount++;
           }
-          
-          alert(`${newCompanyIds.length}개의 기업이 성공적으로 할당되었습니다.`);
-          return { 
-            success: true, 
-            successCount: newCompanyIds.length, 
-            failCount: 0 
-          };
-        } else {
-          console.error('기업 할당 실패:', result ? result.error || '알 수 없는 오류' : '응답 없음');
-          alert('기업 할당에 실패했습니다.');
-          return { 
-            success: false, 
-            successCount: 0, 
-            failCount: newCompanyIds.length 
-          };
         }
+
+        if (successCount > 0) {
+          alert(`${successCount}개의 기업이 성공적으로 할당되었습니다.${failCount > 0 ? `\n${failCount}개의 기업 할당에 실패했습니다.` : ''}`);
+        } else {
+          alert('기업 할당에 실패했습니다.');
+        }
+
+        return { 
+          success: successCount > 0, 
+          successCount: successCount, 
+          failCount: failCount 
+        };
       } catch (error) {
         console.error('할당 프로세스 오류:', error);
         alert('기업 할당 중 오류가 발생했습니다.');
